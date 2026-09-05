@@ -17,6 +17,7 @@ The point of the project is the **connected operational flow and business logic*
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Guardrails](#guardrails)
+- [Design System](#design-system)
 - [Screens & Routes](#screens--routes)
 - [Project Structure](#project-structure)
 - [Setup](#setup)
@@ -155,7 +156,43 @@ Payroll writes money to real records, so the system fails loudly rather than qui
 - **Fail-fast config** — env vars are Zod-parsed at boot, so a missing `DATABASE_URL` or a short `JWT_SECRET` stops the server with a readable message.
 - **Email safety** — `MAIL_REDIRECT_TO` keeps seeded demo addresses from ever being emailed by accident; bulk send is concurrency-limited with per-recipient results.
 
-Full detail in section 9 of the system design plan.
+Full detail in section 10 of the system design plan.
+
+## Design System
+
+### Typography
+
+**Space Grotesk** for the interface, **Space Mono** for figures and codes. The two are siblings — Space Grotesk was drawn from Space Mono — so the pairing reads as one voice rather than two fonts bolted together.
+
+| Role | Face | Weights | Used for |
+| --- | --- | --- | --- |
+| UI | **Space Grotesk** | 400 / 500 / 700 | Navigation, labels, form fields, headings, body copy |
+| Figures & codes | **Space Mono** | 400 / 700 | Salary amounts, worked hours, rule codes (`BASIC`, `HRA`), contract references (`CON/2026/0042`), payslip numbers |
+
+```css
+--font-ui:   'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+--font-mono: 'Space Mono', ui-monospace, 'Cascadia Code', monospace;
+```
+
+**Why a mono for the numbers.** Payslip and dashboard tables stack currency down a column, and proportional digits make those columns ragged. Every numeric cell — amounts, hours, balances, headcounts — renders in Space Mono with `font-variant-numeric: tabular-nums`, so decimal points line up and a ₹1,50,000 row sits flush under a ₹96,000 row. Rule codes and contract references get the same treatment because they read as identifiers, not prose.
+
+Space Grotesk's own digits are checked for `tnum` support at scaffold time; where the feature is absent the mono face covers the numeric columns regardless, so alignment never depends on it.
+
+**Loading.** Self-hosted `.woff2` in `client/public/fonts` with `font-display: swap` and a preload hint for the 400/500 UI weights — no render-blocking request to Google's CDN during the demo, and no layout shift when the network is slow on hackathon wifi.
+
+**In the PDF.** `@react-pdf/renderer` embeds font files rather than reading a stylesheet, so the same Space Grotesk and Space Mono `.ttf` files are registered in `server/pdf/fonts.ts`. The payslip PDF therefore matches the screen exactly — the same face for labels, the same mono for the salary computation table.
+
+### Type scale
+
+| Token | Size / line-height | Use |
+| --- | --- | --- |
+| `display` | 28 / 34 | Dashboard KPI values |
+| `h1` | 20 / 28 | Page titles (`Employee / Aarav Mehta`) |
+| `h2` | 16 / 24 | Form section headers (`Work Information`) |
+| `body` | 14 / 20 | Default — form fields, table cells |
+| `small` | 12 / 16 | Table headers, helper text, status chips |
+
+14px body keeps list views dense the way an HR tool should be, and Space Grotesk stays legible at 12px for column headers.
 
 ## Screens & Routes
 
