@@ -1,0 +1,724 @@
+// PayZ — HR & Payroll schema
+//
+// Money is stored as integer paise (Int), never Float or Decimal-as-float:
+// a payslip is a column of figures that must add up exactly.
+//
+// Several guardrails from section 10.4 of the design plan cannot be expressed
+// in Prisma schema syntax — the GiST exclusion constraint that makes
+// overlapping running contracts impossible, and the partial unique indexes.
+// Those are added as raw SQL in the migration that creates these tables.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  EMPLOYEE
+  HR_MANAGER
+  HR_PAYROLL_USER
+  HR_PAYROLL_MANAGER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum EmployeeType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+enum ContractStatus {
+  DRAFT
+  RUNNING
+  EXPIRED
+  CANCELLED
+}
+
+enum Weekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  MISSING_CHECKOUT
+}
+
+enum AttendanceSource {
+  WIDGET
+  MANUAL
+}
+
+enum TimeOffUnit {
+  DAYS
+  HOURS
+}
+
+enum ApprovalLevel {
+  NONE
+  MANAGER
+  OFFICER
+}
+
+enum TimeOffStatus {
+  TO_APPROVE
+  APPROVED
+  REFUSED
+  CANCELLED
+}
+
+enum RuleCategory {
+  BASIC
+  ALLOWANCE
+  GROSS
+  DEDUCTION
+  NET
+}
+
+enum ComputationType {
+  FIXED
+  PERCENTAGE
+  FORMULA
+}
+
+enum PercentageBase {
+  CONTRACT_WAGE
+  BASIC
+  GROSS
+  RULE
+}
+
+enum PayrunStatus {
+  DRAFT
+  COMPUTED
+  VALIDATED
+  PAID
+  CANCELLED
+}
+
+enum PayslipStatus {
+  DRAFT
+  DONE
+  PAID
+  CANCELLED
+}
+
+enum WarningCode {
+  NO_CONTRACT
+  DUPLICATE_PAYSLIP
+  RULE_ERROR
+  MISSING_BANK_ACCOUNT
+  INCOMPLETE_EMPLOYEE
+  CONTRACT_EXPIRING
+}
+
+// ---------------------------------------------------------------------------
+// Organisation
+// ---------------------------------------------------------------------------
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  legalName String?
+  currency  String   @default("INR")
+  timezone  String   @default("Asia/Kolkata")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  departments      Department[]
+  employees        Employee[]
+  workingSchedules WorkingSchedule[]
+  salaryStructures SalaryStructure[]
+  payruns          Payrun[]
+
+  @@map("companies")
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String
+  code      String?
+  companyId String
+  managerId String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  manager   Employee?  @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  employees Employee[] @relation("EmployeeDepartment")
+  contracts Contract[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@map("departments")
+}
+
+model JobPosition {
+  id        String   @id @default(cuid())
+  title     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employees Employee[]
+  contracts Contract[]
+
+  @@map("job_positions")
+}
+
+// ---------------------------------------------------------------------------
+// Employee — the hub every other record hangs from
+// ---------------------------------------------------------------------------
+
+model Employee {
+  id        String @id @default(cuid())
+  code      String @unique
+  firstName String
+  lastName  String
+
+  workEmail     String  @unique
+  personalEmail String?
+  phone         String?
+  avatarUrl     String?
+
+  companyId         String
+  departmentId      String?
+  jobPositionId     String?
+  managerId         String?
+  workingScheduleId String?
+
+  employeeType EmployeeType @default(FULL_TIME)
+  workLocation String?
+  timezone     String       @default("Asia/Kolkata")
+
+  // Absence of a bank account raises the MISSING_BANK_ACCOUNT warning
+  // before a payrun can be validated (rule W7).
+  bankAccount String?
+  bankName    String?
+  bankIfsc    String?
+
+  joinDate DateTime?
+  active   Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  department      Department?      @relation("EmployeeDepartment", fields: [departmentId], references: [id], onDelete: SetNull)
+  jobPosition     JobPosition?     @relation(fields: [jobPositionId], references: [id], onDelete: SetNull)
+  manager         Employee?        @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  workingSchedule WorkingSchedule? @relation(fields: [workingScheduleId], references: [id], onDelete: SetNull)
+
+  reports            Employee[]          @relation("EmployeeManager")
+  managedDepartments Department[]        @relation("DepartmentManager")
+  user               User?
+  contracts          Contract[]
+  attendances        Attendance[]
+  timeOffRequests    TimeOffRequest[]    @relation("RequestEmployee")
+  approvedRequests   TimeOffRequest[]    @relation("RequestApprover")
+  allocations        TimeOffAllocation[] @relation("AllocationEmployee")
+  approvedAllocations TimeOffAllocation[] @relation("AllocationApprover")
+  payslips           Payslip[]
+
+  @@index([companyId])
+  @@index([departmentId])
+  @@index([managerId])
+  @@index([active])
+  @@map("employees")
+}
+
+// ---------------------------------------------------------------------------
+// Access control
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  employeeId   String?    @unique
+  status       UserStatus @default(ACTIVE)
+  roles        Role[]     @default([EMPLOYEE])
+
+  // Bumped when roles or status change, which invalidates tokens already
+  // issued rather than waiting for them to expire (guardrail 10.2).
+  tokenVersion Int       @default(0)
+  lastLoginAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee  Employee?  @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  payruns   Payrun[]
+  auditLogs AuditLog[]
+
+  @@index([status])
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Working schedules
+// ---------------------------------------------------------------------------
+
+model WorkingSchedule {
+  id           String  @id @default(cuid())
+  name         String
+  companyId    String
+  calendarType String  @default("Standard")
+  timezone     String  @default("Asia/Kolkata")
+  active       Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company   Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  lines     ScheduleLine[]
+  employees Employee[]
+  contracts Contract[]
+
+  @@unique([companyId, name])
+  @@map("working_schedules")
+}
+
+/// One weekday row of a schedule. Weekly hours are derived by summing
+/// (end - start - break) across these lines and are never stored (rule S1).
+model ScheduleLine {
+  id         String  @id @default(cuid())
+  scheduleId String
+  dayOfWeek  Weekday
+
+  /// Minutes from midnight, so arithmetic needs no date context.
+  startMinute  Int
+  endMinute    Int
+  breakMinutes Int @default(0)
+
+  schedule WorkingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@unique([scheduleId, dayOfWeek])
+  @@index([scheduleId])
+  @@map("schedule_lines")
+}
+
+// ---------------------------------------------------------------------------
+// Contracts
+// ---------------------------------------------------------------------------
+
+model Contract {
+  id         String    @id @default(cuid())
+  reference  String    @unique
+  employeeId String
+  startDate  DateTime  @db.Date
+  /// Null means open-ended, which is what makes period resolution a range
+  /// overlap test rather than a "latest contract" lookup (rule C2).
+  endDate    DateTime? @db.Date
+
+  /// Monthly wage in integer paise.
+  wageMonthly Int
+
+  departmentId      String?
+  jobPositionId     String?
+  workingScheduleId String?
+  salaryStructureId String?
+
+  status ContractStatus @default(DRAFT)
+  notes  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee        Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  department      Department?      @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  jobPosition     JobPosition?     @relation(fields: [jobPositionId], references: [id], onDelete: SetNull)
+  workingSchedule WorkingSchedule? @relation(fields: [workingScheduleId], references: [id], onDelete: SetNull)
+  salaryStructure SalaryStructure? @relation(fields: [salaryStructureId], references: [id], onDelete: SetNull)
+
+  // Restrict, not Cascade: payroll history must never be orphaned by an
+  // HR-side deletion (guardrail 10.4).
+  payslips Payslip[]
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@map("contracts")
+}
+
+// ---------------------------------------------------------------------------
+// Attendance
+// ---------------------------------------------------------------------------
+
+model Attendance {
+  id         String    @id @default(cuid())
+  employeeId String
+  checkIn    DateTime
+  /// Null means an open session. A partial unique index enforces at most one
+  /// open session per employee (rule A3).
+  checkOut   DateTime?
+
+  /// Derived from the times and the schedule; stored for reporting speed but
+  /// always recomputed on write, never accepted from the client (rule A1).
+  workedMinutes   Int @default(0)
+  overtimeMinutes Int @default(0)
+
+  status       AttendanceStatus @default(PRESENT)
+  source       AttendanceSource @default(WIDGET)
+  editedByUserId String?
+  notes        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId, checkIn])
+  @@index([checkIn])
+  @@index([status])
+  @@map("attendances")
+}
+
+// ---------------------------------------------------------------------------
+// Time off
+// ---------------------------------------------------------------------------
+
+model TimeOffType {
+  id   String @id @default(cuid())
+  name String @unique
+  code String @unique
+
+  unit TimeOffUnit @default(DAYS)
+  /// When true, approving a request requires an approved allocation with
+  /// sufficient remaining balance (rule T3).
+  requiresAllocation Boolean @default(true)
+  approvalLevel      ApprovalLevel @default(MANAGER)
+
+  /// Label carried onto payroll work entries, e.g. "Leave Work Entry".
+  payrollWorkEntry String?
+  isPaid           Boolean @default(true)
+  color            String  @default("blue")
+  active           Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  allocations TimeOffAllocation[]
+  requests    TimeOffRequest[]
+
+  @@map("time_off_types")
+}
+
+/// Granted balance. Only an APPROVED allocation creates available leave
+/// (rule T1); taken and remaining are derived from approved requests, never
+/// stored as counters that can drift.
+model TimeOffAllocation {
+  id         String @id @default(cuid())
+  employeeId String
+  typeId     String
+  name       String
+
+  /// In the type's unit: days, or hours.
+  allocatedQty Float
+
+  validFrom DateTime  @db.Date
+  validTo   DateTime? @db.Date
+
+  status      TimeOffStatus @default(TO_APPROVE)
+  approverId  String?
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee Employee         @relation("AllocationEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+  approver Employee?        @relation("AllocationApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  type     TimeOffType      @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  requests TimeOffRequest[]
+
+  @@index([employeeId, typeId])
+  @@index([status])
+  @@map("time_off_allocations")
+}
+
+model TimeOffRequest {
+  id           String  @id @default(cuid())
+  employeeId   String
+  typeId       String
+  /// Which balance this request consumed, shown as "Allocation Used" on the
+  /// form so the link between request and balance is visible (rule T3).
+  allocationId String?
+
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  /// Working days (or hours) counted against the employee's schedule, not
+  /// raw calendar days (rule T6).
+  duration  Float
+
+  status     TimeOffStatus @default(TO_APPROVE)
+  approverId String?
+  reason     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee   Employee           @relation("RequestEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+  approver   Employee?          @relation("RequestApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  type       TimeOffType        @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  allocation TimeOffAllocation? @relation(fields: [allocationId], references: [id], onDelete: SetNull)
+
+  @@index([employeeId, startDate])
+  @@index([status])
+  @@index([allocationId])
+  @@map("time_off_requests")
+}
+
+// ---------------------------------------------------------------------------
+// Payroll configuration
+// ---------------------------------------------------------------------------
+
+model SalaryStructure {
+  id        String  @id @default(cuid())
+  name      String
+  code      String  @unique
+  companyId String
+  active    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company   Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  rules     SalaryRule[]
+  contracts Contract[]
+  payruns   Payrun[]
+  payslips  Payslip[]
+
+  @@unique([companyId, name])
+  @@map("salary_structures")
+}
+
+/// One computation line. Rules execute in ascending sequence so later rules
+/// can build on earlier results through the rule and category context
+/// (rules P1, P2). Sequence is unique per structure so the order is never
+/// ambiguous.
+model SalaryRule {
+  id          String       @id @default(cuid())
+  structureId String
+  name        String
+  code        String
+  category    RuleCategory
+  sequence    Int
+
+  computationType ComputationType @default(FIXED)
+
+  /// FIXED: amount in integer paise.
+  fixedAmount Int?
+
+  /// PERCENTAGE: percent of the chosen base. percentageRuleCode is used when
+  /// the base is another named rule.
+  percentage         Float?
+  percentageBase     PercentageBase?
+  percentageRuleCode String?
+
+  /// FORMULA: a restricted expression assigning to `result`, evaluated
+  /// against { contract, employee, worked, rules, categories } in a sandbox
+  /// (guardrail 10.5).
+  formula String?
+
+  quantity Float   @default(1)
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  structure SalaryStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  lines     PayslipLine[]
+
+  @@unique([structureId, code])
+  @@unique([structureId, sequence])
+  @@index([structureId, sequence])
+  @@map("salary_rules")
+}
+
+// ---------------------------------------------------------------------------
+// Payroll processing
+// ---------------------------------------------------------------------------
+
+model Payrun {
+  id        String @id @default(cuid())
+  name      String
+  companyId String
+
+  salaryStructureId String
+  employeeTypeScope EmployeeType?
+
+  periodStart DateTime @db.Date
+  periodEnd   DateTime @db.Date
+
+  status PayrunStatus @default(DRAFT)
+
+  /// Optimistic lock: two officers clicking Compute at once cannot interleave
+  /// (guardrail 10.6).
+  version Int @default(0)
+
+  createdByUserId String?
+  computedAt      DateTime?
+  validatedAt     DateTime?
+  paidAt          DateTime?
+  payslipsSentAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  salaryStructure SalaryStructure @relation(fields: [salaryStructureId], references: [id], onDelete: Restrict)
+  createdBy       User?           @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+  payslips        Payslip[]
+  warnings        PayrollWarning[]
+
+  @@index([companyId, periodStart])
+  @@index([status])
+  @@map("payruns")
+}
+
+model Payslip {
+  id     String @id @default(cuid())
+  number String @unique
+
+  payrunId    String
+  employeeId  String
+  /// Snapshotted so editing a contract later cannot retroactively alter a
+  /// paid payslip (rule C5).
+  contractId  String
+  structureId String
+
+  periodStart DateTime @db.Date
+  periodEnd   DateTime @db.Date
+
+  /// The wage actually used for this computation, in paise. Also snapshotted.
+  contractWage Int
+
+  workedDays    Float @default(0)
+  workedMinutes Int   @default(0)
+  leaveDays     Float @default(0)
+
+  /// Category totals in integer paise. Deductions are negative, so
+  /// net = gross + sum(deductions) is a plain addition (rules P6, P7).
+  basicAmount     Int @default(0)
+  allowanceAmount Int @default(0)
+  grossAmount     Int @default(0)
+  deductionAmount Int @default(0)
+  netAmount       Int @default(0)
+
+  status  PayslipStatus @default(DRAFT)
+  version Int           @default(0)
+
+  pdfPath     String?
+  emailSentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payrun    Payrun          @relation(fields: [payrunId], references: [id], onDelete: Cascade)
+  employee  Employee        @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  contract  Contract        @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  structure SalaryStructure @relation(fields: [structureId], references: [id], onDelete: Restrict)
+  lines     PayslipLine[]
+  warnings  PayrollWarning[]
+
+  @@unique([payrunId, employeeId])
+  @@index([employeeId, periodStart])
+  @@index([status])
+  @@map("payslips")
+}
+
+/// One computed rule result. Rule metadata is denormalised onto the line so a
+/// payslip stays readable even if the rule is later renamed or deleted.
+model PayslipLine {
+  id        String @id @default(cuid())
+  payslipId String
+  ruleId    String?
+
+  code     String
+  name     String
+  category RuleCategory
+  sequence Int
+
+  quantity Float @default(1)
+  rate     Float @default(0)
+  /// Integer paise. Negative for deductions.
+  amount   Int
+
+  payslip Payslip     @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+  rule    SalaryRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+
+  @@unique([payslipId, code])
+  @@index([payslipId, sequence])
+  @@map("payslip_lines")
+}
+
+/// Payroll issues surfaced before finalisation (rule W7). Attached to a
+/// payslip where employee-specific, or to the payrun where not.
+model PayrollWarning {
+  id        String @id @default(cuid())
+  payrunId  String
+  payslipId String?
+
+  code    WarningCode
+  message String
+  /// Blocking warnings prevent Validate; advisory ones need acknowledgement.
+  blocking Boolean @default(false)
+
+  acknowledgedAt     DateTime?
+  acknowledgedByUserId String?
+
+  createdAt DateTime @default(now())
+
+  payrun  Payrun   @relation(fields: [payrunId], references: [id], onDelete: Cascade)
+  payslip Payslip? @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+
+  @@index([payrunId])
+  @@index([payslipId])
+  @@map("payroll_warnings")
+}
+
+// ---------------------------------------------------------------------------
+// Audit
+// ---------------------------------------------------------------------------
+
+/// Manual attendance edits, approvals, role changes and workflow transitions.
+/// Feeds the dashboard's "manual attendance edits" counter (guardrail 10.9).
+model AuditLog {
+  id       String  @id @default(cuid())
+  userId   String?
+  action   String
+  entity   String
+  entityId String
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
