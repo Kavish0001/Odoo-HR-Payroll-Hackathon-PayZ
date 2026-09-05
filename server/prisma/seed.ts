@@ -101,10 +101,31 @@ function assertLocalDatabase(): void {
 const at = (hour: number, minute = 0): number => hour * 60 + minute;
 const day = (iso: string): Date => new Date(`${iso}T00:00:00Z`);
 
+/**
+ * A wall-clock instant on a given day.
+ *
+ * Days are generated at UTC midnight, but attendance is judged with
+ * getHours(), which is local. Writing 09:00 UTC therefore reads back as
+ * half past two in the afternoon in IST, which marks almost everybody late
+ * and pushes check-outs past midnight. Building the instant from the local
+ * calendar day makes the stored time mean what it says.
+ */
+function atLocal(day: Date, minutes: number): Date {
+  return new Date(
+    day.getUTCFullYear(),
+    day.getUTCMonth(),
+    day.getUTCDate(),
+    0,
+    minutes,
+    0,
+    0,
+  );
+}
+
 /** 23:59 on the day a punch happened, for closing a forgotten check-out. */
 function endOfSeedDay(date: Date): Date {
   const end = new Date(date);
-  end.setUTCHours(23, 59, 0, 0);
+  end.setHours(23, 59, 0, 0);
   return end;
 }
 
@@ -538,8 +559,8 @@ async function main(): Promise<void> {
       if (roll < 0.04) {
         attendanceRows.push({
           employeeId: employee.id,
-          checkIn: new Date(date.getTime() + at(9) * 60_000),
-          checkOut: new Date(date.getTime() + at(9) * 60_000),
+          checkIn: atLocal(date, at(9)),
+          checkOut: atLocal(date, at(9)),
           workedMinutes: 0,
           overtimeMinutes: 0,
           status: 'ABSENT',

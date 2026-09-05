@@ -159,7 +159,7 @@ export function ContractFormPage(): React.JSX.Element {
       />
 
       {contractQuery.isError && !isNew && (
-        <p className="border-danger/30 bg-danger/5 text-danger mb-4 rounded-md border px-3 py-2 text-sm">
+        <p className="border-danger-line bg-danger-soft text-ink mb-4 rounded-sm border px-3 py-2 text-sm">
           Could not load this contract. The API may still be starting up.
         </p>
       )}

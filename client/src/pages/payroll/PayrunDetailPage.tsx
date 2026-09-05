@@ -107,7 +107,7 @@ export function PayrunDetailPage(): React.JSX.Element {
   }
   if (payrunQuery.isError || payrun === undefined) {
     return (
-      <p className="border-danger/30 bg-danger/5 text-danger rounded-md border px-3 py-2 text-sm">
+      <p className="border-danger-line bg-danger-soft text-ink rounded-sm border px-3 py-2 text-sm">
         Could not load this payrun.
       </p>
     );
@@ -243,7 +243,7 @@ export function PayrunDetailPage(): React.JSX.Element {
       )}
 
       {actionError !== null && (
-        <p className="border-danger/30 bg-danger/5 text-danger mb-4 rounded-md border px-3 py-2 text-sm">
+        <p className="border-danger-line bg-danger-soft text-ink mb-4 rounded-sm border px-3 py-2 text-sm">
           {actionError}
         </p>
       )}
@@ -308,7 +308,7 @@ function WarningRow({
   onAcknowledge?: (() => void) | undefined;
 }): React.JSX.Element {
   const tone = warning.blocking
-    ? 'border-danger-line bg-danger-soft text-danger-strong'
+    ? 'border-danger-line bg-danger-soft text-ink'
     : 'border-warning-line bg-warning-soft text-warning-strong';
 
   return (

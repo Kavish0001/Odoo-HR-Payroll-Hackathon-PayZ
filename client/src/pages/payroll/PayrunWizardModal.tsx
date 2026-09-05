@@ -235,7 +235,7 @@ export function PayrunWizardModal(): React.JSX.Element {
             </div>
 
             {scopeError !== null && (
-              <p className="border-danger/30 bg-danger/5 text-danger rounded-md border px-3 py-2 text-sm">
+              <p className="border-danger-line bg-danger-soft text-ink rounded-sm border px-3 py-2 text-sm">
                 {scopeError}
               </p>
             )}
@@ -362,7 +362,7 @@ export function PayrunWizardModal(): React.JSX.Element {
             </div>
 
             {createError !== null && (
-              <p className="border-danger/30 bg-danger/5 text-danger rounded-md border px-3 py-2 text-sm">
+              <p className="border-danger-line bg-danger-soft text-ink rounded-sm border px-3 py-2 text-sm">
                 {createError}
               </p>
             )}

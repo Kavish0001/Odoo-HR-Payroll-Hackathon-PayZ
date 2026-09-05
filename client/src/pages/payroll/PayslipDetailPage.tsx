@@ -22,7 +22,7 @@ export function PayslipDetailPage(): React.JSX.Element {
   }
   if (payslipQuery.isError || payslip === undefined) {
     return (
-      <p className="border-danger/30 bg-danger/5 text-danger rounded-md border px-3 py-2 text-sm">
+      <p className="border-danger-line bg-danger-soft text-ink rounded-sm border px-3 py-2 text-sm">
         Could not load this payslip.
       </p>
     );
@@ -150,10 +150,14 @@ export function PayslipDetailPage(): React.JSX.Element {
                       <td className="px-4 py-2.5">
                         <CategoryBadge category={line.category} />
                       </td>
+                      {/* A deduction is a routine part of a payslip, not an
+                          alarm. The minus sign already says which direction it
+                          runs, so the accent stays reserved for things needing
+                          action. */}
                       <td
                         className={`px-4 py-2.5 text-right font-mono ${
                           isDeduction
-                            ? 'text-danger'
+                            ? 'text-muted'
                             : emphasise
                               ? 'font-semibold'
                               : ''
