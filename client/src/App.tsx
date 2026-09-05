@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppLayout } from './layouts/AppLayout.js';
+import { RequirePermission } from './layouts/RequirePermission.js';
 import { AuthProvider } from './lib/auth.js';
 import { UserFormPage } from './pages/admin/UserFormPage.js';
 import { UsersListPage } from './pages/admin/UsersListPage.js';
@@ -109,8 +110,21 @@ export function App(): React.JSX.Element {
             <Route path="/payroll/rules" element={<SalaryRulesListPage />} />
             <Route path="/payroll/rules/:id" element={<SalaryRuleFormPage />} />
             <Route path="/dashboard" element={<PayrollDashboardPage />} />
-            <Route path="/admin/users" element={<UsersListPage />} />
-            <Route path="/admin/users/:id" element={<UserFormPage />} />
+            {/* Rule R5: account and role management is the admin's alone.
+                The API refuses these routes to anyone else regardless; this
+                gate makes the refusal a sentence instead of an empty table. */}
+            <Route
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="user"
+                  label="User Management"
+                />
+              }
+            >
+              <Route path="/admin/users" element={<UsersListPage />} />
+              <Route path="/admin/users/:id" element={<UserFormPage />} />
+            </Route>
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -31,6 +31,8 @@ import {
 } from '../common/pagination.js';
 import { idParamsSchema } from '../common/params.js';
 
+import { refuseSelfElevation } from './self-elevation.js';
+
 export const usersRouter: Router = Router();
 
 /** What the admin list shows. The password hash never leaves the server. */
@@ -89,28 +91,6 @@ function toRow(user: UserRecord): UserRow {
     departmentName: user.employee?.department?.name ?? null,
     lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
   };
-}
-
-/**
- * Rule R5: a user may not change their own roles or status.
- *
- * Enforced in the service rather than the controller, so it holds for every
- * caller. Without it, the only thing stopping an admin demotion mistake, or a
- * compromised session escalating itself, would be the UI hiding a control.
- */
-function refuseSelfElevation(
-  actingUserId: string,
-  targetUserId: string,
-  body: { roles?: unknown; status?: unknown },
-): void {
-  if (actingUserId !== targetUserId) {
-    return;
-  }
-  if (body.roles !== undefined || body.status !== undefined) {
-    throw forbidden(
-      'You cannot change your own roles or account status. Ask another administrator.',
-    );
-  }
 }
 
 const userQuerySchema = paginationSchema.extend({

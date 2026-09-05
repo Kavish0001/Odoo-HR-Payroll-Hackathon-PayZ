@@ -92,11 +92,24 @@ describe('employee role (rule R2)', () => {
 });
 
 describe('user management is admin only (rule R5)', () => {
-  it('refuses every non-admin role', () => {
+  // Every action, not just the two that were easy to think of: a matrix row
+  // is edited under time pressure, and 'create' is the one that hands out
+  // roles.
+  it('refuses every non-admin role, for every action', () => {
     for (const role of ROLES) {
       const expected = role === 'ADMIN';
-      expect(can([role], 'read', 'user')).toBe(expected);
-      expect(can([role], 'update', 'user')).toBe(expected);
+      for (const action of ACTIONS) {
+        expect(can([role], action, 'user')).toBe(expected);
+      }
+    }
+  });
+
+  // Ranks are compared, not memberships, so a role list must not become more
+  // powerful than its strongest member.
+  it('cannot be reached by combining lesser roles', () => {
+    const everyoneBelowAdmin = ROLES.filter((role) => role !== 'ADMIN');
+    for (const action of ACTIONS) {
+      expect(can(everyoneBelowAdmin, action, 'user')).toBe(false);
     }
   });
 });
