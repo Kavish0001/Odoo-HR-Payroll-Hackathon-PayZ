@@ -42,9 +42,9 @@ function toDateOnly(date: Date): string {
 
 function toRow(contract: ContractWithRelations): ContractRow {
   return {
-    id: contract.id,
+    id: String(contract.id),
     reference: contract.reference,
-    employeeId: contract.employeeId,
+    employeeId: String(contract.employeeId),
     employeeName: `${contract.employee.firstName} ${contract.employee.lastName}`,
     departmentName: contract.department?.name ?? null,
     jobPositionTitle: contract.jobPosition?.title ?? null,
@@ -100,10 +100,10 @@ interface RunningContractRef {
 }
 
 async function findOverlappingRunning(
-  employeeId: string,
+  employeeId: number,
   startDate: Date,
   endDate: Date | null,
-  excludeContractId: string | undefined,
+  excludeContractId: number | undefined,
 ): Promise<RunningContractRef | null> {
   const runningContracts = await prisma.contract.findMany({
     where: {
@@ -186,7 +186,7 @@ contractsRouter.get(
   requirePermission('read', 'contract'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const contract = await prisma.contract.findUnique({
       where: { id },
@@ -241,7 +241,7 @@ contractsRouter.patch(
   requirePermission('update', 'contract'),
   validate({ params: idParamsSchema, body: contractSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const body = req.body as z.infer<typeof contractSchema>;
 
     if (body.status === 'RUNNING') {
@@ -283,7 +283,7 @@ contractsRouter.delete(
   requirePermission('delete', 'contract'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     try {
       // Never hard-deleted: a payslip can reference a contract with a

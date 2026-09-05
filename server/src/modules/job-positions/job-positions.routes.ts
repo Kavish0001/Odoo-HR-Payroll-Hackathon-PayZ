@@ -42,7 +42,7 @@ type JobPositionWithCounts = Prisma.JobPositionGetPayload<
 
 function toRow(position: JobPositionWithCounts): JobPositionRow {
   return {
-    id: position.id,
+    id: String(position.id),
     title: position.title,
     employeeCount: position._count.employees,
     contractCount: position._count.contracts,
@@ -86,7 +86,7 @@ jobPositionsRouter.get(
   requirePermission('read', 'jobPosition'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const position = await prisma.jobPosition.findUnique({
       where: { id },
@@ -126,7 +126,7 @@ jobPositionsRouter.patch(
   requirePermission('update', 'jobPosition'),
   validate({ params: idParamsSchema, body: jobPositionSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const body = req.body as z.infer<typeof jobPositionSchema>;
 
     try {
@@ -154,7 +154,7 @@ jobPositionsRouter.delete(
   requirePermission('delete', 'jobPosition'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     try {
       // Soft delete: contracts and employees keep pointing at this position

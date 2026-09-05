@@ -5,7 +5,7 @@ import { prisma } from '../../config/prisma.js';
  * company" per the design plan). Looked up rather than accepted from the
  * client, so a create can never be pointed at a tenant that does not exist.
  */
-export async function getDefaultCompanyId(): Promise<string> {
+export async function getDefaultCompanyId(): Promise<number> {
   const company = await prisma.company.findFirst({
     select: { id: true },
     orderBy: { createdAt: 'asc' },

@@ -59,7 +59,7 @@ function toRow(
   employeeCount: number,
 ): SalaryStructureRow {
   return {
-    id: structure.id,
+    id: String(structure.id),
     name: structure.name,
     code: structure.code,
     active: structure.active,
@@ -146,7 +146,7 @@ salaryStructuresRouter.get(
   requirePermission('read', 'salaryStructure'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const structure: StructureWithRules | null =
       await prisma.salaryStructure.findUnique({
@@ -202,7 +202,7 @@ salaryStructuresRouter.patch(
   requirePermission('update', 'salaryStructure'),
   validate({ params: idParamsSchema, body: salaryStructureSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const body = req.body as SalaryStructureInput;
 
     try {
@@ -235,7 +235,7 @@ salaryStructuresRouter.delete(
   requirePermission('delete', 'salaryStructure'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     try {
       // Soft delete: contracts, payruns and payslips may reference this

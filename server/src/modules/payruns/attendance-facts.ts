@@ -43,7 +43,7 @@ export function countWeekdays(start: Date, end: Date): number {
 const STANDARD_DAY_MINUTES = 480;
 
 export async function computeWorkedFacts(
-  employeeId: string,
+  employeeId: number,
   periodStart: Date,
   periodEnd: Date,
   client: AttendanceLookupClient = defaultPrisma,

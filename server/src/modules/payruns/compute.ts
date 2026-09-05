@@ -1,6 +1,6 @@
-import { type Prisma } from '@prisma/client';
+import { type Contract, type Prisma } from '@prisma/client';
 
-import { resolvePeriodContract } from '../contracts/resolve-period-contract.js';
+import { selectPeriodContract } from '../contracts/resolve-period-contract.js';
 import {
   computePayslip,
   PayrollComputationError,
@@ -40,8 +40,8 @@ function seniorityYears(periodStart: Date, joinDate: Date | null): number {
 }
 
 interface PayrunForCompute {
-  id: string;
-  salaryStructureId: string;
+  id: number;
+  salaryStructureId: number;
   periodStart: Date;
   periodEnd: Date;
 }
@@ -61,15 +61,31 @@ export async function computePayrunPayslips(
     include: { employee: true },
   });
 
+  /**
+   * Every contract this payrun could possibly need, in one query.
+   *
+   * Resolving the period contract per employee meant a round trip per
+   * payslip, inside the transaction -- for a 122-employee run that was 122
+   * sequential queries and the bulk of the compute time. The overlap rule
+   * itself is unchanged; only the fetching moved.
+   */
+  const contractsByEmployee = new Map<number, Contract[]>();
+  for (const contract of await tx.contract.findMany({
+    where: { employeeId: { in: payslips.map((p) => p.employeeId) } },
+  })) {
+    const forEmployee = contractsByEmployee.get(contract.employeeId) ?? [];
+    forEmployee.push(contract);
+    contractsByEmployee.set(contract.employeeId, forEmployee);
+  }
+
   for (const payslip of payslips) {
     const { employee } = payslip;
     const fullName = `${employee.firstName} ${employee.lastName}`;
 
-    const contract = await resolvePeriodContract(
-      employee.id,
+    const contract = selectPeriodContract(
+      contractsByEmployee.get(employee.id) ?? [],
       payrun.periodStart,
       payrun.periodEnd,
-      tx,
     );
 
     if (contract?.salaryStructureId !== payrun.salaryStructureId) {

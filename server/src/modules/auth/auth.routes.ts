@@ -161,7 +161,7 @@ authRouter.post(
   },
 );
 
-async function loadSessionUser(userId: string): Promise<SessionUser> {
+async function loadSessionUser(userId: number): Promise<SessionUser> {
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
     select: {
@@ -179,11 +179,13 @@ async function loadSessionUser(userId: string): Promise<SessionUser> {
     },
   });
 
+  // The wire boundary: ids are integers in Postgres and strings in JSON, so
+  // the browser never has to know which.
   return {
-    id: user.id,
+    id: String(user.id),
     email: user.email,
     roles: user.roles,
-    employeeId: user.employeeId,
+    employeeId: user.employeeId === null ? null : String(user.employeeId),
     employeeName:
       user.employee === null
         ? null

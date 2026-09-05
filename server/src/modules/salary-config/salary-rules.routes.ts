@@ -33,6 +33,7 @@ import {
   assertRuleSaveable,
   toRuleDefinition,
   toRuleDefinitionFromInput,
+  UNSAVED_RULE_ID,
   toSalaryRuleRow,
 } from './helpers.js';
 
@@ -85,7 +86,7 @@ function toRuleData(body: SalaryRuleInput) {
  */
 async function translateRuleError(
   error: unknown,
-  structureId: string,
+  structureId: number,
   body: { sequence: number; code: string },
 ): Promise<unknown> {
   if (
@@ -207,7 +208,7 @@ salaryRulesRouter.get(
   requirePermission('read', 'salaryRule'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const rule = await prisma.salaryRule.findUnique({
       where: { id },
@@ -234,7 +235,7 @@ salaryRulesRouter.post(
     });
     assertRuleSaveable([
       ...siblings.map(toRuleDefinition),
-      toRuleDefinitionFromInput(body, 'NEW'),
+      toRuleDefinitionFromInput(body, UNSAVED_RULE_ID),
     ]);
 
     try {
@@ -255,7 +256,7 @@ salaryRulesRouter.patch(
   requirePermission('update', 'salaryRule'),
   validate({ params: idParamsSchema, body: salaryRuleSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const body = req.body as SalaryRuleInput;
 
     const siblings = await prisma.salaryRule.findMany({
@@ -291,7 +292,7 @@ salaryRulesRouter.delete(
   requirePermission('delete', 'salaryRule'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     try {
       // Soft delete: a payslip line may still reference this rule

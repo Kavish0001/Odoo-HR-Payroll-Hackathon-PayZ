@@ -46,7 +46,7 @@ function toLineRow(
   line: ScheduleWithRelations['lines'][number],
 ): ScheduleLineRow {
   return {
-    id: line.id,
+    id: String(line.id),
     dayOfWeek: line.dayOfWeek,
     startMinute: line.startMinute,
     endMinute: line.endMinute,
@@ -60,7 +60,7 @@ function toRow(
   includeLines: boolean,
 ): WorkingScheduleRow {
   return {
-    id: schedule.id,
+    id: String(schedule.id),
     name: schedule.name,
     calendarType: schedule.calendarType,
     companyName: schedule.company.name,
@@ -115,7 +115,7 @@ schedulesRouter.get(
   requirePermission('read', 'workingSchedule'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const schedule = await prisma.workingSchedule.findUnique({
       where: { id },
@@ -163,7 +163,7 @@ schedulesRouter.patch(
   requirePermission('update', 'workingSchedule'),
   validate({ params: idParamsSchema, body: workingScheduleSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const body = req.body as z.infer<typeof workingScheduleSchema>;
 
     try {
@@ -203,7 +203,7 @@ schedulesRouter.delete(
   requirePermission('delete', 'workingSchedule'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     try {
       // Soft delete: contracts and employees already assigned keep their

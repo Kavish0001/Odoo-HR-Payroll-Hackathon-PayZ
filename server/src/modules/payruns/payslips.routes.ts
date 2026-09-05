@@ -74,7 +74,7 @@ payslipsRouter.get(
   requirePermission('read', 'payslip'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const payslip = await prisma.payslip.findUnique({
       where: { id },
@@ -100,7 +100,7 @@ payslipsRouter.get(
   requirePermission('read', 'payslip'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const payslip = await prisma.payslip.findUnique({
       where: { id },

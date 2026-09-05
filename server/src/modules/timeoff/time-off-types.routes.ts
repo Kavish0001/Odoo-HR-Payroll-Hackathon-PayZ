@@ -33,7 +33,7 @@ type TypeQuery = z.infer<typeof typeQuerySchema>;
 
 function toRow(type: TimeOffType): TimeOffTypeRow {
   return {
-    id: type.id,
+    id: String(type.id),
     name: type.name,
     code: type.code,
     unit: type.unit,
@@ -115,7 +115,7 @@ timeOffTypesRouter.get(
   requirePermission('read', 'timeOffType'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const type = await prisma.timeOffType.findUnique({ where: { id } });
     if (type === null) {
@@ -149,7 +149,7 @@ timeOffTypesRouter.patch(
   requirePermission('update', 'timeOffType'),
   validate({ params: idParamsSchema, body: timeOffTypeSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const body = req.body as z.infer<typeof timeOffTypeSchema>;
 
     try {
@@ -176,7 +176,7 @@ timeOffTypesRouter.delete(
   requirePermission('delete', 'timeOffType'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     try {
       // Soft delete: allocations and requests reference a type with a

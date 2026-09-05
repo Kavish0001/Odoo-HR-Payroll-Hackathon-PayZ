@@ -45,10 +45,11 @@ type DepartmentWithRelations = Prisma.DepartmentGetPayload<
 
 function toDetail(department: DepartmentWithRelations): DepartmentDetail {
   return {
-    id: department.id,
+    id: String(department.id),
     name: department.name,
     code: department.code,
-    managerId: department.managerId,
+    managerId:
+      department.managerId === null ? null : String(department.managerId),
     managerName:
       department.manager === null
         ? null
@@ -97,7 +98,7 @@ departmentsRouter.get(
   requirePermission('read', 'department'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const department = await prisma.department.findUnique({
       where: { id },
@@ -144,7 +145,7 @@ departmentsRouter.patch(
   requirePermission('update', 'department'),
   validate({ params: idParamsSchema, body: departmentSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const body = req.body as z.infer<typeof departmentSchema>;
 
     try {
@@ -177,7 +178,7 @@ departmentsRouter.delete(
   requirePermission('delete', 'department'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     try {
       // Soft delete: a department may be referenced by historical contracts

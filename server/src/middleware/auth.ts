@@ -19,10 +19,10 @@ import { SESSION_COOKIE, verifySession } from '../modules/auth/session.js';
 import { forbidden, unauthorized } from './errors.js';
 
 export interface AuthenticatedUser {
-  id: string;
+  id: number;
   email: string;
   roles: Role[];
-  employeeId: string | null;
+  employeeId: number | null;
 }
 
 declare global {
@@ -158,7 +158,7 @@ export function requireRole(minimum: Role): RequestHandler {
 export function selfScope(
   req: Request,
   field = 'employeeId',
-): Record<string, string> | Record<string, never> {
+): Record<string, number> | Record<string, never> {
   const user = getUser(req);
   if (!isSelfScoped(user.roles)) {
     return {};
@@ -171,8 +171,14 @@ export function selfScope(
   return { [field]: user.employeeId };
 }
 
-/** True when the caller may only act on their own records. */
-export function mustBeSelf(req: Request, employeeId: string): void {
+/**
+ * True when the caller may only act on their own records.
+ *
+ * Both sides are numbers, and they have to stay that way. `1 !== '1'` is true,
+ * so a stray string on either side turns this into a check that refuses
+ * everybody -- annoying, but at least loud.
+ */
+export function mustBeSelf(req: Request, employeeId: number): void {
   const user = getUser(req);
   if (isSelfScoped(user.roles) && user.employeeId !== employeeId) {
     throw forbidden('You may only access your own records');
@@ -182,10 +188,15 @@ export function mustBeSelf(req: Request, employeeId: string): void {
 /**
  * An employee can never approve their own request, whatever role they hold
  * (rule T8).
+ *
+ * This one fails the other way from `mustBeSelf`, which is why the types
+ * matter more here: `1 === '1'` is false, so a stray string would make this
+ * check pass silently and let an employee approve their own leave. Both sides
+ * are numbers and the compiler now refuses anything else.
  */
 export function refuseSelfApproval(
   req: Request,
-  requestEmployeeId: string,
+  requestEmployeeId: number,
 ): void {
   const user = getUser(req);
   if (user.employeeId !== null && user.employeeId === requestEmployeeId) {

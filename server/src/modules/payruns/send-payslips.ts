@@ -17,8 +17,8 @@ import { logger } from '../../config/logger.js';
 const SEND_CONCURRENCY = 3;
 
 export interface PayslipMailTarget {
-  payslipId: string;
-  employeeId: string;
+  payslipId: number;
+  employeeId: number;
   employeeEmail: string;
   employeeName: string;
   number: string;
@@ -27,8 +27,8 @@ export interface PayslipMailTarget {
 }
 
 export interface SendResult {
-  payslipId: string;
-  employeeId: string;
+  payslipId: number;
+  employeeId: number;
   success: boolean;
   error?: string;
 }
@@ -238,7 +238,7 @@ async function mapWithConcurrency<T, R>(
  */
 export async function sendPayslipsForPayrun(
   targets: readonly PayslipMailTarget[],
-  buildPdf?: (payslipId: string) => Promise<Buffer>,
+  buildPdf?: (payslipId: number) => Promise<Buffer>,
 ): Promise<SendResult[]> {
   const redirectTo = env.MAIL_REDIRECT_TO.trim();
 

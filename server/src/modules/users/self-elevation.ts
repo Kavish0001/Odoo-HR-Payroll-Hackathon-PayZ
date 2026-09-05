@@ -16,8 +16,8 @@ import { forbidden } from '../../middleware/errors.js';
  * than as a line of controller plumbing.
  */
 export function refuseSelfElevation(
-  actingUserId: string,
-  targetUserId: string,
+  actingUserId: number,
+  targetUserId: number,
   body: { roles?: unknown; status?: unknown },
 ): void {
   if (actingUserId !== targetUserId) {

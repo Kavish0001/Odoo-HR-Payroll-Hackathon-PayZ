@@ -58,10 +58,10 @@ function toRow(
     takenQty,
   );
   return {
-    id: allocation.id,
-    employeeId: allocation.employeeId,
+    id: String(allocation.id),
+    employeeId: String(allocation.employeeId),
     employeeName: `${allocation.employee.firstName} ${allocation.employee.lastName}`,
-    typeId: allocation.typeId,
+    typeId: String(allocation.typeId),
     typeName: allocation.type.name,
     unit: allocation.type.unit,
     name: allocation.name,
@@ -152,7 +152,7 @@ allocationsRouter.get(
   requirePermission('read', 'timeOffAllocation'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const allocation = await prisma.timeOffAllocation.findUnique({
       where: { id },
@@ -192,7 +192,7 @@ allocationsRouter.patch(
   requirePermission('update', 'timeOffAllocation'),
   validate({ params: idParamsSchema, body: allocationSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const body = req.body as z.infer<typeof allocationSchema>;
 
     try {
@@ -223,7 +223,7 @@ allocationsRouter.delete(
   requirePermission('delete', 'timeOffAllocation'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     try {
       // Never hard-deleted: linked requests reference an allocation with a
@@ -252,7 +252,7 @@ allocationsRouter.post(
   requirePermission('update', 'timeOffAllocation'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const allocation = await prisma.timeOffAllocation.findUnique({
       where: { id },
@@ -290,7 +290,7 @@ allocationsRouter.post(
   requirePermission('update', 'timeOffAllocation'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const allocation = await prisma.timeOffAllocation.findUnique({
       where: { id },

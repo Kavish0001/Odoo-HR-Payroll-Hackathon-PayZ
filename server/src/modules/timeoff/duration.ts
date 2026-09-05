@@ -77,7 +77,7 @@ export type ScheduleLookupClient = Pick<PrismaClient, 'employee'>;
 /** The employee's schedule lines, or `[]` when they have no schedule assigned. */
 export async function fetchEmployeeScheduleLines(
   client: ScheduleLookupClient,
-  employeeId: string,
+  employeeId: number,
 ): Promise<ScheduleLineLike[]> {
   const employee = await client.employee.findUnique({
     where: { id: employeeId },

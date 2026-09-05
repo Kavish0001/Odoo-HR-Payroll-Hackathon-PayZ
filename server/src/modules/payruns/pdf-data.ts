@@ -27,7 +27,7 @@ function maskAccount(account: string | null): string | null {
 }
 
 export async function loadPayslipPdfData(
-  payslipId: string,
+  payslipId: number,
 ): Promise<PayslipPdfData> {
   const payslip = await prisma.payslip.findUnique({
     where: { id: payslipId },

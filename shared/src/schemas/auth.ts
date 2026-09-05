@@ -35,7 +35,16 @@ export const createUserSchema = z.object({
   status: z.enum(USER_STATUSES).default('ACTIVE'),
 });
 
-export type CreateUserInput = z.infer<typeof createUserSchema>;
+/**
+ * What a caller *sends*, not what the server reads back.
+ *
+ * `idSchema` coerces, so `z.infer` would describe `employeeId` as the number
+ * the server ends up with, while the form that builds this payload holds the
+ * string a `<select>` gave it. `z.input` is the side of the coercion the
+ * client is actually on; the routes type their parsed body with `z.infer`
+ * separately and so still see numbers.
+ */
+export type CreateUserInput = z.input<typeof createUserSchema>;
 
 export const updateUserSchema = createUserSchema
   .partial()
@@ -44,7 +53,7 @@ export const updateUserSchema = createUserSchema
     password: passwordSchema.optional(),
   });
 
-export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type UpdateUserInput = z.input<typeof updateUserSchema>;
 
 export const changePasswordSchema = z
   .object({

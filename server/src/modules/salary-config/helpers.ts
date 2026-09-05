@@ -22,8 +22,8 @@ export function toSalaryRuleRow(
   structureName: string,
 ): SalaryRuleRow {
   return {
-    id: rule.id,
-    structureId: rule.structureId,
+    id: String(rule.id),
+    structureId: String(rule.structureId),
     structureName,
     name: rule.name,
     code: rule.code,
@@ -58,10 +58,20 @@ export function toRuleDefinition(rule: SalaryRule): RuleDefinition {
   };
 }
 
+/**
+ * A rule id that belongs to no row.
+ *
+ * The create path validates a rule against its siblings before it exists, and
+ * with `autoincrement()` there is no id to quote until after the insert. Zero
+ * is safe as the stand-in because `idSchema` requires a positive integer and
+ * the sequence starts at one, so it can never collide with a saved rule.
+ */
+export const UNSAVED_RULE_ID = 0;
+
 /** The same shape, built from a not-yet-saved form submission. */
 export function toRuleDefinitionFromInput(
   body: SalaryRuleInput,
-  id: string,
+  id: number,
 ): RuleDefinition {
   return {
     id,
@@ -105,8 +115,8 @@ export function assertRuleSaveable(
  * structures list renders every row's employee count at once.
  */
 export async function employeeCountsByStructure(
-  structureIds: readonly string[],
-): Promise<Map<string, number>> {
+  structureIds: readonly number[],
+): Promise<Map<number, number>> {
   if (structureIds.length === 0) {
     return new Map();
   }
@@ -116,17 +126,17 @@ export async function employeeCountsByStructure(
     where: { salaryStructureId: { in: [...structureIds] } },
   });
 
-  const sets = new Map<string, Set<string>>();
+  const sets = new Map<number, Set<number>>();
   for (const row of rows) {
     if (row.salaryStructureId === null) {
       continue;
     }
-    const set = sets.get(row.salaryStructureId) ?? new Set<string>();
+    const set = sets.get(row.salaryStructureId) ?? new Set<number>();
     set.add(row.employeeId);
     sets.set(row.salaryStructureId, set);
   }
 
-  const counts = new Map<string, number>();
+  const counts = new Map<number, number>();
   for (const [id, set] of sets) {
     counts.set(id, set.size);
   }

@@ -29,7 +29,7 @@ import {
  */
 
 export interface RuleDefinition {
-  id: string;
+  id: number;
   code: string;
   name: string;
   category: RuleCategory;
@@ -56,7 +56,7 @@ export interface ComputeInput {
 }
 
 export interface ComputedLine {
-  ruleId: string;
+  ruleId: number;
   code: string;
   name: string;
   category: RuleCategory;

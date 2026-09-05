@@ -33,7 +33,7 @@ export function startOfToday(now: Date = new Date()): Date {
  * "nothing to do" and "we just tidied up after a forgotten punch".
  */
 export async function closeStaleSessions(
-  employeeId: string,
+  employeeId: number,
   now: Date = new Date(),
   client: StaleSessionClient = defaultPrisma,
 ): Promise<number> {
@@ -59,10 +59,10 @@ export async function closeStaleSessions(
 
 /** The open row for today, if there is one. Older rows are never live. */
 export async function findLiveSession(
-  employeeId: string,
+  employeeId: number,
   now: Date = new Date(),
   client: StaleSessionClient = defaultPrisma,
-): Promise<{ id: string; checkIn: Date } | null> {
+): Promise<{ id: number; checkIn: Date } | null> {
   return client.attendance.findFirst({
     where: {
       employeeId,

@@ -64,7 +64,7 @@ function initials(firstName: string, lastName: string): string {
 
 function toRow(employee: EmployeeWithRelations): EmployeeRow {
   return {
-    id: employee.id,
+    id: String(employee.id),
     code: employee.code,
     firstName: employee.firstName,
     lastName: employee.lastName,
@@ -96,10 +96,15 @@ function toDetail(employee: EmployeeWithDetail): EmployeeDetail {
     bankIfsc: employee.bankIfsc,
     joinDate:
       employee.joinDate === null ? null : employee.joinDate.toISOString(),
-    departmentId: employee.departmentId,
-    jobPositionId: employee.jobPositionId,
-    managerId: employee.managerId,
-    workingScheduleId: employee.workingScheduleId,
+    departmentId:
+      employee.departmentId === null ? null : String(employee.departmentId),
+    jobPositionId:
+      employee.jobPositionId === null ? null : String(employee.jobPositionId),
+    managerId: employee.managerId === null ? null : String(employee.managerId),
+    workingScheduleId:
+      employee.workingScheduleId === null
+        ? null
+        : String(employee.workingScheduleId),
     counts: {
       contracts: employee._count.contracts,
       attendance: employee._count.attendances,
@@ -204,7 +209,7 @@ employeesRouter.get(
   requirePermission('read', 'employee'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     mustBeSelf(req, id);
 
     const employee = await prisma.employee.findUnique({
@@ -246,7 +251,7 @@ employeesRouter.patch(
   requirePermission('update', 'employee'),
   validate({ params: idParamsSchema, body: employeeSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const body = req.body as z.infer<typeof employeeSchema>;
 
     try {
@@ -274,7 +279,7 @@ employeesRouter.delete(
   requirePermission('delete', 'employee'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     try {
       // Soft delete: attendance, time off and payslip history must never be

@@ -1,3 +1,6 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('EMPLOYEE', 'HR_MANAGER', 'HR_PAYROLL_USER', 'HR_PAYROLL_MANAGER', 'ADMIN');
 
@@ -48,7 +51,7 @@ CREATE TYPE "WarningCode" AS ENUM ('NO_CONTRACT', 'DUPLICATE_PAYSLIP', 'RULE_ERR
 
 -- CreateTable
 CREATE TABLE "companies" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "legalName" TEXT,
     "currency" TEXT NOT NULL DEFAULT 'INR',
@@ -62,11 +65,11 @@ CREATE TABLE "companies" (
 
 -- CreateTable
 CREATE TABLE "departments" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "code" TEXT,
-    "companyId" TEXT NOT NULL,
-    "managerId" TEXT,
+    "companyId" INTEGER NOT NULL,
+    "managerId" INTEGER,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -76,7 +79,7 @@ CREATE TABLE "departments" (
 
 -- CreateTable
 CREATE TABLE "job_positions" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -87,7 +90,7 @@ CREATE TABLE "job_positions" (
 
 -- CreateTable
 CREATE TABLE "employees" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "code" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
@@ -95,11 +98,11 @@ CREATE TABLE "employees" (
     "personalEmail" TEXT,
     "phone" TEXT,
     "avatarUrl" TEXT,
-    "companyId" TEXT NOT NULL,
-    "departmentId" TEXT,
-    "jobPositionId" TEXT,
-    "managerId" TEXT,
-    "workingScheduleId" TEXT,
+    "companyId" INTEGER NOT NULL,
+    "departmentId" INTEGER,
+    "jobPositionId" INTEGER,
+    "managerId" INTEGER,
+    "workingScheduleId" INTEGER,
     "employeeType" "EmployeeType" NOT NULL DEFAULT 'FULL_TIME',
     "workLocation" TEXT,
     "timezone" TEXT NOT NULL DEFAULT 'Asia/Kolkata',
@@ -116,10 +119,10 @@ CREATE TABLE "employees" (
 
 -- CreateTable
 CREATE TABLE "users" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
-    "employeeId" TEXT,
+    "employeeId" INTEGER,
     "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
     "roles" "Role"[] DEFAULT ARRAY['EMPLOYEE']::"Role"[],
     "tokenVersion" INTEGER NOT NULL DEFAULT 0,
@@ -132,9 +135,9 @@ CREATE TABLE "users" (
 
 -- CreateTable
 CREATE TABLE "working_schedules" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "companyId" TEXT NOT NULL,
+    "companyId" INTEGER NOT NULL,
     "calendarType" TEXT NOT NULL DEFAULT 'Standard',
     "timezone" TEXT NOT NULL DEFAULT 'Asia/Kolkata',
     "active" BOOLEAN NOT NULL DEFAULT true,
@@ -146,8 +149,8 @@ CREATE TABLE "working_schedules" (
 
 -- CreateTable
 CREATE TABLE "schedule_lines" (
-    "id" TEXT NOT NULL,
-    "scheduleId" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "scheduleId" INTEGER NOT NULL,
     "dayOfWeek" "Weekday" NOT NULL,
     "startMinute" INTEGER NOT NULL,
     "endMinute" INTEGER NOT NULL,
@@ -158,16 +161,16 @@ CREATE TABLE "schedule_lines" (
 
 -- CreateTable
 CREATE TABLE "contracts" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "reference" TEXT NOT NULL,
-    "employeeId" TEXT NOT NULL,
+    "employeeId" INTEGER NOT NULL,
     "startDate" DATE NOT NULL,
     "endDate" DATE,
     "wageMonthly" INTEGER NOT NULL,
-    "departmentId" TEXT,
-    "jobPositionId" TEXT,
-    "workingScheduleId" TEXT,
-    "salaryStructureId" TEXT,
+    "departmentId" INTEGER,
+    "jobPositionId" INTEGER,
+    "workingScheduleId" INTEGER,
+    "salaryStructureId" INTEGER,
     "status" "ContractStatus" NOT NULL DEFAULT 'DRAFT',
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -178,15 +181,15 @@ CREATE TABLE "contracts" (
 
 -- CreateTable
 CREATE TABLE "attendances" (
-    "id" TEXT NOT NULL,
-    "employeeId" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "employeeId" INTEGER NOT NULL,
     "checkIn" TIMESTAMP(3) NOT NULL,
     "checkOut" TIMESTAMP(3),
     "workedMinutes" INTEGER NOT NULL DEFAULT 0,
     "overtimeMinutes" INTEGER NOT NULL DEFAULT 0,
     "status" "AttendanceStatus" NOT NULL DEFAULT 'PRESENT',
     "source" "AttendanceSource" NOT NULL DEFAULT 'WIDGET',
-    "editedByUserId" TEXT,
+    "editedByUserId" INTEGER,
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -196,7 +199,7 @@ CREATE TABLE "attendances" (
 
 -- CreateTable
 CREATE TABLE "time_off_types" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "unit" "TimeOffUnit" NOT NULL DEFAULT 'DAYS',
@@ -214,15 +217,15 @@ CREATE TABLE "time_off_types" (
 
 -- CreateTable
 CREATE TABLE "time_off_allocations" (
-    "id" TEXT NOT NULL,
-    "employeeId" TEXT NOT NULL,
-    "typeId" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "employeeId" INTEGER NOT NULL,
+    "typeId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "allocatedQty" DOUBLE PRECISION NOT NULL,
     "validFrom" DATE NOT NULL,
     "validTo" DATE,
     "status" "TimeOffStatus" NOT NULL DEFAULT 'TO_APPROVE',
-    "approverId" TEXT,
+    "approverId" INTEGER,
     "description" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -232,15 +235,15 @@ CREATE TABLE "time_off_allocations" (
 
 -- CreateTable
 CREATE TABLE "time_off_requests" (
-    "id" TEXT NOT NULL,
-    "employeeId" TEXT NOT NULL,
-    "typeId" TEXT NOT NULL,
-    "allocationId" TEXT,
+    "id" SERIAL NOT NULL,
+    "employeeId" INTEGER NOT NULL,
+    "typeId" INTEGER NOT NULL,
+    "allocationId" INTEGER,
     "startDate" DATE NOT NULL,
     "endDate" DATE NOT NULL,
     "duration" DOUBLE PRECISION NOT NULL,
     "status" "TimeOffStatus" NOT NULL DEFAULT 'TO_APPROVE',
-    "approverId" TEXT,
+    "approverId" INTEGER,
     "reason" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -250,10 +253,10 @@ CREATE TABLE "time_off_requests" (
 
 -- CreateTable
 CREATE TABLE "salary_structures" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "code" TEXT NOT NULL,
-    "companyId" TEXT NOT NULL,
+    "companyId" INTEGER NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -263,8 +266,8 @@ CREATE TABLE "salary_structures" (
 
 -- CreateTable
 CREATE TABLE "salary_rules" (
-    "id" TEXT NOT NULL,
-    "structureId" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "structureId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "category" "RuleCategory" NOT NULL,
@@ -285,16 +288,16 @@ CREATE TABLE "salary_rules" (
 
 -- CreateTable
 CREATE TABLE "payruns" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "companyId" TEXT NOT NULL,
-    "salaryStructureId" TEXT NOT NULL,
+    "companyId" INTEGER NOT NULL,
+    "salaryStructureId" INTEGER NOT NULL,
     "employeeTypeScope" "EmployeeType",
     "periodStart" DATE NOT NULL,
     "periodEnd" DATE NOT NULL,
     "status" "PayrunStatus" NOT NULL DEFAULT 'DRAFT',
     "version" INTEGER NOT NULL DEFAULT 0,
-    "createdByUserId" TEXT,
+    "createdByUserId" INTEGER,
     "computedAt" TIMESTAMP(3),
     "validatedAt" TIMESTAMP(3),
     "paidAt" TIMESTAMP(3),
@@ -307,12 +310,12 @@ CREATE TABLE "payruns" (
 
 -- CreateTable
 CREATE TABLE "payslips" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "number" TEXT NOT NULL,
-    "payrunId" TEXT NOT NULL,
-    "employeeId" TEXT NOT NULL,
-    "contractId" TEXT NOT NULL,
-    "structureId" TEXT NOT NULL,
+    "payrunId" INTEGER NOT NULL,
+    "employeeId" INTEGER NOT NULL,
+    "contractId" INTEGER NOT NULL,
+    "structureId" INTEGER NOT NULL,
     "periodStart" DATE NOT NULL,
     "periodEnd" DATE NOT NULL,
     "contractWage" INTEGER NOT NULL,
@@ -336,9 +339,9 @@ CREATE TABLE "payslips" (
 
 -- CreateTable
 CREATE TABLE "payslip_lines" (
-    "id" TEXT NOT NULL,
-    "payslipId" TEXT NOT NULL,
-    "ruleId" TEXT,
+    "id" SERIAL NOT NULL,
+    "payslipId" INTEGER NOT NULL,
+    "ruleId" INTEGER,
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "category" "RuleCategory" NOT NULL,
@@ -352,14 +355,14 @@ CREATE TABLE "payslip_lines" (
 
 -- CreateTable
 CREATE TABLE "payroll_warnings" (
-    "id" TEXT NOT NULL,
-    "payrunId" TEXT NOT NULL,
-    "payslipId" TEXT,
+    "id" SERIAL NOT NULL,
+    "payrunId" INTEGER NOT NULL,
+    "payslipId" INTEGER,
     "code" "WarningCode" NOT NULL,
     "message" TEXT NOT NULL,
     "blocking" BOOLEAN NOT NULL DEFAULT false,
     "acknowledgedAt" TIMESTAMP(3),
-    "acknowledgedByUserId" TEXT,
+    "acknowledgedByUserId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "payroll_warnings_pkey" PRIMARY KEY ("id")
@@ -367,8 +370,8 @@ CREATE TABLE "payroll_warnings" (
 
 -- CreateTable
 CREATE TABLE "audit_logs" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT,
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER,
     "action" TEXT NOT NULL,
     "entity" TEXT NOT NULL,
     "entityId" TEXT NOT NULL,
@@ -626,3 +629,4 @@ ALTER TABLE "payroll_warnings" ADD CONSTRAINT "payroll_warnings_payslipId_fkey" 
 
 -- AddForeignKey
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+

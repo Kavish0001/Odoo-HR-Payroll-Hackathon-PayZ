@@ -17,7 +17,7 @@ export type ScheduleLookupClient = Pick<
 >;
 
 export async function resolveScheduleLines(
-  employeeId: string,
+  employeeId: number,
   onDate: Date,
   client: ScheduleLookupClient = defaultPrisma,
 ): Promise<readonly ScheduleLineLike[]> {

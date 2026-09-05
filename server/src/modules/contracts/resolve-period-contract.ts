@@ -59,7 +59,7 @@ export type ContractLookupClient = Pick<PrismaClient, 'contract'>;
  * expressed once, in a function unit tests can exercise directly.
  */
 export async function resolvePeriodContract(
-  employeeId: string,
+  employeeId: number,
   periodStart: Date,
   periodEnd: Date,
   client: ContractLookupClient = defaultPrisma,
@@ -68,6 +68,23 @@ export async function resolvePeriodContract(
     where: { employeeId },
   });
 
+  return selectPeriodContract(candidates, periodStart, periodEnd);
+}
+
+/**
+ * The choice itself, with the fetching taken out.
+ *
+ * A payrun resolves a contract for every employee in it, and asking the
+ * database once per employee is a round trip per payslip -- the single
+ * slowest thing in a compute. `computePayrunPayslips` fetches every relevant
+ * contract in one query and calls this for each employee, which keeps the
+ * overlap rule stated exactly once while turning N queries into one.
+ */
+export function selectPeriodContract(
+  candidates: readonly Contract[],
+  periodStart: Date,
+  periodEnd: Date,
+): Contract | null {
   return (
     candidates.find((candidate) =>
       isApplicableToPeriod(candidate, periodStart, periodEnd),

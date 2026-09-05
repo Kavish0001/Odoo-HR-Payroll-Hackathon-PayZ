@@ -35,7 +35,7 @@ export function toPayrunRow(payrun: PayrunListPayload): PayrunRow {
   const totalNet = payrun.payslips.reduce((sum, p) => sum + p.netAmount, 0);
 
   return {
-    id: payrun.id,
+    id: String(payrun.id),
     name: payrun.name,
     structureName: payrun.salaryStructure.name,
     periodStart: toDateOnly(payrun.periodStart),
@@ -82,11 +82,11 @@ export type PayslipWithRelations = Prisma.PayslipGetPayload<
 
 export function toPayslipRow(payslip: PayslipWithRelations): PayslipRow {
   return {
-    id: payslip.id,
+    id: String(payslip.id),
     number: payslip.number,
-    payrunId: payslip.payrunId,
+    payrunId: String(payslip.payrunId),
     payrunName: payslip.payrun.name,
-    employeeId: payslip.employeeId,
+    employeeId: String(payslip.employeeId),
     employeeName: `${payslip.employee.firstName} ${payslip.employee.lastName}`,
     departmentName: payslip.employee.department?.name ?? null,
     structureName: payslip.structure.name,
@@ -118,7 +118,7 @@ export function toPayslipLineRow(
   line: PayslipDetailPayload['lines'][number],
 ): PayslipLineRow {
   return {
-    id: line.id,
+    id: String(line.id),
     code: line.code,
     name: line.name,
     category: line.category,
@@ -158,11 +158,11 @@ export type WarningWithEmployee = Prisma.PayrollWarningGetPayload<
 
 export function toWarningRow(warning: WarningWithEmployee): PayrollWarningRow {
   return {
-    id: warning.id,
+    id: String(warning.id),
     code: warning.code,
     message: warning.message,
     blocking: warning.blocking,
-    payslipId: warning.payslipId,
+    payslipId: warning.payslipId === null ? null : String(warning.payslipId),
     employeeName:
       warning.payslip === null
         ? null
@@ -186,7 +186,7 @@ type PayrunDb = Pick<PrismaClient, 'payrun' | 'payslip' | 'payrollWarning'>;
 
 export async function getPayrunDetail(
   db: PayrunDb,
-  id: string,
+  id: number,
 ): Promise<PayrunDetail | null> {
   const payrun = await db.payrun.findUnique({
     where: { id },
@@ -211,7 +211,7 @@ export async function getPayrunDetail(
 
   return {
     ...toPayrunRow(payrun),
-    salaryStructureId: payrun.salaryStructureId,
+    salaryStructureId: String(payrun.salaryStructureId),
     payslips: payslips.map(toPayslipRow),
     warnings: warnings.map(toWarningRow),
   };

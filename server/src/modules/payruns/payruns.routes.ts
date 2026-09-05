@@ -29,7 +29,10 @@ import { idParamsSchema } from '../common/params.js';
 import { resolvePeriodContract } from '../contracts/resolve-period-contract.js';
 
 import { computePayrunPayslips } from './compute.js';
-import { resolveEligibleEmployees } from './eligibility.js';
+import {
+  resolveEligibleEmployees,
+  toEligibilityResponse,
+} from './eligibility.js';
 import { getPayrunDetail, payrunListArgs, toPayrunRow } from './mappers.js';
 import { payslipNumber } from './numbering.js';
 import { loadPayslipPdfData } from './pdf-data.js';
@@ -70,7 +73,7 @@ payrunsRouter.post(
   asyncRoute(async (req, res) => {
     const scope = req.body as PayrunScopeInput;
     const result = await resolveEligibleEmployees(scope, undefined, prisma);
-    res.json(result);
+    res.json(toEligibilityResponse(result));
   }),
 );
 
@@ -113,7 +116,7 @@ payrunsRouter.get(
   requirePermission('read', 'payrun'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const detail = await getPayrunDetail(prisma, id);
     if (detail === null) {
       throw notFound('Payrun not found');
@@ -272,7 +275,7 @@ payrunsRouter.post(
   requirePermission('update', 'payrun'),
   validate({ params: idParamsSchema, body: workflowActionSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const { version } = req.body as WorkflowAction;
 
     const payrun = await prisma.payrun.findUnique({ where: { id } });
@@ -310,7 +313,7 @@ payrunsRouter.post(
   requirePermission('update', 'payrun'),
   validate({ params: idParamsSchema, body: workflowActionSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const { version } = req.body as WorkflowAction;
 
     const payrun = await prisma.payrun.findUnique({ where: { id } });
@@ -357,7 +360,7 @@ payrunsRouter.post(
   requirePermission('update', 'payrun'),
   validate({ params: idParamsSchema, body: workflowActionSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const { version } = req.body as WorkflowAction;
 
     const payrun = await prisma.payrun.findUnique({ where: { id } });
@@ -393,7 +396,7 @@ payrunsRouter.post(
   requirePermission('update', 'payrun'),
   validate({ params: idParamsSchema, body: workflowActionSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const { version } = req.body as WorkflowAction;
 
     const payrun = await prisma.payrun.findUnique({ where: { id } });
@@ -430,7 +433,7 @@ payrunsRouter.post(
   requirePermission('update', 'payrun'),
   validate({ params: idParamsSchema, body: workflowActionSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const { version } = req.body as WorkflowAction;
 
     const payrun = await prisma.payrun.findUnique({
@@ -507,7 +510,13 @@ payrunsRouter.post(
     res.json({
       sent: successfulIds.length,
       failed: results.length - successfulIds.length,
-      results,
+      // The wire boundary again: the send ran on integer ids, the browser
+      // reads strings.
+      results: results.map((result) => ({
+        ...result,
+        payslipId: String(result.payslipId),
+        employeeId: String(result.employeeId),
+      })),
       payrun: await getPayrunDetail(prisma, id),
     });
   }),
@@ -521,8 +530,8 @@ payrunsRouter.post(
   validate({ params: warningParamsSchema }),
   asyncRoute(async (req, res) => {
     const { id, warningId } = req.params as unknown as {
-      id: string;
-      warningId: string;
+      id: number;
+      warningId: number;
     };
     const user = getUser(req);
 

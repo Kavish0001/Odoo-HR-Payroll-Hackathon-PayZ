@@ -16,8 +16,8 @@ import {
 const day = (iso: string): Date => new Date(`${iso}T00:00:00.000Z`);
 
 interface FakeRequest {
-  id: string;
-  allocationId: string | null;
+  id: number;
+  allocationId: number | null;
   status: TimeOffStatus;
   duration: number;
 }
@@ -36,9 +36,9 @@ function fakeClient(requests: FakeRequest[]): BalanceClient {
           where,
         }: {
           where: {
-            allocationId: string;
+            allocationId: number;
             status: TimeOffStatus;
-            id?: { not: string };
+            id?: { not: number };
           };
         }) => {
           const matching = requests.filter(
@@ -57,9 +57,9 @@ function fakeClient(requests: FakeRequest[]): BalanceClient {
         ({
           where,
         }: {
-          where: { allocationId: { in: string[] }; status: TimeOffStatus };
+          where: { allocationId: { in: number[] }; status: TimeOffStatus };
         }) => {
-          const byAllocation = new Map<string, number>();
+          const byAllocation = new Map<number, number>();
           for (const request of requests) {
             if (
               request.allocationId !== null &&
@@ -125,66 +125,63 @@ describe('rule T2: remaining is derived from approved requests', () => {
 
   it('sums only APPROVED requests linked to the allocation', async () => {
     const client = fakeClient([
-      { id: 'r1', allocationId: 'alloc-1', status: 'APPROVED', duration: 3 },
+      { id: 1, allocationId: 101, status: 'APPROVED', duration: 3 },
       {
-        id: 'r2',
-        allocationId: 'alloc-1',
+        id: 2,
+        allocationId: 101,
         status: 'TO_APPROVE',
         duration: 100,
       },
-      { id: 'r3', allocationId: 'alloc-1', status: 'REFUSED', duration: 100 },
-      { id: 'r4', allocationId: 'alloc-2', status: 'APPROVED', duration: 100 },
+      { id: 3, allocationId: 101, status: 'REFUSED', duration: 100 },
+      { id: 4, allocationId: 102, status: 'APPROVED', duration: 100 },
     ]);
 
-    await expect(sumApprovedDuration(client, 'alloc-1')).resolves.toBe(3);
+    await expect(sumApprovedDuration(client, 101)).resolves.toBe(3);
   });
 
   it('returns zero when nothing has been approved against the allocation', async () => {
     const client = fakeClient([]);
-    await expect(sumApprovedDuration(client, 'alloc-1')).resolves.toBe(0);
+    await expect(sumApprovedDuration(client, 101)).resolves.toBe(0);
   });
 
   it('excludes a given request id, for recomputing "what remains without this one"', async () => {
     const client = fakeClient([
-      { id: 'r1', allocationId: 'alloc-1', status: 'APPROVED', duration: 3 },
-      { id: 'r2', allocationId: 'alloc-1', status: 'APPROVED', duration: 4 },
+      { id: 1, allocationId: 101, status: 'APPROVED', duration: 3 },
+      { id: 2, allocationId: 101, status: 'APPROVED', duration: 4 },
     ]);
 
-    await expect(sumApprovedDuration(client, 'alloc-1', 'r2')).resolves.toBe(3);
+    await expect(sumApprovedDuration(client, 101, 2)).resolves.toBe(3);
   });
 
   it('batches the sum for several allocations in one query', async () => {
     const client = fakeClient([
-      { id: 'r1', allocationId: 'alloc-1', status: 'APPROVED', duration: 3 },
-      { id: 'r2', allocationId: 'alloc-2', status: 'APPROVED', duration: 4 },
+      { id: 1, allocationId: 101, status: 'APPROVED', duration: 3 },
+      { id: 2, allocationId: 102, status: 'APPROVED', duration: 4 },
       {
-        id: 'r3',
-        allocationId: 'alloc-2',
+        id: 3,
+        allocationId: 102,
         status: 'TO_APPROVE',
         duration: 100,
       },
     ]);
 
-    const map = await sumApprovedDurationByAllocation(client, [
-      'alloc-1',
-      'alloc-2',
-    ]);
-    expect(map.get('alloc-1')).toBe(3);
-    expect(map.get('alloc-2')).toBe(4);
+    const map = await sumApprovedDurationByAllocation(client, [101, 102]);
+    expect(map.get(101)).toBe(3);
+    expect(map.get(102)).toBe(4);
   });
 
   it('reflects a change in status immediately, since nothing is cached (rule T5 depends on this)', async () => {
     const requests: FakeRequest[] = [
-      { id: 'r1', allocationId: 'alloc-1', status: 'APPROVED', duration: 5 },
+      { id: 1, allocationId: 101, status: 'APPROVED', duration: 5 },
     ];
     const client = fakeClient(requests);
 
-    await expect(sumApprovedDuration(client, 'alloc-1')).resolves.toBe(5);
+    await expect(sumApprovedDuration(client, 101)).resolves.toBe(5);
 
     // Simulate the refuse/cancel endpoint flipping the request's status.
     requests[0]!.status = 'REFUSED';
 
-    await expect(sumApprovedDuration(client, 'alloc-1')).resolves.toBe(0);
+    await expect(sumApprovedDuration(client, 101)).resolves.toBe(0);
   });
 });
 
@@ -196,19 +193,19 @@ describe('rule T3: approval requires enough remaining balance', () => {
   it('picks the first candidate with enough remaining', () => {
     const chosen = pickAllocationForRequest(
       [
-        { id: 'alloc-1', allocatedQty: 10, takenQty: 8 }, // 2 remaining
-        { id: 'alloc-2', allocatedQty: 10, takenQty: 0 }, // 10 remaining
+        { id: 101, allocatedQty: 10, takenQty: 8 }, // 2 remaining
+        { id: 102, allocatedQty: 10, takenQty: 0 }, // 10 remaining
       ],
       5,
     );
-    expect(chosen).toBe('alloc-2');
+    expect(chosen).toBe(102);
   });
 
   it('returns null when no candidate has enough remaining', () => {
     const chosen = pickAllocationForRequest(
       [
-        { id: 'alloc-1', allocatedQty: 10, takenQty: 8 },
-        { id: 'alloc-2', allocatedQty: 5, takenQty: 5 },
+        { id: 101, allocatedQty: 10, takenQty: 8 },
+        { id: 102, allocatedQty: 5, takenQty: 5 },
       ],
       5,
     );
@@ -221,10 +218,10 @@ describe('rule T3: approval requires enough remaining balance', () => {
 
   it('accepts a candidate whose remaining exactly equals the request duration', () => {
     const chosen = pickAllocationForRequest(
-      [{ id: 'alloc-1', allocatedQty: 5, takenQty: 0 }],
+      [{ id: 101, allocatedQty: 5, takenQty: 0 }],
       5,
     );
-    expect(chosen).toBe('alloc-1');
+    expect(chosen).toBe(101);
   });
 });
 
@@ -248,11 +245,11 @@ describe('rule T4: requiresAllocation: false skips the balance check', () => {
 describe('rule T5: refusing/cancelling an approved request returns the days', () => {
   it('remaining goes back up once a previously-approved request is refused', async () => {
     const requests: FakeRequest[] = [
-      { id: 'r1', allocationId: 'alloc-1', status: 'APPROVED', duration: 4 },
+      { id: 1, allocationId: 101, status: 'APPROVED', duration: 4 },
     ];
     const client = fakeClient(requests);
     const allocation = {
-      id: 'alloc-1',
+      id: 101,
       allocatedQty: 10,
       status: 'APPROVED' as TimeOffStatus,
     };

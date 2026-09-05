@@ -7,8 +7,8 @@ import {
 } from './send-payslips.js';
 
 const target: PayslipMailTarget = {
-  payslipId: 'p1',
-  employeeId: 'e1',
+  payslipId: 1,
+  employeeId: 2,
   employeeEmail: 'someone@example.com',
   employeeName: 'Amit Mishra',
   number: 'PS/2026/04146',

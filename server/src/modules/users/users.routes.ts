@@ -64,11 +64,11 @@ const userSelect = {
 } as const;
 
 interface UserRecord {
-  id: string;
+  id: number;
   email: string;
   status: UserStatus;
   roles: Role[];
-  employeeId: string | null;
+  employeeId: number | null;
   lastLoginAt: Date | null;
   employee: {
     firstName: string;
@@ -79,11 +79,11 @@ interface UserRecord {
 
 function toRow(user: UserRecord): UserRow {
   return {
-    id: user.id,
+    id: String(user.id),
     email: user.email,
     status: user.status,
     roles: user.roles,
-    employeeId: user.employeeId,
+    employeeId: user.employeeId === null ? null : String(user.employeeId),
     employeeName:
       user.employee === null
         ? null
@@ -150,7 +150,7 @@ usersRouter.get(
   requirePermission('read', 'user'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const user = await prisma.user.findUnique({
       where: { id },
       select: userSelect,
@@ -214,7 +214,7 @@ usersRouter.patch(
   requirePermission('update', 'user'),
   validate({ params: idParamsSchema, body: updateUserSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const body = req.body as z.infer<typeof updateUserSchema>;
 
     refuseSelfElevation(getUser(req).id, id, body);
@@ -276,7 +276,7 @@ usersRouter.delete(
   requirePermission('delete', 'user'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     if (getUser(req).id === id) {
       throw forbidden('You cannot deactivate your own account');

@@ -14,10 +14,19 @@ const SESSION_TTL_SECONDS = 8 * 60 * 60;
 const BCRYPT_ROUNDS = 12;
 
 export interface SessionClaims {
-  sub: string;
+  /**
+   * The user's row id. JWT convention says `sub` is a string, but keeping it
+   * numeric here means the ownership checks in `middleware/auth.ts` compare
+   * number to number with no conversion step to forget.
+   *
+   * Cookies issued before the integer migration carry a cuid here, which
+   * matches no user row and so fails closed to a 401 -- a forced sign-out,
+   * which is the safe direction for a claim that grants access.
+   */
+  sub: number;
   email: string;
   roles: Role[];
-  employeeId: string | null;
+  employeeId: number | null;
   /** Invalidates the token when roles or status change (guardrail 10.2). */
   tokenVersion: number;
 }

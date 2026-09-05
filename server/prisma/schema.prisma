@@ -138,7 +138,7 @@ enum WarningCode {
 // ---------------------------------------------------------------------------
 
 model Company {
-  id        String   @id @default(cuid())
+  id        Int      @id @default(autoincrement())
   name      String
   legalName String?
   currency  String   @default("INR")
@@ -157,11 +157,11 @@ model Company {
 }
 
 model Department {
-  id        String   @id @default(cuid())
+  id        Int      @id @default(autoincrement())
   name      String
   code      String?
-  companyId String
-  managerId String?
+  companyId Int
+  managerId Int?
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -177,7 +177,7 @@ model Department {
 }
 
 model JobPosition {
-  id        String   @id @default(cuid())
+  id        Int      @id @default(autoincrement())
   title     String   @unique
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -194,7 +194,7 @@ model JobPosition {
 // ---------------------------------------------------------------------------
 
 model Employee {
-  id        String @id @default(cuid())
+  id        Int    @id @default(autoincrement())
   code      String @unique
   firstName String
   lastName  String
@@ -204,11 +204,11 @@ model Employee {
   phone         String?
   avatarUrl     String?
 
-  companyId         String
-  departmentId      String?
-  jobPositionId     String?
-  managerId         String?
-  workingScheduleId String?
+  companyId         Int
+  departmentId      Int?
+  jobPositionId     Int?
+  managerId         Int?
+  workingScheduleId Int?
 
   employeeType EmployeeType @default(FULL_TIME)
   workLocation String?
@@ -232,16 +232,16 @@ model Employee {
   manager         Employee?        @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
   workingSchedule WorkingSchedule? @relation(fields: [workingScheduleId], references: [id], onDelete: SetNull)
 
-  reports            Employee[]          @relation("EmployeeManager")
-  managedDepartments Department[]        @relation("DepartmentManager")
-  user               User?
-  contracts          Contract[]
-  attendances        Attendance[]
-  timeOffRequests    TimeOffRequest[]    @relation("RequestEmployee")
-  approvedRequests   TimeOffRequest[]    @relation("RequestApprover")
-  allocations        TimeOffAllocation[] @relation("AllocationEmployee")
+  reports             Employee[]          @relation("EmployeeManager")
+  managedDepartments  Department[]        @relation("DepartmentManager")
+  user                User?
+  contracts           Contract[]
+  attendances         Attendance[]
+  timeOffRequests     TimeOffRequest[]    @relation("RequestEmployee")
+  approvedRequests    TimeOffRequest[]    @relation("RequestApprover")
+  allocations         TimeOffAllocation[] @relation("AllocationEmployee")
   approvedAllocations TimeOffAllocation[] @relation("AllocationApprover")
-  payslips           Payslip[]
+  payslips            Payslip[]
 
   @@index([companyId])
   @@index([departmentId])
@@ -255,10 +255,10 @@ model Employee {
 // ---------------------------------------------------------------------------
 
 model User {
-  id           String     @id @default(cuid())
+  id           Int        @id @default(autoincrement())
   email        String     @unique
   passwordHash String
-  employeeId   String?    @unique
+  employeeId   Int?       @unique
   status       UserStatus @default(ACTIVE)
   roles        Role[]     @default([EMPLOYEE])
 
@@ -283,9 +283,9 @@ model User {
 // ---------------------------------------------------------------------------
 
 model WorkingSchedule {
-  id           String  @id @default(cuid())
+  id           Int     @id @default(autoincrement())
   name         String
-  companyId    String
+  companyId    Int
   calendarType String  @default("Standard")
   timezone     String  @default("Asia/Kolkata")
   active       Boolean @default(true)
@@ -305,8 +305,8 @@ model WorkingSchedule {
 /// One weekday row of a schedule. Weekly hours are derived by summing
 /// (end - start - break) across these lines and are never stored (rule S1).
 model ScheduleLine {
-  id         String  @id @default(cuid())
-  scheduleId String
+  id         Int     @id @default(autoincrement())
+  scheduleId Int
   dayOfWeek  Weekday
 
   /// Minutes from midnight, so arithmetic needs no date context.
@@ -326,9 +326,9 @@ model ScheduleLine {
 // ---------------------------------------------------------------------------
 
 model Contract {
-  id         String    @id @default(cuid())
+  id         Int       @id @default(autoincrement())
   reference  String    @unique
-  employeeId String
+  employeeId Int
   startDate  DateTime  @db.Date
   /// Null means open-ended, which is what makes period resolution a range
   /// overlap test rather than a "latest contract" lookup (rule C2).
@@ -337,10 +337,10 @@ model Contract {
   /// Monthly wage in integer paise.
   wageMonthly Int
 
-  departmentId      String?
-  jobPositionId     String?
-  workingScheduleId String?
-  salaryStructureId String?
+  departmentId      Int?
+  jobPositionId     Int?
+  workingScheduleId Int?
+  salaryStructureId Int?
 
   status ContractStatus @default(DRAFT)
   notes  String?
@@ -369,8 +369,8 @@ model Contract {
 // ---------------------------------------------------------------------------
 
 model Attendance {
-  id         String    @id @default(cuid())
-  employeeId String
+  id         Int       @id @default(autoincrement())
+  employeeId Int
   checkIn    DateTime
   /// Null means an open session. A partial unique index enforces at most one
   /// open session per employee (rule A3).
@@ -381,10 +381,10 @@ model Attendance {
   workedMinutes   Int @default(0)
   overtimeMinutes Int @default(0)
 
-  status       AttendanceStatus @default(PRESENT)
-  source       AttendanceSource @default(WIDGET)
-  editedByUserId String?
-  notes        String?
+  status         AttendanceStatus @default(PRESENT)
+  source         AttendanceSource @default(WIDGET)
+  editedByUserId Int?
+  notes          String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -402,14 +402,14 @@ model Attendance {
 // ---------------------------------------------------------------------------
 
 model TimeOffType {
-  id   String @id @default(cuid())
+  id   Int    @id @default(autoincrement())
   name String @unique
   code String @unique
 
-  unit TimeOffUnit @default(DAYS)
+  unit               TimeOffUnit   @default(DAYS)
   /// When true, approving a request requires an approved allocation with
   /// sufficient remaining balance (rule T3).
-  requiresAllocation Boolean @default(true)
+  requiresAllocation Boolean       @default(true)
   approvalLevel      ApprovalLevel @default(MANAGER)
 
   /// Label carried onto payroll work entries, e.g. "Leave Work Entry".
@@ -431,9 +431,9 @@ model TimeOffType {
 /// (rule T1); taken and remaining are derived from approved requests, never
 /// stored as counters that can drift.
 model TimeOffAllocation {
-  id         String @id @default(cuid())
-  employeeId String
-  typeId     String
+  id         Int    @id @default(autoincrement())
+  employeeId Int
+  typeId     Int
   name       String
 
   /// In the type's unit: days, or hours.
@@ -443,7 +443,7 @@ model TimeOffAllocation {
   validTo   DateTime? @db.Date
 
   status      TimeOffStatus @default(TO_APPROVE)
-  approverId  String?
+  approverId  Int?
   description String?
 
   createdAt DateTime @default(now())
@@ -460,12 +460,12 @@ model TimeOffAllocation {
 }
 
 model TimeOffRequest {
-  id           String  @id @default(cuid())
-  employeeId   String
-  typeId       String
+  id           Int  @id @default(autoincrement())
+  employeeId   Int
+  typeId       Int
   /// Which balance this request consumed, shown as "Allocation Used" on the
   /// form so the link between request and balance is visible (rule T3).
-  allocationId String?
+  allocationId Int?
 
   startDate DateTime @db.Date
   endDate   DateTime @db.Date
@@ -474,7 +474,7 @@ model TimeOffRequest {
   duration  Float
 
   status     TimeOffStatus @default(TO_APPROVE)
-  approverId String?
+  approverId Int?
   reason     String?
 
   createdAt DateTime @default(now())
@@ -496,10 +496,10 @@ model TimeOffRequest {
 // ---------------------------------------------------------------------------
 
 model SalaryStructure {
-  id        String  @id @default(cuid())
+  id        Int     @id @default(autoincrement())
   name      String
   code      String  @unique
-  companyId String
+  companyId Int
   active    Boolean @default(true)
 
   createdAt DateTime @default(now())
@@ -520,8 +520,8 @@ model SalaryStructure {
 /// (rules P1, P2). Sequence is unique per structure so the order is never
 /// ambiguous.
 model SalaryRule {
-  id          String       @id @default(cuid())
-  structureId String
+  id          Int          @id @default(autoincrement())
+  structureId Int
   name        String
   code        String
   category    RuleCategory
@@ -563,11 +563,11 @@ model SalaryRule {
 // ---------------------------------------------------------------------------
 
 model Payrun {
-  id        String @id @default(cuid())
+  id        Int    @id @default(autoincrement())
   name      String
-  companyId String
+  companyId Int
 
-  salaryStructureId String
+  salaryStructureId Int
   employeeTypeScope EmployeeType?
 
   periodStart DateTime @db.Date
@@ -579,7 +579,7 @@ model Payrun {
   /// (guardrail 10.6).
   version Int @default(0)
 
-  createdByUserId String?
+  createdByUserId Int?
   computedAt      DateTime?
   validatedAt     DateTime?
   paidAt          DateTime?
@@ -588,9 +588,9 @@ model Payrun {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  salaryStructure SalaryStructure @relation(fields: [salaryStructureId], references: [id], onDelete: Restrict)
-  createdBy       User?           @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  salaryStructure SalaryStructure  @relation(fields: [salaryStructureId], references: [id], onDelete: Restrict)
+  createdBy       User?            @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
   payslips        Payslip[]
   warnings        PayrollWarning[]
 
@@ -600,15 +600,15 @@ model Payrun {
 }
 
 model Payslip {
-  id     String @id @default(cuid())
+  id     Int    @id @default(autoincrement())
   number String @unique
 
-  payrunId    String
-  employeeId  String
+  payrunId    Int
+  employeeId  Int
   /// Snapshotted so editing a contract later cannot retroactively alter a
   /// paid payslip (rule C5).
-  contractId  String
-  structureId String
+  contractId  Int
+  structureId Int
 
   periodStart DateTime @db.Date
   periodEnd   DateTime @db.Date
@@ -637,10 +637,10 @@ model Payslip {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  payrun    Payrun          @relation(fields: [payrunId], references: [id], onDelete: Cascade)
-  employee  Employee        @relation(fields: [employeeId], references: [id], onDelete: Restrict)
-  contract  Contract        @relation(fields: [contractId], references: [id], onDelete: Restrict)
-  structure SalaryStructure @relation(fields: [structureId], references: [id], onDelete: Restrict)
+  payrun    Payrun           @relation(fields: [payrunId], references: [id], onDelete: Cascade)
+  employee  Employee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  contract  Contract         @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  structure SalaryStructure  @relation(fields: [structureId], references: [id], onDelete: Restrict)
   lines     PayslipLine[]
   warnings  PayrollWarning[]
 
@@ -653,9 +653,9 @@ model Payslip {
 /// One computed rule result. Rule metadata is denormalised onto the line so a
 /// payslip stays readable even if the rule is later renamed or deleted.
 model PayslipLine {
-  id        String @id @default(cuid())
-  payslipId String
-  ruleId    String?
+  id        Int  @id @default(autoincrement())
+  payslipId Int
+  ruleId    Int?
 
   code     String
   name     String
@@ -678,17 +678,17 @@ model PayslipLine {
 /// Payroll issues surfaced before finalisation (rule W7). Attached to a
 /// payslip where employee-specific, or to the payrun where not.
 model PayrollWarning {
-  id        String @id @default(cuid())
-  payrunId  String
-  payslipId String?
+  id        Int  @id @default(autoincrement())
+  payrunId  Int
+  payslipId Int?
 
-  code    WarningCode
-  message String
+  code     WarningCode
+  message  String
   /// Blocking warnings prevent Validate; advisory ones need acknowledgement.
-  blocking Boolean @default(false)
+  blocking Boolean     @default(false)
 
-  acknowledgedAt     DateTime?
-  acknowledgedByUserId String?
+  acknowledgedAt       DateTime?
+  acknowledgedByUserId Int?
 
   createdAt DateTime @default(now())
 
@@ -707,10 +707,14 @@ model PayrollWarning {
 /// Manual attendance edits, approvals, role changes and workflow transitions.
 /// Feeds the dashboard's "manual attendance edits" counter (guardrail 10.9).
 model AuditLog {
-  id       String  @id @default(cuid())
-  userId   String?
+  id       Int    @id @default(autoincrement())
+  userId   Int?
   action   String
   entity   String
+  /// Deliberately text where every other id is an Int: this column is
+  /// polymorphic, paired with `entity` above, and holds the id of a row in
+  /// whichever table that names. It has no foreign key and cannot have one,
+  /// so a writer must convert explicitly -- String(employee.id).
   entityId String
   metadata Json?
 

@@ -58,8 +58,8 @@ export function deriveBalance(
 /** Sum of durations of APPROVED requests linked to one allocation. */
 export async function sumApprovedDuration(
   client: BalanceClient,
-  allocationId: string,
-  excludeRequestId?: string,
+  allocationId: number,
+  excludeRequestId?: number,
 ): Promise<number> {
   const result = await client.timeOffRequest.aggregate({
     where: {
@@ -77,9 +77,9 @@ export async function sumApprovedDuration(
 /** The same sum, batched for a page of allocations in one query. */
 export async function sumApprovedDurationByAllocation(
   client: BalanceClient,
-  allocationIds: readonly string[],
-): Promise<Map<string, number>> {
-  const map = new Map<string, number>();
+  allocationIds: readonly number[],
+): Promise<Map<number, number>> {
+  const map = new Map<number, number>();
   if (allocationIds.length === 0) {
     return map;
   }
@@ -125,7 +125,7 @@ export function allocationCoversWindow(
 }
 
 export interface AllocationCandidate {
-  id: string;
+  id: number;
   allocatedQty: number;
   takenQty: number;
 }
@@ -140,7 +140,7 @@ export interface AllocationCandidate {
 export function pickAllocationForRequest(
   candidates: readonly AllocationCandidate[],
   duration: number,
-): string | null {
+): number | null {
   for (const candidate of candidates) {
     if (remainingFrom(candidate.allocatedQty, candidate.takenQty) >= duration) {
       return candidate.id;
@@ -152,7 +152,7 @@ export function pickAllocationForRequest(
 /** Full balance for one allocation, read fresh from the requests table. */
 export async function computeAllocationBalance(
   client: BalanceClient,
-  allocation: { id: string; allocatedQty: number; status: TimeOffStatus },
+  allocation: { id: number; allocatedQty: number; status: TimeOffStatus },
 ): Promise<AllocationBalance> {
   if (!allocationGrantsBalance(allocation.status)) {
     return {

@@ -10,9 +10,9 @@ import {
 } from './balance.js';
 
 export interface ApproveRequestResult {
-  id: string;
+  id: number;
   status: TimeOffStatus;
-  allocationId: string | null;
+  allocationId: number | null;
 }
 
 /**
@@ -32,8 +32,8 @@ export interface ApproveRequestResult {
  */
 export async function approveTimeOffRequest(
   client: PrismaClient,
-  requestId: string,
-  approverId: string,
+  requestId: number,
+  approverId: number,
 ): Promise<ApproveRequestResult> {
   return client.$transaction(async (tx) => {
     const request = await tx.timeOffRequest.findUnique({

@@ -9,6 +9,9 @@ import {
 
 const day = (iso: string): Date => new Date(`${iso}T00:00:00.000Z`);
 
+/** The one employee these fixtures are about. */
+const EMPLOYEE = 1;
+
 let counter = 0;
 
 function makeContract(overrides: {
@@ -18,9 +21,9 @@ function makeContract(overrides: {
 }): Contract {
   counter += 1;
   return {
-    id: `contract-${counter}`,
+    id: counter,
     reference: `CON/${counter}`,
-    employeeId: 'emp-1',
+    employeeId: EMPLOYEE,
     wageMonthly: 5_000_00,
     departmentId: null,
     jobPositionId: null,
@@ -112,7 +115,7 @@ describe('resolvePeriodContract', () => {
     });
     const client = clientReturning([midStart]);
 
-    return resolvePeriodContract('emp-1', periodStart, periodEnd, client).then(
+    return resolvePeriodContract(EMPLOYEE, periodStart, periodEnd, client).then(
       (result) => {
         expect(result?.id).toBe(midStart.id);
       },
@@ -128,7 +131,7 @@ describe('resolvePeriodContract', () => {
     const client = clientReturning([midEnd]);
 
     const result = await resolvePeriodContract(
-      'emp-1',
+      EMPLOYEE,
       periodStart,
       periodEnd,
       client,
@@ -145,7 +148,7 @@ describe('resolvePeriodContract', () => {
     const client = clientReturning([openEnded]);
 
     const result = await resolvePeriodContract(
-      'emp-1',
+      EMPLOYEE,
       periodStart,
       periodEnd,
       client,
@@ -162,7 +165,7 @@ describe('resolvePeriodContract', () => {
     const client = clientReturning([tooEarly]);
 
     const result = await resolvePeriodContract(
-      'emp-1',
+      EMPLOYEE,
       periodStart,
       periodEnd,
       client,
@@ -179,7 +182,7 @@ describe('resolvePeriodContract', () => {
     const client = clientReturning([expired]);
 
     const result = await resolvePeriodContract(
-      'emp-1',
+      EMPLOYEE,
       periodStart,
       periodEnd,
       client,
@@ -201,7 +204,7 @@ describe('resolvePeriodContract', () => {
     const client = clientReturning([old, current]);
 
     const result = await resolvePeriodContract(
-      'emp-1',
+      EMPLOYEE,
       periodStart,
       periodEnd,
       client,

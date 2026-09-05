@@ -57,8 +57,8 @@ type AttendanceWithEmployee = Prisma.AttendanceGetPayload<
 
 function toRow(attendance: AttendanceWithEmployee): AttendanceRow {
   return {
-    id: attendance.id,
-    employeeId: attendance.employeeId,
+    id: String(attendance.id),
+    employeeId: String(attendance.employeeId),
     employeeName: `${attendance.employee.firstName} ${attendance.employee.lastName}`,
     departmentName: attendance.employee.department?.name ?? null,
     checkIn: attendance.checkIn.toISOString(),
@@ -89,7 +89,7 @@ interface ComputedAttendanceFields {
  * for these fields.
  */
 async function computeAttendanceFields(
-  employeeId: string,
+  employeeId: number,
   checkIn: Date,
   checkOut: Date | null,
   now: Date = new Date(),
@@ -131,7 +131,7 @@ function translateAttendanceError(error: unknown): unknown {
   return error;
 }
 
-function requireEmployeeId(req: Request): string {
+function requireEmployeeId(req: Request): number {
   const user = getUser(req);
   if (user.employeeId === null) {
     throw forbidden('This account is not linked to an employee record');
@@ -225,7 +225,7 @@ attendanceRouter.get(
 
     const session: AttendanceSession = {
       open: true,
-      attendanceId: open.id,
+      attendanceId: String(open.id),
       checkInAt: open.checkIn.toISOString(),
       elapsedMinutes,
     };
@@ -266,7 +266,7 @@ attendanceRouter.post(
 
       const session: AttendanceSession = {
         open: true,
-        attendanceId: created.id,
+        attendanceId: String(created.id),
         checkInAt: created.checkIn.toISOString(),
         elapsedMinutes: 0,
       };
@@ -324,7 +324,7 @@ attendanceRouter.get(
   requirePermission('read', 'attendance'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const attendance = await prisma.attendance.findUnique({
       where: { id },
@@ -393,7 +393,7 @@ attendanceRouter.patch(
   requirePermission('update', 'attendance'),
   validate({ params: idParamsSchema, body: attendanceSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const user = getUser(req);
     const body = req.body as z.infer<typeof attendanceSchema>;
     const checkOut = body.checkOut ?? null;
@@ -443,7 +443,7 @@ attendanceRouter.delete(
   requirePermission('delete', 'attendance'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     try {
       await prisma.attendance.delete({ where: { id } });

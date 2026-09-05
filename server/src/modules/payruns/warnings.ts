@@ -34,10 +34,10 @@ export function isContractExpiringSoon(
 }
 
 export interface EmployeeCompletenessInput {
-  departmentId: string | null;
-  jobPositionId: string | null;
+  departmentId: number | null;
+  jobPositionId: number | null;
   joinDate: Date | null;
-  workingScheduleId: string | null;
+  workingScheduleId: number | null;
 }
 
 /** A record missing basics HR would expect before payroll relies on it. */
@@ -127,8 +127,8 @@ type WarningDb =
  */
 export async function replacePayslipWarnings(
   db: WarningDb,
-  payrunId: string,
-  payslipId: string,
+  payrunId: number,
+  payslipId: number,
   warnings: readonly WarningInput[],
 ): Promise<void> {
   const existing = await db.payrollWarning.findMany({

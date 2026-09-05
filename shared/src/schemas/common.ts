@@ -8,8 +8,23 @@ import { z } from 'zod';
  * places at the next compile, which is the whole reason for the package.
  */
 
-/** Prisma cuid: starts with c, then 24 lowercase alphanumerics. */
-export const idSchema = z.string().regex(/^c[a-z0-9]{20,30}$/, 'Invalid id');
+/**
+ * A database id, coerced from whatever the wire delivered.
+ *
+ * Postgres stores these as `int4`, which is what makes the joins and indexes
+ * cheap, but JSON carries them as strings: a route param is always a string,
+ * a query string is always a string, and the DTOs the API returns keep them
+ * as strings so the browser never has to care.
+ *
+ * The union-then-pipe is what makes both sides true at once: the *input* is
+ * `string | number`, so a form that holds the string a `<select>` gave it
+ * still typechecks, while the *output* is always a number, so a route handler
+ * that reads a parsed body gets an integer. A bare `z.coerce.number()` types
+ * its input as `number` and would reject the caller that has a string.
+ */
+export const idSchema = z
+  .union([z.string(), z.number()])
+  .pipe(z.coerce.number().int('Invalid id').positive('Invalid id'));
 
 export const emailSchema = z
   .string()

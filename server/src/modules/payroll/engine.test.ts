@@ -8,13 +8,20 @@ import {
   type RuleDefinition,
 } from './engine.js';
 
+/** Rule ids only need to be distinct; the engine orders by sequence. */
+let ruleIdCounter = 0;
+function nextRuleId(): number {
+  ruleIdCounter += 1;
+  return ruleIdCounter;
+}
+
 /** Builds a rule with sensible defaults so each test states only what matters. */
 function rule(
   overrides: Partial<RuleDefinition> &
     Pick<RuleDefinition, 'code' | 'category' | 'sequence'>,
 ): RuleDefinition {
   return {
-    id: `id-${overrides.code}`,
+    id: nextRuleId(),
     name: overrides.code,
     computationType: 'FIXED',
     fixedAmount: null,

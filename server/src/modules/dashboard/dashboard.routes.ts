@@ -133,7 +133,7 @@ async function loadPayslipFigures(
   totalNet: number;
   generated: number;
   paid: number;
-  departmentTotals: Map<string, { name: string; total: number }>;
+  departmentTotals: Map<number, { name: string; total: number }>;
   statusCounts: Map<PayslipStatus, number>;
 }> {
   const rows = await prisma.payslip.findMany({
@@ -153,7 +153,7 @@ async function loadPayslipFigures(
 
   let totalNet = 0;
   let paid = 0;
-  const departmentTotals = new Map<string, { name: string; total: number }>();
+  const departmentTotals = new Map<number, { name: string; total: number }>();
   const statusCounts = new Map<PayslipStatus, number>();
 
   for (const row of rows) {
@@ -191,7 +191,7 @@ async function loadPayslipFigures(
 async function loadDepartmentPoints(
   query: DashboardQuery,
   employeeWhere: Prisma.EmployeeWhereInput,
-  departmentTotals: Map<string, { name: string; total: number }>,
+  departmentTotals: Map<number, { name: string; total: number }>,
 ): Promise<DepartmentSalaryPoint[]> {
   const [departments, headcounts] = await Promise.all([
     prisma.department.findMany({
@@ -206,7 +206,7 @@ async function loadDepartmentPoints(
     }),
   ]);
 
-  const headcountMap = new Map<string, number>();
+  const headcountMap = new Map<number, number>();
   for (const row of headcounts) {
     if (row.departmentId !== null) {
       headcountMap.set(row.departmentId, row._count._all);
@@ -214,7 +214,7 @@ async function loadDepartmentPoints(
   }
 
   return departments.map((department) => ({
-    departmentId: department.id,
+    departmentId: String(department.id),
     departmentName: department.name,
     headcount: headcountMap.get(department.id) ?? 0,
     totalNet: departmentTotals.get(department.id)?.total ?? 0,
@@ -458,7 +458,7 @@ async function loadTimeOff(
     }
 
     return {
-      typeId: type.id,
+      typeId: String(type.id),
       typeName: type.name,
       approvedDays,
       pending: pendingMap.get(type.id) ?? 0,

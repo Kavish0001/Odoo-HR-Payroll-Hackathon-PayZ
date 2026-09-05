@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { refuseSelfElevation } from './self-elevation.js';
 
-const ME = 'user-me';
-const SOMEONE_ELSE = 'user-other';
+const ME = 1;
+const SOMEONE_ELSE = 2;
 
 describe('refuseSelfElevation', () => {
   it('refuses granting yourself a role', () => {

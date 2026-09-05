@@ -19,14 +19,52 @@ export type EligibilityClient = Pick<
 >;
 
 export interface ExcludedEmployee {
-  employeeId: string;
+  employeeId: number;
   fullName: string;
   reason: string;
 }
 
+/**
+ * `EligibleEmployee` with the id it actually has.
+ *
+ * The shared DTO carries `employeeId` as a string because that is what the
+ * browser receives. Inside the server it has to stay a number, or the
+ * membership test in the create-payrun route silently fails: `Set.has` uses
+ * SameValueZero, so `new Set([1]).has('1')` is false and every selected
+ * employee would come back reported as ineligible. The route converts at
+ * `res.json()` and nowhere earlier.
+ */
+export type EligibleEmployeeRecord = Omit<EligibleEmployee, 'employeeId'> & {
+  employeeId: number;
+};
+
 export interface EligibilityResult {
-  eligible: EligibleEmployee[];
+  eligible: EligibleEmployeeRecord[];
   excluded: ExcludedEmployee[];
+}
+
+/**
+ * The same result with its ids stringified for the response.
+ *
+ * The internal shape carries numbers so the membership tests in the
+ * create-payrun route work; this is the only thing that should ever be handed
+ * to `res.json`, and its annotated return type is what makes the compiler
+ * complain if the raw record is sent instead.
+ */
+export function toEligibilityResponse(result: EligibilityResult): {
+  eligible: EligibleEmployee[];
+  excluded: { employeeId: string; fullName: string; reason: string }[];
+} {
+  return {
+    eligible: result.eligible.map((row) => ({
+      ...row,
+      employeeId: String(row.employeeId),
+    })),
+    excluded: result.excluded.map((row) => ({
+      ...row,
+      employeeId: String(row.employeeId),
+    })),
+  };
 }
 
 function toDateOnly(date: Date): string {
@@ -51,12 +89,12 @@ function periodsOverlap(
  * advisory heads-up before the run even exists).
  */
 export async function findDuplicatePayslip(
-  employeeId: string,
+  employeeId: number,
   periodStart: Date,
   periodEnd: Date,
-  excludePayrunId: string | undefined,
+  excludePayrunId: number | undefined,
   client: EligibilityClient = defaultPrisma,
-): Promise<{ payrunId: string; payrunName: string } | null> {
+): Promise<{ payrunId: number; payrunName: string } | null> {
   const candidates = await client.payslip.findMany({
     where: {
       employeeId,
@@ -90,7 +128,7 @@ export async function findDuplicatePayslip(
 }
 
 interface EligibilityScope {
-  salaryStructureId: string;
+  salaryStructureId: number;
   periodStart: Date;
   periodEnd: Date;
   employeeTypeScope?: EmployeeType | null | undefined;
@@ -98,7 +136,7 @@ interface EligibilityScope {
 
 export async function resolveEligibleEmployees(
   scope: EligibilityScope,
-  excludePayrunId?: string,
+  excludePayrunId?: number,
   client: EligibilityClient = defaultPrisma,
 ): Promise<EligibilityResult> {
   const candidates = await client.employee.findMany({
@@ -115,7 +153,7 @@ export async function resolveEligibleEmployees(
     orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
   });
 
-  const eligible: EligibleEmployee[] = [];
+  const eligible: EligibleEmployeeRecord[] = [];
   const excluded: ExcludedEmployee[] = [];
 
   for (const employee of candidates) {

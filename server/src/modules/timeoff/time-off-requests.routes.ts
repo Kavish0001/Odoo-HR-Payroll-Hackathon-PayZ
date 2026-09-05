@@ -67,11 +67,11 @@ function toDateOnly(date: Date): string {
 
 function toRow(request: RequestWithRelations): TimeOffRequestRow {
   return {
-    id: request.id,
-    employeeId: request.employeeId,
+    id: String(request.id),
+    employeeId: String(request.employeeId),
     employeeName: `${request.employee.firstName} ${request.employee.lastName}`,
     departmentName: request.employee.department?.name ?? null,
-    typeId: request.typeId,
+    typeId: String(request.typeId),
     typeName: request.type.name,
     unit: request.type.unit,
     startDate: toDateOnly(request.startDate),
@@ -83,12 +83,13 @@ function toRow(request: RequestWithRelations): TimeOffRequestRow {
         ? null
         : `${request.approver.firstName} ${request.approver.lastName}`,
     reason: request.reason,
-    allocationId: request.allocationId,
+    allocationId:
+      request.allocationId === null ? null : String(request.allocationId),
     allocationName: request.allocation?.name ?? null,
   };
 }
 
-async function loadRequestRow(id: string): Promise<TimeOffRequestRow> {
+async function loadRequestRow(id: number): Promise<TimeOffRequestRow> {
   const request = await prisma.timeOffRequest.findUnique({
     where: { id },
     ...requestWithRelations,
@@ -101,7 +102,7 @@ async function loadRequestRow(id: string): Promise<TimeOffRequestRow> {
 
 /** Rule T6: working days from the employee's schedule, not calendar days. */
 async function computeDuration(
-  employeeId: string,
+  employeeId: number,
   startDate: Date,
   endDate: Date,
 ): Promise<number> {
@@ -157,10 +158,10 @@ timeOffRequestsRouter.get(
   requirePermission('read', 'timeOffRequest'),
   validate({ query: z.object({ employeeId: idSchema.optional() }) }),
   asyncRoute(async (req, res) => {
-    const query = req.query as unknown as { employeeId?: string };
+    const query = req.query as unknown as { employeeId?: number };
     const user = getUser(req);
 
-    let employeeId: string;
+    let employeeId: number;
     if (isSelfScoped(user.roles)) {
       if (user.employeeId === null) {
         throw forbidden('This account is not linked to an employee record');
@@ -195,7 +196,7 @@ timeOffRequestsRouter.get(
           _sum: { duration: true },
         });
         rows.push({
-          typeId: type.id,
+          typeId: String(type.id),
           typeName: type.name,
           unit: type.unit,
           requiresAllocation: false,
@@ -225,7 +226,7 @@ timeOffRequestsRouter.get(
       );
 
       rows.push({
-        typeId: type.id,
+        typeId: String(type.id),
         typeName: type.name,
         unit: type.unit,
         requiresAllocation: true,
@@ -246,7 +247,7 @@ timeOffRequestsRouter.get(
   requirePermission('read', 'timeOffRequest'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const request = await prisma.timeOffRequest.findUnique({
       where: { id },
@@ -297,7 +298,7 @@ timeOffRequestsRouter.patch(
   requirePermission('update', 'timeOffRequest'),
   validate({ params: idParamsSchema, body: timeOffRequestSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
     const body = req.body as z.infer<typeof timeOffRequestSchema>;
     mustBeSelf(req, body.employeeId);
 
@@ -337,7 +338,7 @@ timeOffRequestsRouter.delete(
   requirePermission('delete', 'timeOffRequest'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const existing = await prisma.timeOffRequest.findUnique({ where: { id } });
     if (existing === null) {
@@ -364,7 +365,7 @@ timeOffRequestsRouter.post(
   requirePermission('update', 'timeOffRequest'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const existing = await prisma.timeOffRequest.findUnique({
       where: { id },
@@ -392,7 +393,7 @@ timeOffRequestsRouter.post(
   requirePermission('update', 'timeOffRequest'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id } = req.params as unknown as { id: string };
+    const { id } = req.params as unknown as { id: number };
 
     const existing = await prisma.timeOffRequest.findUnique({ where: { id } });
     if (existing === null) {

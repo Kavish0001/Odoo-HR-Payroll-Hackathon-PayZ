@@ -146,7 +146,7 @@ function eachWorkingDay(from: Date, to: Date): Date[] {
   return days;
 }
 
-function toRuleDefinition(rule: SeedRule, id: string): RuleDefinition {
+function toRuleDefinition(rule: SeedRule, id: number): RuleDefinition {
   return {
     id,
     code: rule.code,
@@ -200,7 +200,7 @@ async function main(): Promise<void> {
     data: { name: 'OXP Pvt Ltd', legalName: 'OXP Private Limited' },
   });
 
-  const departments = new Map<string, string>();
+  const departments = new Map<string, number>();
   for (const name of DEPARTMENTS) {
     const record = await prisma.department.create({
       data: {
@@ -212,7 +212,7 @@ async function main(): Promise<void> {
     departments.set(name, record.id);
   }
 
-  const positions = new Map<string, string>();
+  const positions = new Map<string, number>();
   for (const title of JOB_POSITIONS) {
     const record = await prisma.jobPosition.create({ data: { title } });
     positions.set(title, record.id);
@@ -328,11 +328,11 @@ async function main(): Promise<void> {
   const employees = new Map<
     string,
     {
-      id: string;
+      id: number;
       wage: number;
       isIntern: boolean;
       seniority: number;
-      scheduleId: string;
+      scheduleId: number;
     }
   >();
 
@@ -423,10 +423,10 @@ async function main(): Promise<void> {
   // One expired and one running each. The exclusion constraint guarantees the
   // running ones cannot overlap, so this ordering is enforced, not assumed.
   let reference = 1;
-  const contracts = new Map<string, string>();
+  const contracts = new Map<string, number>();
   const raisedContracts = new Map<
     string,
-    { contractId: string; wage: number }
+    { contractId: number; wage: number }
   >();
 
   for (const person of ROSTER) {
@@ -534,7 +534,7 @@ async function main(): Promise<void> {
   // overview and the health percentage are computed from something rather
   // than asserted.
   const attendanceRows: {
-    employeeId: string;
+    employeeId: number;
     checkIn: Date;
     checkOut: Date | null;
     workedMinutes: number;
@@ -635,7 +635,7 @@ async function main(): Promise<void> {
   }
 
   // ---- Time off ----------------------------------------------------------
-  const typeIds = new Map<string, string>();
+  const typeIds = new Map<string, number>();
   for (const type of TIME_OFF_TYPES) {
     const record = await prisma.timeOffType.create({
       data: {
@@ -943,7 +943,7 @@ async function main(): Promise<void> {
     email: string;
     passwordHash: string;
     roles: Role[];
-    employeeId: string;
+    employeeId: number;
   }[] = [];
 
   for (const person of ROSTER) {
