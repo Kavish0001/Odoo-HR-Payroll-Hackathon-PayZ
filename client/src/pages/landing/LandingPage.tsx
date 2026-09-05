@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 
 import { usePublicStats } from '../../api/stats.js';
+import { Backdrop } from '../../components/brand/Backdrop.js';
 import { Logo } from '../../components/brand/Logo.js';
-import { MachinedBackdrop } from '../../components/brand/MachinedBackdrop.js';
 
 import { FlowDiagram } from './FlowDiagram.js';
 
@@ -83,7 +83,7 @@ export function LandingPage(): React.JSX.Element {
 
   return (
     <div className="text-ink relative min-h-screen">
-      <MachinedBackdrop />
+      <Backdrop density="minimal" />
       {/* ---- Top bar ------------------------------------------------------ */}
       <header className="border-steel-300 border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">

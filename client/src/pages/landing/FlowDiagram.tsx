@@ -25,8 +25,8 @@ export function FlowDiagram(): React.JSX.Element {
       <defs>
         <pattern
           id="landing-dots"
-          width="14"
-          height="14"
+          width="6"
+          height="6"
           patternUnits="userSpaceOnUse"
         >
           <circle cx="1.5" cy="1.5" r="1.5" fill="var(--color-steel-300)" />
@@ -39,7 +39,7 @@ export function FlowDiagram(): React.JSX.Element {
         width="520"
         height="300"
         fill="url(#landing-dots)"
-        opacity="0.75"
+        opacity="0.6"
       />
 
       {/* Structural lines, drawn behind the nodes. */}

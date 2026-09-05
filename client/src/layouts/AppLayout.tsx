@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 
-import { MachinedBackdrop } from '../components/brand/MachinedBackdrop.js';
+import { Backdrop } from '../components/brand/Backdrop.js';
 import { useAuth } from '../lib/auth.js';
 
 import { HeaderStrip } from './HeaderStrip.js';
@@ -23,7 +23,7 @@ export function AppLayout(): React.JSX.Element {
 
   return (
     <div className="min-h-screen">
-      <MachinedBackdrop />
+      <Backdrop />
       <Navbar />
       <HeaderStrip />
       <main className="mx-auto max-w-[1500px] px-5 py-8">

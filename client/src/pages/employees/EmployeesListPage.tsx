@@ -1,6 +1,6 @@
 import type { EmployeeRow } from '@payz/shared';
 import { type ColumnDef } from '@tanstack/react-table';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { useDepartments } from '../../api/departments.js';
@@ -56,7 +56,7 @@ export function EmployeesListPage(): React.JSX.Element {
         accessorFn: (row) => row.fullName,
         cell: ({ row }) => (
           <div className="flex items-center gap-2.5">
-            <span className="bg-info-soft text-info flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+            <span className="bg-steel-100 text-ink font-mono flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-medium">
               {row.original.initials}
             </span>
             <span className="font-medium">{row.original.fullName}</span>
@@ -229,13 +229,46 @@ function KanbanBoard({
   isLoading: boolean;
   isError: boolean;
 }): React.JSX.Element {
+  const boardRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Turn a vertical wheel into sideways movement over the board.
+   *
+   * The horizontal scrollbar sits under the longest column, which on a full
+   * roster is well past the fold, so reaching it meant scrolling down first.
+   * The wheel now moves the board directly, wherever the pointer is over it.
+   *
+   * A horizontal gesture (trackpad swipe, shift+wheel) is left alone, and so
+   * is a vertical wheel once the board is already at either end, so the page
+   * keeps scrolling normally instead of trapping the pointer.
+   */
+  const onWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    const board = boardRef.current;
+    if (board === null || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+      return;
+    }
+
+    const max = board.scrollWidth - board.clientWidth;
+    if (max <= 0) {
+      return;
+    }
+
+    const next = board.scrollLeft + event.deltaY;
+    if (next < 0 || next > max) {
+      return;
+    }
+
+    board.scrollLeft = next;
+    event.preventDefault();
+  }, []);
+
   if (isLoading) {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-2">
-        {Array.from({ length: 3 }).map((_, index) => (
+      <div className="flex gap-4 overflow-x-auto pb-3">
+        {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className="border-line bg-raised h-64 w-64 shrink-0 animate-pulse rounded-lg border"
+            className="border-steel-300 bg-raised h-64 w-64 shrink-0 animate-pulse rounded-sm border"
           />
         ))}
       </div>
@@ -264,10 +297,14 @@ function KanbanBoard({
   }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-2">
+    <div
+      ref={boardRef}
+      onWheel={onWheel}
+      className="flex gap-4 overflow-x-auto pb-2"
+    >
       {groups.map(([department, employees]) => (
         <div key={department} className="w-64 shrink-0">
-          <div className="text-muted mb-2 flex items-center justify-between px-1 text-xs font-semibold tracking-wide uppercase">
+          <div className="eyebrow mb-2 flex items-center justify-between px-1">
             <span>{department}</span>
             <span className="font-mono">{employees.length}</span>
           </div>
@@ -276,10 +313,10 @@ function KanbanBoard({
               <Link
                 key={employee.id}
                 to={`/employees/${employee.id}`}
-                className="border-line bg-raised hover:border-metal-500 block rounded-md border p-3 transition-colors"
+                className="border-steel-300 bg-raised hover:border-ink block rounded-sm border p-3 transition-colors"
               >
                 <div className="flex items-start gap-2.5">
-                  <span className="bg-info-soft text-info flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+                  <span className="bg-steel-100 text-ink font-mono flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-medium">
                     {employee.initials || initialsFrom(employee.fullName)}
                   </span>
                   <div className="min-w-0 flex-1">

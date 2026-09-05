@@ -252,13 +252,20 @@ h3 {
   color: var(--color-muted);
 }
 
-/** The dotted-grid texture from the mockups: header strips and hero panels. */
+/**
+ * The dotted-grid texture from the mockups: header strips and hero panels.
+ *
+ * 3px dots on a 3px gap, so the tile is 6px. That is a dense, halftone-style
+ * grid rather than a sparse one, which is why the dots are drawn in the
+ * lightest steel: at this spacing anything darker reads as a flat fill and
+ * small monospace labels start to fight it.
+ */
 @utility dot-grid {
   background-image: radial-gradient(
-    var(--color-steel-300) 1px,
-    transparent 1px
+    var(--color-steel-300) 1.5px,
+    transparent 1.5px
   );
-  background-size: 12px 12px;
+  background-size: 6px 6px;
 }
 
 /**

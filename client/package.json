@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@payz/shared": "*",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
     "@tanstack/react-query": "^5.62.7",
     "@tanstack/react-table": "^8.20.6",
     "axios": "^1.7.9",
@@ -22,6 +24,7 @@
     "react-router-dom": "^7.1.1",
     "recharts": "^2.15.0",
     "tailwind-merge": "^2.5.5",
+    "three": "^0.185.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {
@@ -29,6 +32,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
+    "@types/three": "^0.185.4",
     "@vitejs/plugin-react": "^4.3.4",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.2",
