@@ -1,8 +1,48 @@
 @import 'tailwindcss';
 
+/* Self-hosted rather than pulled from the Google CDN, so hackathon wifi cannot
+   make the demo render in a fallback face. 97 KB for five faces, latin subset.
+   font-display: swap shows text immediately in the fallback and swaps when the
+   face arrives, rather than holding the page blank. */
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/SpaceGrotesk-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/SpaceGrotesk-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/SpaceGrotesk-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/SpaceMono-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/SpaceMono-700.woff2') format('woff2');
+}
+
 /* Space Grotesk for the interface, Space Mono for figures and identifiers.
-   Self-hosted rather than pulled from a CDN, so hackathon wifi cannot make
-   the demo render in a fallback face. Font files land here in P1. */
+   Faces are declared above and served from /fonts. */
 @theme {
   --font-sans:
     'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
