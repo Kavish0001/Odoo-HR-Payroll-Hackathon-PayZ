@@ -15,14 +15,19 @@ import {
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { attendanceRouter } from './modules/attendance/attendance.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
-import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
-import { salaryRulesRouter } from './modules/salary-config/salary-rules.routes.js';
-import { salaryStructuresRouter } from './modules/salary-config/salary-structures.routes.js';
 import { contractsRouter } from './modules/contracts/contracts.routes.js';
+import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { departmentsRouter } from './modules/departments/departments.routes.js';
 import { employeesRouter } from './modules/employees/employees.routes.js';
 import { jobPositionsRouter } from './modules/job-positions/job-positions.routes.js';
+import { payrunsRouter } from './modules/payruns/payruns.routes.js';
+import { payslipsRouter } from './modules/payruns/payslips.routes.js';
+import { salaryRulesRouter } from './modules/salary-config/salary-rules.routes.js';
+import { salaryStructuresRouter } from './modules/salary-config/salary-structures.routes.js';
 import { schedulesRouter } from './modules/schedules/schedules.routes.js';
+import { allocationsRouter } from './modules/timeoff/allocations.routes.js';
+import { timeOffRequestsRouter } from './modules/timeoff/time-off-requests.routes.js';
+import { timeOffTypesRouter } from './modules/timeoff/time-off-types.routes.js';
 
 /**
  * The Express app, built separately from the listener so tests can mount it
@@ -88,6 +93,13 @@ export function createApp(): Express {
     { prefix: '/api/contracts', router: contractsRouter },
     { prefix: '/api/attendance', router: attendanceRouter },
     { prefix: '/api/dashboard', router: dashboardRouter },
+    // Each of these declares its own sub-path (/types, /allocations,
+    // /requests), so they share one prefix.
+    { prefix: '/api/time-off', router: timeOffTypesRouter },
+    { prefix: '/api/time-off', router: allocationsRouter },
+    { prefix: '/api/time-off', router: timeOffRequestsRouter },
+    { prefix: '/api/payruns', router: payrunsRouter },
+    { prefix: '/api/payslips', router: payslipsRouter },
     { prefix: '/api/salary-structures', router: salaryStructuresRouter },
     { prefix: '/api/salary-rules', router: salaryRulesRouter },
   ];

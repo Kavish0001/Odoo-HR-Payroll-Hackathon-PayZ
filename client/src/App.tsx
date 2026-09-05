@@ -2,21 +2,32 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppLayout } from './layouts/AppLayout.js';
 import { AuthProvider } from './lib/auth.js';
+import { AttendanceFormPage } from './pages/attendance/AttendanceFormPage.js';
+import { AttendanceListPage } from './pages/attendance/AttendanceListPage.js';
 import { ContractFormPage } from './pages/contracts/ContractFormPage.js';
 import { ContractsListPage } from './pages/contracts/ContractsListPage.js';
+import { PayrollDashboardPage } from './pages/dashboard/PayrollDashboardPage.js';
 import { DepartmentFormPage } from './pages/departments/DepartmentFormPage.js';
 import { DepartmentsListPage } from './pages/departments/DepartmentsListPage.js';
 import { EmployeeFormPage } from './pages/employees/EmployeeFormPage.js';
 import { EmployeesListPage } from './pages/employees/EmployeesListPage.js';
-import { AttendanceFormPage } from './pages/attendance/AttendanceFormPage.js';
-import { AttendanceListPage } from './pages/attendance/AttendanceListPage.js';
-import { PayrollDashboardPage } from './pages/dashboard/PayrollDashboardPage.js';
 import { LoginPage } from './pages/LoginPage.js';
+import { PayrunDetailPage } from './pages/payroll/PayrunDetailPage.js';
+import { PayrunNewPage } from './pages/payroll/PayrunNewPage.js';
+import { PayrunsListPage } from './pages/payroll/PayrunsListPage.js';
+import { PayslipDetailPage } from './pages/payroll/PayslipDetailPage.js';
+import { PayslipsListPage } from './pages/payroll/PayslipsListPage.js';
+import { Placeholder } from './pages/Placeholder.js';
 import { SalaryRuleFormPage } from './pages/salaryConfig/SalaryRuleFormPage.js';
 import { SalaryRulesListPage } from './pages/salaryConfig/SalaryRulesListPage.js';
 import { SalaryStructureFormPage } from './pages/salaryConfig/SalaryStructureFormPage.js';
 import { SalaryStructuresListPage } from './pages/salaryConfig/SalaryStructuresListPage.js';
-import { Placeholder } from './pages/Placeholder.js';
+import { AllocationFormPage } from './pages/timeoff/AllocationFormPage.js';
+import { AllocationsListPage } from './pages/timeoff/AllocationsListPage.js';
+import { TimeOffRequestFormPage } from './pages/timeoff/TimeOffRequestFormPage.js';
+import { TimeOffRequestsListPage } from './pages/timeoff/TimeOffRequestsListPage.js';
+import { TimeOffTypeFormPage } from './pages/timeoff/TimeOffTypeFormPage.js';
+import { TimeOffTypesListPage } from './pages/timeoff/TimeOffTypesListPage.js';
 import { WorkingScheduleFormPage } from './pages/workingSchedules/WorkingScheduleFormPage.js';
 import { WorkingSchedulesListPage } from './pages/workingSchedules/WorkingSchedulesListPage.js';
 
@@ -51,23 +62,32 @@ export function App(): React.JSX.Element {
             <Route path="/attendance/:id" element={<AttendanceFormPage />} />
             <Route
               path="/time-off/requests"
-              element={<Placeholder title="Time Off Requests" />}
+              element={<TimeOffRequestsListPage />}
+            />
+            <Route
+              path="/time-off/requests/:id"
+              element={<TimeOffRequestFormPage />}
             />
             <Route
               path="/time-off/allocations"
-              element={<Placeholder title="Allocations" />}
+              element={<AllocationsListPage />}
             />
             <Route
-              path="/time-off/types"
-              element={<Placeholder title="Time Off Types" />}
+              path="/time-off/allocations/:id"
+              element={<AllocationFormPage />}
             />
+            <Route path="/time-off/types" element={<TimeOffTypesListPage />} />
             <Route
-              path="/payroll/payruns"
-              element={<Placeholder title="Payruns" />}
+              path="/time-off/types/:id"
+              element={<TimeOffTypeFormPage />}
             />
+            <Route path="/payroll/payruns" element={<PayrunsListPage />} />
+            <Route path="/payroll/payruns/new" element={<PayrunNewPage />} />
+            <Route path="/payroll/payruns/:id" element={<PayrunDetailPage />} />
+            <Route path="/payroll/payslips" element={<PayslipsListPage />} />
             <Route
-              path="/payroll/payslips"
-              element={<Placeholder title="Payslips" />}
+              path="/payroll/payslips/:id"
+              element={<PayslipDetailPage />}
             />
             <Route
               path="/payroll/structures"
