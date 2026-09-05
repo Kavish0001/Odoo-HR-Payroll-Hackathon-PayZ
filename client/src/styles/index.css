@@ -41,35 +41,69 @@
   src: url('/fonts/SpaceMono-700.woff2') format('woff2');
 }
 
-/* Space Grotesk for the interface, Space Mono for figures and identifiers.
-   Faces are declared above and served from /fonts. */
 @theme {
   --font-sans:
     'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'Space Mono', ui-monospace, 'Cascadia Code', monospace;
 
-  /* Palette taken from the PayZ coin: gunmetal body, red mint mark. */
+  /* ---- Neutrals: gunmetal, from the coin face ---- */
   --color-ink: oklch(0.26 0.008 260);
   --color-muted: oklch(0.56 0.008 260);
   --color-line: oklch(0.9 0.004 260);
-  --color-surface: oklch(0.99 0.002 260);
+  --color-surface: oklch(0.985 0.002 260);
   --color-raised: oklch(1 0 0);
 
-  /* Gunmetal, from the coin face gradient (#2B2E33 - #9EA3A9). */
   --color-metal-900: oklch(0.29 0.008 260);
   --color-metal-700: oklch(0.45 0.008 260);
   --color-metal-500: oklch(0.68 0.006 260);
   --color-metal-300: oklch(0.86 0.004 260);
 
-  /* Mint-mark red. Reserved for destructive actions and blocking warnings,
-     so it keeps its urgency. */
-  --color-brand: oklch(0.52 0.21 26);
-  --color-brand-strong: oklch(0.42 0.19 26);
+  /* ---- Semantic hues ----
+     Every status colour means one thing across the whole app, so a colour is
+     readable without its label. Chroma and lightness are held close between
+     hues so no single status shouts louder than the others, and each pairs a
+     text tone with a tinted surface for chips and banners. */
 
-  /* Status colours for payroll and leave states. */
-  --color-success: oklch(0.6 0.13 155);
-  --color-warning: oklch(0.72 0.15 75);
+  /* Emerald: active, running, approved, present, paid. */
+  --color-success: oklch(0.55 0.14 155);
+  --color-success-soft: oklch(0.95 0.04 155);
+
+  /* Amber: pending, to approve, late, draft, advisory warnings. */
+  --color-warning: oklch(0.66 0.15 75);
+  --color-warning-soft: oklch(0.96 0.05 75);
+
+  /* Blue: informational, computed, paid time off, neutral emphasis. */
+  --color-info: oklch(0.58 0.15 250);
+  --color-info-soft: oklch(0.95 0.04 250);
+
+  /* Violet: payroll and money surfaces, distinct from HR blue. */
+  --color-accent: oklch(0.55 0.17 300);
+  --color-accent-soft: oklch(0.95 0.04 300);
+
+  /* Teal: attendance and time, distinct from both blue and green. */
+  --color-teal: oklch(0.6 0.11 195);
+  --color-teal-soft: oklch(0.95 0.035 195);
+
+  /* Mint-mark red. Reserved: destructive actions, blocking payroll warnings,
+     refused and absent. Nothing merely informational uses it, so when it
+     appears it still means stop. */
   --color-danger: oklch(0.55 0.21 26);
+  --color-danger-soft: oklch(0.95 0.04 26);
+
+  /* Slate: expired, cancelled, inactive. Present but retired. */
+  --color-neutral: oklch(0.55 0.02 260);
+  --color-neutral-soft: oklch(0.95 0.005 260);
+
+  /* Categorical series for dashboard charts, in plot order. Ordered so
+     adjacent series stay distinguishable, including for the most common
+     colour-vision deficiencies, where blue against amber survives and red
+     against green does not. */
+  --color-chart-1: oklch(0.58 0.15 250);
+  --color-chart-2: oklch(0.55 0.14 155);
+  --color-chart-3: oklch(0.66 0.15 75);
+  --color-chart-4: oklch(0.55 0.17 300);
+  --color-chart-5: oklch(0.6 0.11 195);
+  --color-chart-6: oklch(0.55 0.21 26);
 }
 
 :root {
@@ -90,4 +124,10 @@ body {
 .font-mono,
 [data-numeric] {
   font-variant-numeric: tabular-nums;
+}
+
+/* Focus is always visible: payroll is keyboard-heavy work. */
+:focus-visible {
+  outline: 2px solid var(--color-info);
+  outline-offset: 2px;
 }
