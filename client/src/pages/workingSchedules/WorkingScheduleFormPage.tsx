@@ -19,6 +19,7 @@ import { PageHeader } from '../../components/data/PageHeader.js';
 import { Checkbox } from '../../components/ui/Checkbox.js';
 import { Field } from '../../components/ui/Field.js';
 import { Input } from '../../components/ui/Input.js';
+import { useAuth } from '../../lib/auth.js';
 
 interface DayLineFormValue {
   dayOfWeek: Weekday;
@@ -91,8 +92,14 @@ function lineHours(line: DayLineFormValue): number {
 export function WorkingScheduleFormPage(): React.JSX.Element {
   const { id = 'new' } = useParams<{ id: string }>();
   const isNew = id === 'new';
+  const { allowed } = useAuth();
   const navigate = useNavigate();
 
+  // Read on this resource sits at EMPLOYEE so other forms can resolve
+  // its names; changing it is HR's. Anyone without the write permission
+  // reads the record instead of being handed inputs and a Save button
+  // that answers 403.
+  const canWrite = allowed(isNew ? 'create' : 'update', 'workingSchedule');
   const [formError, setFormError] = useState<string | null>(null);
 
   const scheduleQuery = useWorkingSchedule(isNew ? undefined : id);
@@ -239,6 +246,8 @@ export function WorkingScheduleFormPage(): React.JSX.Element {
           void navigate('/working-schedules');
         }}
         error={formError}
+        readOnly={!canWrite}
+        readOnlyNote="Working schedules are maintained by HR."
       >
         <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field

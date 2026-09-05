@@ -249,7 +249,9 @@ allocationsRouter.delete(
 allocationsRouter.post(
   '/allocations/:id/approve',
   requireAuth,
-  requirePermission('update', 'timeOffAllocation'),
+  // Same rank as update today, but named for what it is: granting balance is
+  // a decision, and the client asks for this action by name.
+  requirePermission('approve', 'timeOffAllocation'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
     const { id } = req.params as unknown as { id: number };
@@ -287,7 +289,9 @@ allocationsRouter.post(
 allocationsRouter.post(
   '/allocations/:id/refuse',
   requireAuth,
-  requirePermission('update', 'timeOffAllocation'),
+  // Same rank as update today, but named for what it is: granting balance is
+  // a decision, and the client asks for this action by name.
+  requirePermission('approve', 'timeOffAllocation'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
     const { id } = req.params as unknown as { id: number };

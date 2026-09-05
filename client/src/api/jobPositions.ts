@@ -35,7 +35,7 @@ export interface JobPositionListParams {
  * catalogue, so a missing endpoint (404) degrades to an empty list rather
  * than failing the whole form.
  */
-export function useJobPositionOptions() {
+export function useJobPositionOptions(enabled = true) {
   return useQuery({
     queryKey: ['job-positions', 'options'],
     queryFn: async (): Promise<JobPositionOption[]> => {
@@ -53,6 +53,7 @@ export function useJobPositionOptions() {
       }
     },
     staleTime: 60_000,
+    enabled,
   });
 }
 

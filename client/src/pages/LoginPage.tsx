@@ -8,6 +8,7 @@ import { toApiError } from '../api/client.js';
 import { Backdrop } from '../components/brand/Backdrop.js';
 import { Logo } from '../components/brand/Logo.js';
 import { useAuth } from '../lib/auth.js';
+import { homePathFor } from '../lib/utils.js';
 
 export function LoginPage(): React.JSX.Element {
   const { signIn } = useAuth();
@@ -26,8 +27,10 @@ export function LoginPage(): React.JSX.Element {
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
     try {
-      await signIn(values.email, values.password);
-      void navigate('/employees', { replace: true });
+      const signedIn = await signIn(values.email, values.password);
+      // Routed on the role that just signed in, not on context state: the
+      // provider has not re-rendered this component yet.
+      void navigate(homePathFor(signedIn), { replace: true });
     } catch (error) {
       setFormError(toApiError(error).message);
     }

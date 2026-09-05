@@ -52,74 +52,244 @@ export function App(): React.JSX.Element {
           <Route path="/login" element={<LoginPage />} />
 
           <Route element={<AppLayout />}>
-            <Route path="/employees" element={<EmployeesListPage />} />
-            <Route path="/employees/:id" element={<EmployeeFormPage />} />
-            <Route path="/departments" element={<DepartmentsListPage />} />
-            <Route path="/departments/:id" element={<DepartmentFormPage />} />
-            <Route path="/job-positions" element={<JobPositionsListPage />} />
+            {/* Every area is gated on the same permission the navbar uses to
+                decide whether to show its link, because hiding a link is not
+                a gate: anyone can type the path. The API refuses these
+                requests regardless (rule R1) -- what this adds is a sentence
+                explaining the refusal, in place of a screen of failed
+                requests and empty tables. */}
             <Route
-              path="/job-positions/:id"
-              element={<JobPositionFormPage />}
-            />
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="employee"
+                  label="Employees"
+                />
+              }
+            >
+              <Route path="/employees" element={<EmployeesListPage />} />
+              <Route path="/employees/:id" element={<EmployeeFormPage />} />
+            </Route>
+
             <Route
-              path="/working-schedules"
-              element={<WorkingSchedulesListPage />}
-            />
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="department"
+                  label="Departments"
+                />
+              }
+            >
+              <Route path="/departments" element={<DepartmentsListPage />} />
+              <Route path="/departments/:id" element={<DepartmentFormPage />} />
+            </Route>
+
             <Route
-              path="/working-schedules/:id"
-              element={<WorkingScheduleFormPage />}
-            />
-            <Route path="/contracts" element={<ContractsListPage />} />
-            <Route path="/contracts/:id" element={<ContractFormPage />} />
-            <Route path="/attendance" element={<AttendanceListPage />} />
-            <Route path="/attendance/:id" element={<AttendanceFormPage />} />
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="jobPosition"
+                  label="Job Positions"
+                />
+              }
+            >
+              <Route path="/job-positions" element={<JobPositionsListPage />} />
+              <Route
+                path="/job-positions/:id"
+                element={<JobPositionFormPage />}
+              />
+            </Route>
+
             <Route
-              path="/time-off/dashboard"
-              element={<TimeOffDashboardPage />}
-            />
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="workingSchedule"
+                  label="Working Schedules"
+                />
+              }
+            >
+              <Route
+                path="/working-schedules"
+                element={<WorkingSchedulesListPage />}
+              />
+              <Route
+                path="/working-schedules/:id"
+                element={<WorkingScheduleFormPage />}
+              />
+            </Route>
+
             <Route
-              path="/time-off/requests"
-              element={<TimeOffRequestsListPage />}
-            />
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="contract"
+                  label="Contracts"
+                />
+              }
+            >
+              <Route path="/contracts" element={<ContractsListPage />} />
+              <Route path="/contracts/:id" element={<ContractFormPage />} />
+            </Route>
+
             <Route
-              path="/time-off/requests/:id"
-              element={<TimeOffRequestFormPage />}
-            />
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="attendance"
+                  label="Attendance"
+                />
+              }
+            >
+              <Route path="/attendance" element={<AttendanceListPage />} />
+              <Route path="/attendance/:id" element={<AttendanceFormPage />} />
+            </Route>
+
             <Route
-              path="/time-off/allocations"
-              element={<AllocationsListPage />}
-            />
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="timeOffRequest"
+                  label="Time Off"
+                />
+              }
+            >
+              <Route
+                path="/time-off/dashboard"
+                element={<TimeOffDashboardPage />}
+              />
+              <Route
+                path="/time-off/requests"
+                element={<TimeOffRequestsListPage />}
+              />
+              <Route
+                path="/time-off/requests/:id"
+                element={<TimeOffRequestFormPage />}
+              />
+            </Route>
+
             <Route
-              path="/time-off/allocations/:id"
-              element={<AllocationFormPage />}
-            />
-            <Route path="/time-off/types" element={<TimeOffTypesListPage />} />
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="timeOffAllocation"
+                  label="Time Off Allocations"
+                />
+              }
+            >
+              <Route
+                path="/time-off/allocations"
+                element={<AllocationsListPage />}
+              />
+              <Route
+                path="/time-off/allocations/:id"
+                element={<AllocationFormPage />}
+              />
+            </Route>
+
             <Route
-              path="/time-off/types/:id"
-              element={<TimeOffTypeFormPage />}
-            />
-            <Route path="/payroll/payruns" element={<PayrunsListPage />} />
-            <Route path="/payroll/payruns/new" element={<PayrunNewPage />} />
-            <Route path="/payroll/payruns/:id" element={<PayrunDetailPage />} />
-            <Route path="/payroll/payslips" element={<PayslipsListPage />} />
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="timeOffType"
+                  label="Time Off Types"
+                />
+              }
+            >
+              <Route
+                path="/time-off/types"
+                element={<TimeOffTypesListPage />}
+              />
+              <Route
+                path="/time-off/types/:id"
+                element={<TimeOffTypeFormPage />}
+              />
+            </Route>
+
             <Route
-              path="/payroll/payslips/:id"
-              element={<PayslipDetailPage />}
-            />
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="payrun"
+                  label="Payruns"
+                />
+              }
+            >
+              <Route path="/payroll/payruns" element={<PayrunsListPage />} />
+              <Route path="/payroll/payruns/new" element={<PayrunNewPage />} />
+              <Route
+                path="/payroll/payruns/:id"
+                element={<PayrunDetailPage />}
+              />
+            </Route>
+
+            {/* Payslips are the one payroll area an employee reaches. With
+                only `readSelf` they see their own pay and nobody else's: the
+                API filters to their employee id whatever the page asks for. */}
             <Route
-              path="/payroll/structures"
-              element={<SalaryStructuresListPage />}
-            />
+              element={
+                <RequirePermission
+                  action="readSelf"
+                  resource="payslip"
+                  label="Payslips"
+                />
+              }
+            >
+              <Route path="/payroll/payslips" element={<PayslipsListPage />} />
+              <Route
+                path="/payroll/payslips/:id"
+                element={<PayslipDetailPage />}
+              />
+            </Route>
+
             <Route
-              path="/payroll/structures/:id"
-              element={<SalaryStructureFormPage />}
-            />
-            <Route path="/payroll/rules" element={<SalaryRulesListPage />} />
-            <Route path="/payroll/rules/:id" element={<SalaryRuleFormPage />} />
-            <Route path="/dashboard" element={<PayrollDashboardPage />} />
-            {/* Rule R5: account and role management is the admin's alone.
-                The API refuses these routes to anyone else regardless; this
-                gate makes the refusal a sentence instead of an empty table. */}
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="salaryStructure"
+                  label="Salary Structures"
+                />
+              }
+            >
+              <Route
+                path="/payroll/structures"
+                element={<SalaryStructuresListPage />}
+              />
+              <Route
+                path="/payroll/structures/:id"
+                element={<SalaryStructureFormPage />}
+              />
+            </Route>
+
+            <Route
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="salaryRule"
+                  label="Salary Rules"
+                />
+              }
+            >
+              <Route path="/payroll/rules" element={<SalaryRulesListPage />} />
+              <Route
+                path="/payroll/rules/:id"
+                element={<SalaryRuleFormPage />}
+              />
+            </Route>
+
+            <Route
+              element={
+                <RequirePermission
+                  action="read"
+                  resource="dashboard"
+                  label="The payroll dashboard"
+                />
+              }
+            >
+              <Route path="/dashboard" element={<PayrollDashboardPage />} />
+            </Route>
+
+            {/* Rule R5: account and role management is the admin's alone. */}
             <Route
               element={
                 <RequirePermission

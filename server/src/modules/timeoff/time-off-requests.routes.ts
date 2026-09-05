@@ -1,4 +1,5 @@
 import {
+  can,
   idSchema,
   isSelfScoped,
   timeOffRequestQuerySchema,
@@ -332,10 +333,18 @@ timeOffRequestsRouter.patch(
   }),
 );
 
+/**
+ * Cancels a request -- this is a withdrawal, not a deletion: the row survives
+ * as CANCELLED so the history stays queryable.
+ *
+ * Guarded at the level an employee holds, because withdrawing your own
+ * request is the other half of being allowed to file one. Cancelling somebody
+ * else's still needs 'delete', which is HR_MANAGER and above.
+ */
 timeOffRequestsRouter.delete(
   '/requests/:id',
   requireAuth,
-  requirePermission('delete', 'timeOffRequest'),
+  requirePermission('update', 'timeOffRequest'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
     const { id } = req.params as unknown as { id: number };
@@ -343,6 +352,9 @@ timeOffRequestsRouter.delete(
     const existing = await prisma.timeOffRequest.findUnique({ where: { id } });
     if (existing === null) {
       throw notFound('Time off request not found');
+    }
+    if (!can(getUser(req).roles, 'delete', 'timeOffRequest')) {
+      mustBeSelf(req, existing.employeeId);
     }
     if (existing.status === 'REFUSED' || existing.status === 'CANCELLED') {
       throw conflict('This request has already been finalised');
@@ -362,7 +374,12 @@ timeOffRequestsRouter.delete(
 timeOffRequestsRouter.post(
   '/requests/:id/approve',
   requireAuth,
-  requirePermission('update', 'timeOffRequest'),
+  // 'approve', not 'update': the matrix grants EMPLOYEE update on a time off
+  // request so they can edit their own while it is pending. Guarding this
+  // with update let any employee approve a colleague's leave -- refusing
+  // self-approval below is not enough, because the request being decided is
+  // somebody else's (rule T8).
+  requirePermission('approve', 'timeOffRequest'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
     const { id } = req.params as unknown as { id: number };
@@ -390,7 +407,7 @@ timeOffRequestsRouter.post(
 timeOffRequestsRouter.post(
   '/requests/:id/refuse',
   requireAuth,
-  requirePermission('update', 'timeOffRequest'),
+  requirePermission('approve', 'timeOffRequest'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
     const { id } = req.params as unknown as { id: number };
@@ -402,6 +419,11 @@ timeOffRequestsRouter.post(
     if (existing.status === 'REFUSED' || existing.status === 'CANCELLED') {
       throw conflict('This request has already been finalised');
     }
+    // Rule T8 cuts both ways: deciding your own request is not allowed, and
+    // refusing is a decision. An employee withdraws their own request by
+    // cancelling it (DELETE), which is a different act with a different
+    // status.
+    refuseSelfApproval(req, existing.employeeId);
 
     const approverId = getUser(req).employeeId;
     if (approverId === null) {

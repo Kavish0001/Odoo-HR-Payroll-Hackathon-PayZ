@@ -35,6 +35,11 @@ export function JobPositionFormPage(): React.JSX.Element {
   const navigate = useNavigate();
   const { allowed } = useAuth();
 
+  // Read on this resource sits at EMPLOYEE so other forms can resolve
+  // its names; changing it is HR's. Anyone without the write permission
+  // reads the record instead of being handed inputs and a Save button
+  // that answers 403.
+  const canWrite = allowed(isNew ? 'create' : 'update', 'jobPosition');
   const [formError, setFormError] = useState<string | null>(null);
 
   const positionQuery = useJobPosition(isNew ? undefined : id);
@@ -127,6 +132,8 @@ export function JobPositionFormPage(): React.JSX.Element {
           void navigate('/job-positions');
         }}
         error={formError}
+        readOnly={!canWrite}
+        readOnlyNote="Job positions are maintained by HR."
         footerExtra={
           canArchive ? (
             <Button

@@ -1,15 +1,18 @@
-import { payslipQuerySchema, type PayslipQuery } from '@payz/shared';
+import {
+  ownRecordsOnly,
+  payslipQuerySchema,
+  type PayslipQuery,
+} from '@payz/shared';
 import { type Prisma } from '@prisma/client';
-import { Router } from 'express';
+import { type Request, Router } from 'express';
 
 import { prisma } from '../../config/prisma.js';
 import {
-  mustBeSelf,
+  getUser,
   requireAuth,
   requirePermission,
-  selfScope,
 } from '../../middleware/auth.js';
-import { notFound } from '../../middleware/errors.js';
+import { forbidden, notFound } from '../../middleware/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { renderPayslipPdf } from '../../pdf/payslip-document.js';
 import { asyncRoute } from '../common/async-route.js';
@@ -31,10 +34,41 @@ import { loadPayslipPdfData } from './pdf-data.js';
  */
 export const payslipsRouter: Router = Router();
 
+/**
+ * The ownership rule for payslips, in one place.
+ *
+ * Two audiences reach these routes. Payroll staff hold `read` and see the
+ * whole batch. Everybody else -- an employee, and equally an HR Manager, who
+ * has no payroll access at all under rule R3 -- holds only `readSelf`, and
+ * sees exactly one person's payslips: their own.
+ *
+ * The role-rank helpers are the wrong instrument here. They ask whether the
+ * caller's *role* is self-scoped, which is true only of EMPLOYEE, and would
+ * therefore wave an HR Manager through to anybody's pay. This asks about the
+ * resource instead.
+ */
+function ownPayslipFilter(req: Request): { employeeId?: number } {
+  const user = getUser(req);
+  if (!ownRecordsOnly(user.roles, 'payslip')) {
+    return {};
+  }
+  if (user.employeeId === null) {
+    throw forbidden('This account is not linked to an employee record');
+  }
+  return { employeeId: user.employeeId };
+}
+
+function assertPayslipVisible(req: Request, employeeId: number): void {
+  const own = ownPayslipFilter(req);
+  if (own.employeeId !== undefined && own.employeeId !== employeeId) {
+    throw forbidden('You may only view your own payslips');
+  }
+}
+
 payslipsRouter.get(
   '/',
   requireAuth,
-  requirePermission('read', 'payslip'),
+  requirePermission('readSelf', 'payslip'),
   validate({ query: payslipQuerySchema }),
   asyncRoute(async (req, res) => {
     const query = req.query as unknown as PayslipQuery;
@@ -50,9 +84,9 @@ payslipsRouter.get(
       where.status = query.status;
     }
 
-    // R2 (defence in depth): a self-scoped caller only ever sees their own
-    // payslips, whatever employeeId the client asked for.
-    Object.assign(where, selfScope(req));
+    // Applied last, so it overwrites any employeeId the client asked for
+    // rather than being overwritten by it.
+    Object.assign(where, ownPayslipFilter(req));
 
     const [payslips, total] = await Promise.all([
       prisma.payslip.findMany({
@@ -71,7 +105,7 @@ payslipsRouter.get(
 payslipsRouter.get(
   '/:id',
   requireAuth,
-  requirePermission('read', 'payslip'),
+  requirePermission('readSelf', 'payslip'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
     const { id } = req.params as unknown as { id: number };
@@ -83,7 +117,7 @@ payslipsRouter.get(
     if (payslip === null) {
       throw notFound('Payslip not found');
     }
-    mustBeSelf(req, payslip.employeeId);
+    assertPayslipVisible(req, payslip.employeeId);
 
     res.json(toPayslipDetail(payslip));
   }),
@@ -97,7 +131,7 @@ payslipsRouter.get(
 payslipsRouter.get(
   '/:id/pdf',
   requireAuth,
-  requirePermission('read', 'payslip'),
+  requirePermission('readSelf', 'payslip'),
   validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
     const { id } = req.params as unknown as { id: number };
@@ -109,7 +143,7 @@ payslipsRouter.get(
     if (payslip === null) {
       throw notFound('Payslip not found');
     }
-    mustBeSelf(req, payslip.employeeId);
+    assertPayslipVisible(req, payslip.employeeId);
 
     const data = await loadPayslipPdfData(id);
     const buffer = await renderPayslipPdf(data);

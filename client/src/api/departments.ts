@@ -18,7 +18,10 @@ export interface DepartmentDetail extends DepartmentRow {
   managerId?: string | null;
 }
 
-export function useDepartments(params: DepartmentListParams = {}) {
+export function useDepartments(
+  params: DepartmentListParams = {},
+  enabled = true,
+) {
   return useQuery({
     queryKey: ['departments', 'list', params],
     queryFn: async () => {
@@ -27,6 +30,7 @@ export function useDepartments(params: DepartmentListParams = {}) {
       });
       return data;
     },
+    enabled,
   });
 }
 

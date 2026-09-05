@@ -1,6 +1,8 @@
 import {
+  can,
   employeeQuerySchema,
   employeeSchema,
+  employeeSelfSchema,
   type EmployeeDetail,
   type EmployeeQuery,
   type EmployeeRow,
@@ -11,12 +13,13 @@ import { type z } from 'zod';
 
 import { prisma } from '../../config/prisma.js';
 import {
+  getUser,
   mustBeSelf,
   requireAuth,
   requirePermission,
   selfScope,
 } from '../../middleware/auth.js';
-import { conflict, notFound } from '../../middleware/errors.js';
+import { conflict, forbidden, notFound } from '../../middleware/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { asyncRoute } from '../common/async-route.js';
 import { getDefaultCompanyId } from '../common/company.js';
@@ -141,6 +144,24 @@ function toEmployeeData(body: z.infer<typeof employeeSchema>) {
   };
 }
 
+/**
+ * The subset of columns an employee may change on their own record.
+ *
+ * Deliberately built from `employeeSelfSchema` rather than from the request:
+ * whatever a self-editing caller sends, only these five columns can reach the
+ * database. A tampered payload carrying `active: true` or another
+ * `departmentId` does not fail -- those keys simply do not exist here.
+ */
+function toEmployeeSelfData(body: z.infer<typeof employeeSelfSchema>) {
+  return {
+    personalEmail: body.personalEmail ?? null,
+    phone: body.phone ?? null,
+    bankAccount: body.bankAccount ?? null,
+    bankName: body.bankName ?? null,
+    bankIfsc: body.bankIfsc ?? null,
+  };
+}
+
 /** Duplicate `code` or `workEmail` on create/update, named for the caller. */
 function translateEmployeeError(error: unknown): unknown {
   if (
@@ -245,19 +266,41 @@ employeesRouter.post(
   }),
 );
 
+/**
+ * Two callers reach this route, and they are not editing the same record.
+ *
+ * HR sends the whole employee and holds `update`. Everyone else holds only
+ * `updateSelf`, may address only their own id, and has their payload parsed
+ * by the narrower schema -- so the body is validated against what that caller
+ * is actually allowed to change, rather than being validated loosely and then
+ * trimmed. The guard is the lower of the two permissions because the stricter
+ * one is checked here, where the target id is known.
+ */
 employeesRouter.patch(
   '/:id',
   requireAuth,
-  requirePermission('update', 'employee'),
-  validate({ params: idParamsSchema, body: employeeSchema }),
+  requirePermission('updateSelf', 'employee'),
+  validate({ params: idParamsSchema }),
   asyncRoute(async (req, res) => {
     const { id } = req.params as unknown as { id: number };
-    const body = req.body as z.infer<typeof employeeSchema>;
+    const user = getUser(req);
+    const isHr = can(user.roles, 'update', 'employee');
+
+    if (!isHr && user.employeeId !== id) {
+      throw forbidden('You may only update your own details');
+    }
+
+    // Parsed here rather than in `validate` because which schema applies
+    // depends on the caller. A ZodError from either reaches the same central
+    // handler and comes back as field errors.
+    const data = isHr
+      ? toEmployeeData(employeeSchema.parse(req.body))
+      : toEmployeeSelfData(employeeSelfSchema.parse(req.body));
 
     try {
       const employee = await prisma.employee.update({
         where: { id },
-        data: toEmployeeData(body),
+        data,
         ...employeeWithDetail,
       });
       res.json(toDetail(employee));

@@ -13,6 +13,10 @@ import { useAuth } from '../lib/auth.js';
  * who does reaches the User Management screen, watches every request come
  * back 403, and sees an empty table rather than an answer.
  *
+ * Every area in the app is wrapped in one of these, on the same permission
+ * the navbar consults, so no path can be reached by typing it that could not
+ * be reached by clicking.
+ *
  * The API is still the enforcement point — it refuses those requests whatever
  * the browser believes (rule R1). This exists so the refusal is legible.
  */
@@ -36,7 +40,7 @@ export function RequirePermission({
     <div className="space-y-6">
       <PageHeader
         title="Not available to your role"
-        subtitle={`${label} is restricted to administrators.`}
+        subtitle={`${label} is not part of what your role covers.`}
       />
       <Card>
         <p className="text-sm">

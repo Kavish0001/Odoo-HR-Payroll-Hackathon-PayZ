@@ -30,7 +30,26 @@ export const RESOURCES = [
 ] as const;
 export type Resource = (typeof RESOURCES)[number];
 
-export const ACTIONS = ['read', 'create', 'update', 'delete'] as const;
+/**
+ * `readSelf` and `updateSelf` exist because a rank ladder alone cannot say
+ * "your own record, but nobody else's". An employee must see their own
+ * payslip while an HR Manager sees none (rule R3), which is not a monotonic
+ * rank -- so the self-service capability is its own action, and the route
+ * pairs it with an ownership check.
+ *
+ * `approve` is separate from `update` for the same reason in reverse: an
+ * employee may edit their own pending leave request, and that must never be
+ * the same permission as deciding somebody else's (rule T8).
+ */
+export const ACTIONS = [
+  'read',
+  'readSelf',
+  'create',
+  'update',
+  'updateSelf',
+  'approve',
+  'delete',
+] as const;
 export type Action = (typeof ACTIONS)[number];
 
 /** The minimum role rank required for each action on each resource. */
@@ -40,6 +59,10 @@ const MATRIX: Record<Resource, Partial<Record<Action, Role>>> = {
     read: 'EMPLOYEE',
     create: 'HR_MANAGER',
     update: 'HR_MANAGER',
+    // Anyone may correct their own contact and bank details. The route
+    // narrows the payload to those columns, so this cannot move a department
+    // or reactivate a leaver (rule R2).
+    updateSelf: 'EMPLOYEE',
     delete: 'ADMIN',
   },
   department: {
@@ -78,13 +101,18 @@ const MATRIX: Record<Resource, Partial<Record<Action, Role>>> = {
   timeOffRequest: {
     read: 'EMPLOYEE',
     create: 'EMPLOYEE',
+    // Editing is scoped to the caller's own pending request by the route.
     update: 'EMPLOYEE',
+    // Deciding someone else's leave is a manager's act, never the
+    // requester's (rule T8).
+    approve: 'HR_MANAGER',
     delete: 'HR_MANAGER',
   },
   timeOffAllocation: {
     read: 'EMPLOYEE',
     create: 'HR_MANAGER',
     update: 'HR_MANAGER',
+    approve: 'HR_MANAGER',
     delete: 'HR_MANAGER',
   },
   timeOffType: {
@@ -118,6 +146,10 @@ const MATRIX: Record<Resource, Partial<Record<Action, Role>>> = {
   },
   payslip: {
     read: 'HR_PAYROLL_USER',
+    // Everyone sees their own pay. The payslip routes filter by the caller's
+    // employee id whenever they lack the team-wide `read`, so this grants a
+    // window onto one record and never onto the batch.
+    readSelf: 'EMPLOYEE',
     create: 'HR_PAYROLL_USER',
     update: 'HR_PAYROLL_USER',
     delete: 'HR_PAYROLL_MANAGER',
@@ -166,6 +198,23 @@ export function atLeast(roles: readonly Role[], role: Role): boolean {
  */
 export function isSelfScoped(roles: readonly Role[]): boolean {
   return highestRank(roles) === ROLE_RANK.EMPLOYEE;
+}
+
+/**
+ * True when the caller holds the self-service permission on a resource but
+ * not the team-wide one, and must therefore be shown -- and served -- only
+ * their own records.
+ *
+ * This is the counterpart to `isSelfScoped`, which asks about the *role*.
+ * This asks about the *resource*, which is the question payslips need: an HR
+ * Manager is not self-scoped, yet still sees only their own payslip.
+ */
+export function ownRecordsOnly(
+  roles: readonly Role[],
+  resource: Resource,
+  action: Action = 'read',
+): boolean {
+  return !can(roles, action, resource);
 }
 
 export const requiredRoleFor = (

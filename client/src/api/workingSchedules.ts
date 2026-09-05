@@ -13,7 +13,10 @@ export interface WorkingScheduleListParams {
   search?: string | undefined;
 }
 
-export function useWorkingSchedules(params: WorkingScheduleListParams = {}) {
+export function useWorkingSchedules(
+  params: WorkingScheduleListParams = {},
+  enabled = true,
+) {
   return useQuery({
     queryKey: ['working-schedules', 'list', params],
     queryFn: async () => {
@@ -23,6 +26,7 @@ export function useWorkingSchedules(params: WorkingScheduleListParams = {}) {
       );
       return data;
     },
+    enabled,
   });
 }
 

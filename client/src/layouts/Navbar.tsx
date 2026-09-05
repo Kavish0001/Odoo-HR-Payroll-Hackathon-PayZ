@@ -1,4 +1,4 @@
-import { type Action, type Resource } from '@payz/shared';
+import { isSelfScoped, type Action, type Resource } from '@payz/shared';
 import { NavLink } from 'react-router-dom';
 
 import { AttendanceWidget } from '../components/attendance/AttendanceWidget.js';
@@ -114,7 +114,7 @@ const NAV: NavItem[] = [
       {
         label: 'Payslips',
         to: '/payroll/payslips',
-        permission: ['read', 'payslip'],
+        permission: ['readSelf', 'payslip'],
       },
       {
         label: 'Structures',
@@ -129,6 +129,55 @@ const NAV: NavItem[] = [
     ],
   },
 ];
+
+/**
+ * What an employee gets instead.
+ *
+ * The same links, filtered by the same permissions, would technically work --
+ * but they would be the wrong shape. An employee's "Employees" list contains
+ * one row, themselves; the department and job-position catalogues are
+ * reference data they cannot act on; and every screen they actually use is
+ * about their own record. So the menu says what it is: my profile, my
+ * attendance, my leave, my pay.
+ *
+ * `/employees/:id` needs their employee id, which is why this is a function
+ * rather than a constant.
+ */
+function selfServiceNav(employeeId: string | null): NavItem[] {
+  return [
+    {
+      label: 'My Profile',
+      to: employeeId === null ? '/employees' : `/employees/${employeeId}`,
+      permission: ['read', 'employee'],
+    },
+    {
+      label: 'My Attendance',
+      to: '/attendance',
+      permission: ['read', 'attendance'],
+    },
+    {
+      label: 'My Time Off',
+      permission: ['read', 'timeOffRequest'],
+      children: [
+        {
+          label: 'Balances',
+          to: '/time-off/dashboard',
+          permission: ['read', 'timeOffRequest'],
+        },
+        {
+          label: 'My Requests',
+          to: '/time-off/requests',
+          permission: ['read', 'timeOffRequest'],
+        },
+      ],
+    },
+    {
+      label: 'My Payslips',
+      to: '/payroll/payslips',
+      permission: ['readSelf', 'payslip'],
+    },
+  ];
+}
 
 /**
  * Nav items are monospace and uppercase, so navigation reads as machine
@@ -149,8 +198,20 @@ export function Navbar(): React.JSX.Element {
   const { user, allowed, signOut } = useAuth();
 
   // Hiding is a courtesy, not the enforcement point: the API re-checks every
-  // request regardless of what the navbar shows.
-  const visible = NAV.filter((item) => allowed(...item.permission));
+  // request regardless of what the navbar shows, and every route is gated
+  // besides.
+  const selfService = user !== null && isSelfScoped(user.roles);
+  const items = selfService ? selfServiceNav(user.employeeId) : NAV;
+  const visible = items.filter((item) => allowed(...item.permission));
+
+  // An HR Manager has no payroll access at all (rule R3), so the Payroll menu
+  // is hidden from them entirely -- and with it the way to their own payslip,
+  // which is nobody's idea of a payroll permission. They get a direct link
+  // instead. Employees already have one in their own menu.
+  const showOwnPayslips =
+    !selfService &&
+    !allowed('read', 'payslip') &&
+    allowed('readSelf', 'payslip');
 
   return (
     <header className="border-steel-300 brushed sticky top-0 z-20 border-b">
@@ -201,6 +262,15 @@ export function Navbar(): React.JSX.Element {
         )}
 
         <div className="ml-auto flex items-center gap-3">
+          {showOwnPayslips && (
+            <NavLink
+              to="/payroll/payslips"
+              className={({ isActive }) => linkClass(isActive)}
+              title="Your own payslips"
+            >
+              My Payslips
+            </NavLink>
+          )}
           {allowed('read', 'user') && (
             <NavLink
               to="/admin/users"

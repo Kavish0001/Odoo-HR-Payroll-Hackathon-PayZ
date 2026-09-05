@@ -28,7 +28,10 @@ export function TimeOffRequestsListPage(): React.JSX.Element {
   const refuseMutation = useRefuseTimeOffRequest();
 
   const rows = requestsQuery.data?.rows ?? [];
-  const canApprove = allowed('update', 'timeOffRequest');
+  // 'approve', not 'update': an employee holds update so they can edit their
+  // own pending request, and showing them Approve/Refuse on a colleague's row
+  // offered a decision that is not theirs to make (rule T8).
+  const canApprove = allowed('approve', 'timeOffRequest');
 
   const columns = useMemo<ColumnDef<TimeOffRequestRow>[]>(
     () => [

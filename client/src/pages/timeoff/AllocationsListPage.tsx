@@ -33,7 +33,7 @@ export function AllocationsListPage(): React.JSX.Element {
   const refuseMutation = useRefuseAllocation();
 
   const rows = allocationsQuery.data?.rows ?? [];
-  const canApprove = allowed('update', 'timeOffAllocation');
+  const canApprove = allowed('approve', 'timeOffAllocation');
 
   const columns = useMemo<ColumnDef<AllocationRow>[]>(
     () => [

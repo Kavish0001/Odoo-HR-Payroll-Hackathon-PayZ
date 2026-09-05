@@ -58,6 +58,11 @@ export function AllocationFormPage(): React.JSX.Element {
   const [searchParams] = useSearchParams();
   const prefillEmployeeId = searchParams.get('employeeId') ?? undefined;
 
+  // Read on this resource sits at EMPLOYEE so other forms can resolve
+  // its names; changing it is HR's. Anyone without the write permission
+  // reads the record instead of being handed inputs and a Save button
+  // that answers 403.
+  const canWrite = allowed(isNew ? 'create' : 'update', 'timeOffAllocation');
   const [formError, setFormError] = useState<string | null>(null);
 
   const allocationQuery = useAllocation(isNew ? undefined : id);
@@ -122,7 +127,7 @@ export function AllocationFormPage(): React.JSX.Element {
   });
 
   const detail = allocationQuery.data;
-  const canApprove = !isNew && allowed('update', 'timeOffAllocation');
+  const canApprove = !isNew && allowed('approve', 'timeOffAllocation');
   const pendingReview = detail?.status === 'TO_APPROVE';
 
   return (
@@ -182,6 +187,8 @@ export function AllocationFormPage(): React.JSX.Element {
           void navigate('/time-off/allocations');
         }}
         error={formError}
+        readOnly={!canWrite}
+        readOnlyNote="Allocations are granted by HR. Your balance is on the Time Off dashboard."
         footerExtra={
           canApprove && pendingReview ? (
             <div className="ml-auto flex gap-2">

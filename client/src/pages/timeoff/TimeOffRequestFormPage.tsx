@@ -12,6 +12,7 @@ import { useEmployees } from '../../api/employees.js';
 import {
   useApproveTimeOffRequest,
   useCreateTimeOffRequest,
+  useDeleteTimeOffRequest,
   useLeaveBalances,
   useRefuseTimeOffRequest,
   useTimeOffRequest,
@@ -58,14 +59,21 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
 
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Somebody filing their own leave is not choosing whose leave it is. The
+  // API pins a self-scoped caller to their own employee id regardless, so the
+  // picker would offer a choice of exactly one name -- and the colleague list
+  // behind it is not theirs to read.
+  const picksEmployee = allowed('approve', 'timeOffRequest');
+
   const requestQuery = useTimeOffRequest(isNew ? undefined : id);
-  const employeesQuery = useEmployees({ pageSize: 200 });
+  const employeesQuery = useEmployees({ pageSize: 200 }, picksEmployee);
   const typesQuery = useTimeOffTypes({ pageSize: 200, active: 'true' });
 
   const createMutation = useCreateTimeOffRequest();
   const updateMutation = useUpdateTimeOffRequest(id);
   const approveMutation = useApproveTimeOffRequest();
   const refuseMutation = useRefuseTimeOffRequest();
+  const cancelMutation = useDeleteTimeOffRequest();
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const {
@@ -119,8 +127,18 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
 
   const detail = requestQuery.data;
   const isEditable = isNew || detail?.status === 'TO_APPROVE';
-  const canApprove = !isNew && allowed('update', 'timeOffRequest');
   const pendingReview = detail?.status === 'TO_APPROVE';
+
+  // Deciding a request and owning one are different capabilities, and were
+  // the same check until now: 'update' is granted to EMPLOYEE so they can
+  // edit their own request while it is pending, which meant every employee
+  // was offered Approve and Refuse on it (rule T8).
+  const canApprove = !isNew && allowed('approve', 'timeOffRequest');
+  const isOwnRequest =
+    detail !== undefined && user?.employeeId === detail.employeeId;
+  // The other half of being allowed to file a request: withdrawing it. An
+  // approver refuses; the person who asked cancels.
+  const canWithdraw = isOwnRequest && !canApprove && pendingReview;
 
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
@@ -173,7 +191,23 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
         }}
         error={formError}
         footerExtra={
-          canApprove && pendingReview ? (
+          canWithdraw ? (
+            <Button
+              type="button"
+              variant="secondary"
+              className="text-danger ml-auto"
+              onClick={() => {
+                cancelMutation.mutate(id, {
+                  onSuccess: () => {
+                    void navigate('/time-off/requests');
+                  },
+                });
+              }}
+              disabled={cancelMutation.isPending}
+            >
+              Withdraw request
+            </Button>
+          ) : canApprove && pendingReview ? (
             <div className="ml-auto flex gap-2">
               <Button
                 type="button"
@@ -202,20 +236,34 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
         }
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field
-            label="Employee"
-            htmlFor="employeeId"
-            required
-            error={errors.employeeId?.message}
-          >
-            <Select
-              id="employeeId"
-              options={employeeOptions}
-              placeholder="Select an employee"
-              disabled={!isEditable}
-              {...register('employeeId')}
-            />
-          </Field>
+          {picksEmployee ? (
+            <Field
+              label="Employee"
+              htmlFor="employeeId"
+              required
+              error={errors.employeeId?.message}
+            >
+              <Select
+                id="employeeId"
+                options={employeeOptions}
+                placeholder="Select an employee"
+                disabled={!isEditable}
+                {...register('employeeId')}
+              />
+            </Field>
+          ) : (
+            <Field label="Employee" htmlFor="employeeId">
+              {/* Registered, not merely displayed: the value still has to
+                  reach the payload, and a read-only input keeps it there
+                  without offering it up for editing. */}
+              <Input
+                id="employeeId"
+                readOnly
+                value={user?.employeeName ?? 'You'}
+              />
+              <input type="hidden" {...register('employeeId')} />
+            </Field>
+          )}
           <Field
             label="Time Off Type"
             htmlFor="typeId"

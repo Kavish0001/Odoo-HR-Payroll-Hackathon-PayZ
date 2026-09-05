@@ -18,7 +18,8 @@ import { api, isUnauthorized } from '../api/client.js';
 interface AuthContextValue {
   user: SessionUser | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  /** Returns the signed-in user, so the caller can route on their role. */
+  signIn: (email: string, password: string) => Promise<SessionUser>;
   signOut: () => Promise<void>;
   /** Mirrors the server's permission table, for hiding what cannot be used. */
   allowed: (action: Action, resource: Resource) => boolean;
@@ -66,7 +67,7 @@ export function AuthProvider({
 
   const signIn = useCallback(
     async (email: string, password: string) => {
-      await signInMutation.mutateAsync({ email, password });
+      return await signInMutation.mutateAsync({ email, password });
     },
     [signInMutation],
   );

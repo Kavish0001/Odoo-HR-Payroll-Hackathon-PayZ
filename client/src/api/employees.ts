@@ -1,6 +1,7 @@
 import type {
   EmployeeDetail,
   EmployeeInput,
+  EmployeeSelfInput,
   EmployeeRow,
   Paginated,
 } from '@payz/shared';
@@ -15,7 +16,12 @@ export interface EmployeeListParams {
   departmentId?: string | undefined;
 }
 
-export function useEmployees(params: EmployeeListParams = {}) {
+/**
+ * `enabled` is here so a form can decline to fetch a list it only needs in
+ * order to offer a choice. A role that cannot change the field has no use for
+ * the options, and in several cases no permission to read them either.
+ */
+export function useEmployees(params: EmployeeListParams = {}, enabled = true) {
   return useQuery({
     queryKey: ['employees', 'list', params],
     queryFn: async () => {
@@ -24,6 +30,7 @@ export function useEmployees(params: EmployeeListParams = {}) {
       });
       return data;
     },
+    enabled,
   });
 }
 
@@ -51,10 +58,14 @@ export function useCreateEmployee() {
   });
 }
 
+/**
+ * Accepts either payload the API accepts: the whole record from HR, or the
+ * contact-and-bank subset an employee may change on their own record.
+ */
 export function useUpdateEmployee(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: EmployeeInput) => {
+    mutationFn: async (input: EmployeeInput | EmployeeSelfInput) => {
       const { data } = await api.patch<EmployeeDetail>(
         `/employees/${id}`,
         input,

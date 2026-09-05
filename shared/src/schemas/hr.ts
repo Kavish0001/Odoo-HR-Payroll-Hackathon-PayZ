@@ -140,6 +140,31 @@ export const employeeSchema = z.object({
 });
 export type EmployeeInput = z.infer<typeof employeeSchema>;
 
+/**
+ * The only columns an employee may change on their own record.
+ *
+ * Contact details and bank details are the employee's own facts to correct --
+ * and missing bank details are a payroll warning (rule W7), so the person who
+ * can actually fix it should be able to. Everything else on the record
+ * (code, names, department, manager, position, schedule, type, join date,
+ * active) describes their employment rather than them, and stays with HR.
+ *
+ * Stated once, here: the API narrows the update payload to these keys, and
+ * the form renders exactly these as editable. Neither side can drift.
+ */
+export const employeeSelfSchema = employeeSchema.pick({
+  personalEmail: true,
+  phone: true,
+  bankAccount: true,
+  bankName: true,
+  bankIfsc: true,
+});
+export type EmployeeSelfInput = z.infer<typeof employeeSelfSchema>;
+
+export const EMPLOYEE_SELF_FIELDS = Object.keys(
+  employeeSelfSchema.shape,
+) as (keyof EmployeeSelfInput)[];
+
 export const employeeQuerySchema = paginationSchema.extend({
   departmentId: idSchema.optional(),
   employeeType: z.enum(EMPLOYEE_TYPES).optional(),

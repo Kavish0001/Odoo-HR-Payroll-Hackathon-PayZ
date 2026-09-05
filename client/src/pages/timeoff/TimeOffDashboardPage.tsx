@@ -25,7 +25,7 @@ export function TimeOffDashboardPage(): React.JSX.Element {
   // because the API scopes the same request to the caller (rule R2).
   const pending = useTimeOffRequests({ status: 'TO_APPROVE' });
 
-  const canApprove = allowed('update', 'timeOffRequest');
+  const canApprove = allowed('approve', 'timeOffRequest');
   const rows = balances.data ?? [];
   const queue = pending.data?.rows ?? [];
 

@@ -24,6 +24,7 @@ import { Field } from '../../components/ui/Field.js';
 import { Input } from '../../components/ui/Input.js';
 import { Select } from '../../components/ui/Select.js';
 import { Textarea } from '../../components/ui/Textarea.js';
+import { useAuth } from '../../lib/auth.js';
 import { emptyToUndefined, typedZodResolver } from '../../lib/forms.js';
 
 interface ContractFormValues {
@@ -62,10 +63,16 @@ const EMPTY_VALUES = (employeeId?: string): ContractFormValues => ({
 export function ContractFormPage(): React.JSX.Element {
   const { id = 'new' } = useParams<{ id: string }>();
   const isNew = id === 'new';
+  const { allowed } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const prefillEmployeeId = searchParams.get('employeeId') ?? undefined;
 
+  // Read on this resource sits at EMPLOYEE so other forms can resolve
+  // its names; changing it is HR's. Anyone without the write permission
+  // reads the record instead of being handed inputs and a Save button
+  // that answers 403.
+  const canWrite = allowed(isNew ? 'create' : 'update', 'contract');
   const [formError, setFormError] = useState<string | null>(null);
 
   const contractQuery = useContract(isNew ? undefined : id);
@@ -173,6 +180,8 @@ export function ContractFormPage(): React.JSX.Element {
           void navigate(backTarget);
         }}
         error={formError}
+        readOnly={!canWrite}
+        readOnlyNote="Contracts are maintained by HR."
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field

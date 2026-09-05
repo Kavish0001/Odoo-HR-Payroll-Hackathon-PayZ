@@ -8,14 +8,24 @@ import { DataTable } from '../../components/data/DataTable.js';
 import { PageHeader } from '../../components/data/PageHeader.js';
 import { Pagination } from '../../components/data/Pagination.js';
 import { StatusBadge } from '../../components/data/StatusBadge.js';
+import { useAuth } from '../../lib/auth.js';
 
 const PAGE_SIZE = 20;
 
 export function PayslipsListPage(): React.JSX.Element {
   const navigate = useNavigate();
+  const { allowed } = useAuth();
   const [searchParams] = useSearchParams();
   const payrunId = searchParams.get('payrunId') ?? undefined;
   const employeeId = searchParams.get('employeeId') ?? undefined;
+
+  // Two screens share this route. Payroll staff see everybody's payslips and
+  // need to know whose each one is; everyone else sees only their own, which
+  // the API enforces by ignoring any employeeId asked for here. For them the
+  // Employee column would repeat their own name down the page, and the
+  // payroll warnings are HR's queue, not something to hand the person whose
+  // bank details are missing as a column of jargon.
+  const isPayrollView = allowed('read', 'payslip');
 
   const [page, setPage] = useState(1);
 
@@ -29,19 +39,27 @@ export function PayslipsListPage(): React.JSX.Element {
 
   const columns = useMemo<ColumnDef<PayslipRow>[]>(
     () => [
-      { id: 'employee', header: 'Employee', accessorKey: 'employeeName' },
-      {
-        id: 'warning',
-        header: 'Warning',
-        cell: ({ row }) =>
-          row.original.warnings.length === 0 ? (
-            <span className="text-muted">—</span>
-          ) : (
-            <span className="bg-warning-soft text-warning-strong inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium">
-              {row.original.warnings.join(', ')}
-            </span>
-          ),
-      },
+      ...(isPayrollView
+        ? [
+            {
+              id: 'employee',
+              header: 'Employee',
+              accessorKey: 'employeeName',
+            } satisfies ColumnDef<PayslipRow>,
+            {
+              id: 'warning',
+              header: 'Warning',
+              cell: ({ row }) =>
+                row.original.warnings.length === 0 ? (
+                  <span className="text-muted">—</span>
+                ) : (
+                  <span className="bg-warning-soft text-warning-strong inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium">
+                    {row.original.warnings.join(', ')}
+                  </span>
+                ),
+            } satisfies ColumnDef<PayslipRow>,
+          ]
+        : []),
       {
         id: 'period',
         header: 'Period',
@@ -84,19 +102,21 @@ export function PayslipsListPage(): React.JSX.Element {
         cell: ({ row }) => <StatusBadge status={row.original.status} />,
       },
     ],
-    [],
+    [isPayrollView],
   );
 
   return (
     <div>
       <PageHeader
-        title="Payslips"
+        title={isPayrollView ? 'Payslips' : 'My Payslips'}
         subtitle={
-          payrunId !== undefined
-            ? 'Filtered to one payrun.'
-            : employeeId !== undefined
-              ? 'Filtered to one employee.'
-              : undefined
+          !isPayrollView
+            ? 'Your own payslips. Open one to see how the amount was worked out, or to save the PDF.'
+            : payrunId !== undefined
+              ? 'Filtered to one payrun.'
+              : employeeId !== undefined
+                ? 'Filtered to one employee.'
+                : undefined
         }
       />
 
@@ -106,8 +126,12 @@ export function PayslipsListPage(): React.JSX.Element {
         isLoading={payslipsQuery.isLoading}
         isError={payslipsQuery.isError}
         errorMessage="Could not load payslips. The API may still be starting up."
-        emptyTitle="No payslips found"
-        emptyDescription="Payslips appear once a payrun has been computed."
+        emptyTitle={isPayrollView ? 'No payslips found' : 'No payslips yet'}
+        emptyDescription={
+          isPayrollView
+            ? 'Payslips appear once a payrun has been computed.'
+            : 'Your payslips appear here once payroll has been run for a period you worked.'
+        }
         onRowClick={(row) => {
           void navigate(`/payroll/payslips/${row.id}`);
         }}

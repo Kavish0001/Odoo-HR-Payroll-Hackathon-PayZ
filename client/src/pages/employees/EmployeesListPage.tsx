@@ -119,7 +119,11 @@ export function EmployeesListPage(): React.JSX.Element {
     <div>
       <PageHeader
         title="Employees"
-        subtitle="Everyone in the organisation, by department."
+        subtitle={
+          allowed('create', 'employee')
+            ? 'Everyone in the organisation, by department.'
+            : 'Your own record. The wider directory is HR\u2019s to see.'
+        }
         actions={
           allowed('create', 'employee') ? (
             <Button

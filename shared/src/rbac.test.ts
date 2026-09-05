@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { ROLES, type Role } from './enums.js';
-import { ACTIONS, RESOURCES, atLeast, can, isSelfScoped } from './rbac.js';
+import {
+  ACTIONS,
+  RESOURCES,
+  atLeast,
+  can,
+  isSelfScoped,
+  ownRecordsOnly,
+  requiredRoleFor,
+} from './rbac.js';
 
 describe('role hierarchy', () => {
   it('lets a higher role do anything a lower one can', () => {
@@ -97,8 +105,11 @@ describe('user management is admin only (rule R5)', () => {
   // roles.
   it('refuses every non-admin role, for every action', () => {
     for (const role of ROLES) {
-      const expected = role === 'ADMIN';
       for (const action of ACTIONS) {
+        // An action the row does not define is nobody's, the admin's
+        // included: the matrix fails closed rather than granting by rank.
+        const expected =
+          role === 'ADMIN' && requiredRoleFor(action, 'user') !== undefined;
         expect(can([role], action, 'user')).toBe(expected);
       }
     }
@@ -111,6 +122,47 @@ describe('user management is admin only (rule R5)', () => {
     for (const action of ACTIONS) {
       expect(can(everyoneBelowAdmin, action, 'user')).toBe(false);
     }
+  });
+});
+
+describe('approving is not updating (rule T8)', () => {
+  const employee: Role[] = ['EMPLOYEE'];
+
+  // The distinction this pair of assertions protects is the whole reason
+  // 'approve' exists. An employee needs 'update' on a time off request to
+  // correct their own before anyone has decided it -- and for a while that
+  // same permission was what the approve route asked for, which handed every
+  // employee the power to approve a colleague's leave.
+  it('lets an employee edit a request but never decide one', () => {
+    expect(can(employee, 'update', 'timeOffRequest')).toBe(true);
+    expect(can(employee, 'approve', 'timeOffRequest')).toBe(false);
+  });
+
+  it('gives approval to HR Manager and above, on both leave resources', () => {
+    for (const resource of ['timeOffRequest', 'timeOffAllocation'] as const) {
+      expect(can(['HR_MANAGER'], 'approve', resource)).toBe(true);
+      expect(can(['HR_PAYROLL_MANAGER'], 'approve', resource)).toBe(true);
+      expect(can(employee, 'approve', resource)).toBe(false);
+    }
+  });
+});
+
+describe('self-service actions', () => {
+  it('lets anyone read their own payslip without opening the batch', () => {
+    expect(can(['EMPLOYEE'], 'readSelf', 'payslip')).toBe(true);
+    expect(can(['EMPLOYEE'], 'read', 'payslip')).toBe(false);
+    // Rule R3 survives: an HR Manager still has no payroll access, and the
+    // route pairs readSelf with an ownership check rather than a rank test.
+    expect(can(['HR_MANAGER'], 'read', 'payslip')).toBe(false);
+    expect(ownRecordsOnly(['HR_MANAGER'], 'payslip')).toBe(true);
+    expect(ownRecordsOnly(['HR_PAYROLL_USER'], 'payslip')).toBe(false);
+  });
+
+  it('lets anyone correct their own details but not administer employees', () => {
+    expect(can(['EMPLOYEE'], 'updateSelf', 'employee')).toBe(true);
+    expect(can(['EMPLOYEE'], 'update', 'employee')).toBe(false);
+    expect(ownRecordsOnly(['EMPLOYEE'], 'employee', 'update')).toBe(true);
+    expect(ownRecordsOnly(['HR_MANAGER'], 'employee', 'update')).toBe(false);
   });
 });
 

@@ -7,6 +7,7 @@ import { PageHeader } from '../../components/data/PageHeader.js';
 import { StatusBadge } from '../../components/data/StatusBadge.js';
 import { Button } from '../../components/ui/Button.js';
 import { Card } from '../../components/ui/Card.js';
+import { useAuth } from '../../lib/auth.js';
 import { CategoryBadge } from '../salaryConfig/CategoryBadge.js';
 
 /** GROSS and NET are totals of what came before, so their rows are emphasised. */
@@ -14,6 +15,7 @@ const EMPHASISED_CATEGORIES = new Set(['GROSS', 'NET']);
 
 export function PayslipDetailPage(): React.JSX.Element {
   const { id = '' } = useParams<{ id: string }>();
+  const { allowed } = useAuth();
   const payslipQuery = usePayslip(id);
   const payslip = payslipQuery.data;
 
@@ -27,6 +29,12 @@ export function PayslipDetailPage(): React.JSX.Element {
       </p>
     );
   }
+
+  // An employee reaching their own payslip holds `readSelf` and nothing else
+  // in payroll, so the two things here that lead out of their own record --
+  // the payrun link and the pre-finalisation warnings, which are HR's queue
+  // rather than the employee's -- are not offered to them.
+  const isPayrollView = allowed('read', 'payslip');
 
   const groups = RULE_CATEGORIES.map((category) => ({
     category,
@@ -55,7 +63,7 @@ export function PayslipDetailPage(): React.JSX.Element {
         }
       />
 
-      {payslip.warnings.length > 0 && (
+      {isPayrollView && payslip.warnings.length > 0 && (
         <p className="border-warning-line bg-warning-soft text-warning-strong mb-4 rounded-md border px-3 py-2 text-sm">
           {payslip.warnings.join(', ')}
         </p>
@@ -74,12 +82,16 @@ export function PayslipDetailPage(): React.JSX.Element {
         </Card>
         <Card className="p-4">
           <p className="text-muted text-xs tracking-wide uppercase">Pay Run</p>
-          <Link
-            to={`/payroll/payruns/${payslip.payrunId}`}
-            className="hover:text-ink mt-1 block text-sm font-medium hover:underline"
-          >
-            {payslip.payrunName}
-          </Link>
+          {isPayrollView ? (
+            <Link
+              to={`/payroll/payruns/${payslip.payrunId}`}
+              className="hover:text-ink mt-1 block text-sm font-medium hover:underline"
+            >
+              {payslip.payrunName}
+            </Link>
+          ) : (
+            <p className="mt-1 text-sm font-medium">{payslip.payrunName}</p>
+          )}
         </Card>
         <Card className="p-4">
           <p className="text-muted text-xs tracking-wide uppercase">Period</p>

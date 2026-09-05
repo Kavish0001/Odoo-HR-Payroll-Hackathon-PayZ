@@ -1,3 +1,4 @@
+import { type Action, type Resource, type Role } from '@payz/shared';
 import { type Router } from 'express';
 
 import { logger } from '../config/logger.js';
@@ -40,6 +41,19 @@ interface GuardMarker {
   payzGuard?: unknown;
 }
 
+/** What a route declared, as `requirePermission`/`requireRole` recorded it. */
+export interface DeclaredGuard {
+  action?: Action;
+  resource?: Resource;
+  role?: Role;
+}
+
+export interface RouteGuard {
+  /** e.g. `POST /api/time-off/requests/:id/approve`. */
+  label: string;
+  guards: DeclaredGuard[];
+}
+
 interface RouteLayer {
   route?: {
     path?: unknown;
@@ -66,6 +80,56 @@ function isAuthenticated(handlers: readonly unknown[]): boolean {
 
 function joinPath(prefix: string, path: string): string {
   return `${prefix}${path}`.replace(/\/{2,}/g, '/').replace(/(.)\/$/, '$1');
+}
+
+function readGuards(handlers: readonly unknown[]): DeclaredGuard[] {
+  return handlers
+    .map((handler) =>
+      typeof handler === 'function'
+        ? (handler as GuardMarker).payzGuard
+        : undefined,
+    )
+    .filter((guard): guard is DeclaredGuard => guard !== undefined);
+}
+
+/**
+ * Every registered route with the permission it declares.
+ *
+ * The startup assertion only asks whether a guard exists. This reports which
+ * one, so a test can pin the permissions that are easy to weaken by accident
+ * -- an approval route quietly guarded by 'update' reads as guarded, and for
+ * a while one was.
+ */
+export function describeRouteGuards(
+  mounts: readonly RouterMount[],
+): RouteGuard[] {
+  const routes: RouteGuard[] = [];
+
+  for (const mount of mounts) {
+    const stack = (mount.router as unknown as { stack?: RouteLayer[] }).stack;
+    if (!Array.isArray(stack)) {
+      throw new Error('Cannot inspect the router stack to read route guards.');
+    }
+
+    for (const layer of stack) {
+      if (layer.route === undefined) {
+        continue;
+      }
+      const path = typeof layer.route.path === 'string' ? layer.route.path : '';
+      const full = joinPath(mount.prefix, path);
+      const guards = readGuards(
+        (layer.route.stack ?? []).map((entry) => entry.handle),
+      );
+
+      for (const [method, enabled] of Object.entries(layer.route.methods ?? {})) {
+        if (enabled) {
+          routes.push({ label: `${method.toUpperCase()} ${full}`, guards });
+        }
+      }
+    }
+  }
+
+  return routes;
 }
 
 function collectUnguarded(mount: RouterMount, found: string[]): void {
