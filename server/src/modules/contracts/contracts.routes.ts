@@ -18,7 +18,11 @@ import {
 import { conflict, notFound } from '../../middleware/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { asyncRoute } from '../common/async-route.js';
-import { paginationArgs, toPaginated } from '../common/pagination.js';
+import {
+  containsInsensitive,
+  paginationArgs,
+  toPaginated,
+} from '../common/pagination.js';
 import { idParamsSchema } from '../common/params.js';
 
 export const contractsRouter: Router = Router();
@@ -154,6 +158,35 @@ contractsRouter.get(
     const query = req.query as unknown as ContractQuery;
 
     const where: Prisma.ContractWhereInput = {};
+
+    /**
+     * Search matches the employee's name, and nothing else.
+     *
+     * Deliberately not the contract reference: every reference is minted as
+     * CON/<n>, so a single letter of "con" matched the entire table and the
+     * box looked broken. Nobody searches a contract list by its reference
+     * anyway -- they are looking for a person.
+     *
+     * Each word is required separately rather than matched as one string, so
+     * "aarav mehta" and "mehta aarav" both find the same person; a single
+     * `contains` on either name field would find neither.
+     */
+    if (query.search !== undefined && query.search.trim().length > 0) {
+      where.AND = query.search
+        .trim()
+        .split(/\s+/)
+        .map((word) => ({
+          employee: {
+            is: {
+              OR: [
+                { firstName: containsInsensitive(word) },
+                { lastName: containsInsensitive(word) },
+              ],
+            },
+          },
+        }));
+    }
+
     if (query.employeeId !== undefined) {
       where.employeeId = query.employeeId;
     }

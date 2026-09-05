@@ -137,7 +137,7 @@ export function ContractsListPage(): React.JSX.Element {
             setSearch(event.target.value);
             setPage(1);
           }}
-          placeholder="Search by reference or employee…"
+          placeholder="Search by employee name…"
           className="max-w-64"
           aria-label="Search contracts"
         />
