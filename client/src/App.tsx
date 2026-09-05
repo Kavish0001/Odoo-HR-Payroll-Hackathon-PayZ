@@ -13,6 +13,7 @@ import { DepartmentFormPage } from './pages/departments/DepartmentFormPage.js';
 import { DepartmentsListPage } from './pages/departments/DepartmentsListPage.js';
 import { EmployeeFormPage } from './pages/employees/EmployeeFormPage.js';
 import { EmployeesListPage } from './pages/employees/EmployeesListPage.js';
+import { LandingPage } from './pages/landing/LandingPage.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { PayrunDetailPage } from './pages/payroll/PayrunDetailPage.js';
 import { PayrunNewPage } from './pages/payroll/PayrunNewPage.js';
@@ -42,6 +43,8 @@ export function App(): React.JSX.Element {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Public marketing page, outside the signed-in application. */}
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
 
           <Route element={<AppLayout />}>
@@ -105,7 +108,7 @@ export function App(): React.JSX.Element {
             <Route path="/admin/users/:id" element={<UserFormPage />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/employees" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

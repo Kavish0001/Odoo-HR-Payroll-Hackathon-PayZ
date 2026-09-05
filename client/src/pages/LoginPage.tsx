@@ -33,11 +33,12 @@ export function LoginPage(): React.JSX.Element {
   });
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6">
+    <main className="bg-steel-50 dot-grid flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <Logo size={72} />
-          <h1 className="mt-4 text-2xl font-bold tracking-tight">
+          <Logo size={64} withWordmark />
+          <p className="eyebrow mt-8">// System console</p>
+          <h1 className="font-display mt-3 text-3xl font-bold tracking-tight">
             Welcome back
           </h1>
           <p className="text-muted mt-1 text-sm">
@@ -49,14 +50,11 @@ export function LoginPage(): React.JSX.Element {
           onSubmit={(event) => {
             void onSubmit(event);
           }}
-          className="border-line bg-raised space-y-4 rounded-lg border p-6"
+          className="border-steel-300 bg-raised space-y-5 rounded-sm border p-7"
           noValidate
         >
           <div>
-            <label
-              htmlFor="email"
-              className="mb-1 block text-xs font-medium tracking-wide uppercase"
-            >
+            <label htmlFor="email" className="eyebrow mb-1.5 block">
               Work Email
             </label>
             <input
@@ -65,7 +63,7 @@ export function LoginPage(): React.JSX.Element {
               autoComplete="username"
               placeholder="employee@company.com"
               aria-invalid={errors.email !== undefined}
-              className="border-line focus:border-metal-700 w-full rounded-md border px-3 py-2 outline-none"
+              className="border-steel-300 focus:border-signal w-full rounded-sm border px-3 py-2 text-sm outline-none"
               {...register('email')}
             />
             {errors.email && (
@@ -74,10 +72,7 @@ export function LoginPage(): React.JSX.Element {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-xs font-medium tracking-wide uppercase"
-            >
+            <label htmlFor="password" className="eyebrow mb-1.5 block">
               Password
             </label>
             <input
@@ -86,7 +81,7 @@ export function LoginPage(): React.JSX.Element {
               autoComplete="current-password"
               placeholder="••••••••••"
               aria-invalid={errors.password !== undefined}
-              className="border-line focus:border-metal-700 w-full rounded-md border px-3 py-2 font-mono outline-none"
+              className="border-steel-300 focus:border-signal font-mono w-full rounded-sm border px-3 py-2 text-sm outline-none"
               {...register('password')}
             />
             {errors.password && (
@@ -99,7 +94,7 @@ export function LoginPage(): React.JSX.Element {
           {formError !== null && (
             <p
               role="alert"
-              className="border-danger/30 bg-danger/5 text-danger rounded-md border px-3 py-2 text-sm"
+              className="border-danger-line bg-danger-soft text-ink rounded-sm border px-3 py-2 text-xs"
             >
               {formError}
             </p>
@@ -108,13 +103,13 @@ export function LoginPage(): React.JSX.Element {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-metal-900 w-full rounded-md px-3 py-2 font-medium text-white disabled:opacity-60"
+            className="bg-signal font-mono w-full rounded-sm px-3 py-3 text-[11px] tracking-wider text-white uppercase transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             {isSubmitting ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
 
-        <p className="text-muted mt-4 text-center text-xs">
+        <p className="eyebrow mt-6 text-center">
           Accounts are created by an administrator.
         </p>
       </div>

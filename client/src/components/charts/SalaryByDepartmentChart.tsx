@@ -15,7 +15,12 @@ import {
 } from 'recharts';
 
 import { type TooltipValue, toAmount } from './format.js';
-import { AXIS_TICK_STYLE, chartColor, GRID_STROKE } from './theme.js';
+import {
+  AXIS_TICK_STYLE,
+  CHART_EDGE,
+  CHART_FILL,
+  GRID_STROKE,
+} from './theme.js';
 
 interface SalaryByDepartmentChartProps {
   data: readonly DepartmentSalaryPoint[];
@@ -65,9 +70,15 @@ export function SalaryByDepartmentChart({
           ]}
           contentStyle={{ fontSize: 12, borderRadius: 8 }}
         />
-        <Bar dataKey="totalNet" name="Net salary" radius={[4, 4, 0, 0]}>
-          {chartData.map((point, index) => (
-            <Cell key={point.name} fill={chartColor(index)} />
+        <Bar
+          stroke={CHART_EDGE}
+          strokeWidth={1}
+          dataKey="totalNet"
+          name="Net salary"
+          radius={[0, 0, 0, 0]}
+        >
+          {chartData.map((point) => (
+            <Cell key={point.name} fill={CHART_FILL} />
           ))}
         </Bar>
       </BarChart>

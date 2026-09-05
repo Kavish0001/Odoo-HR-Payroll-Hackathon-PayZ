@@ -198,7 +198,7 @@ export function PayrollDashboardPage(): React.JSX.Element {
 
       {dashboardQuery.isLoading && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="border-steel-300 brushed divide-steel-300 grid grid-cols-1 divide-y rounded-sm border sm:grid-cols-2 sm:divide-x lg:grid-cols-5 lg:divide-y-0">
             {Array.from({ length: 5 }).map((_, index) => (
               <KpiCardSkeleton key={index} />
             ))}
@@ -229,8 +229,9 @@ export function PayrollDashboardPage(): React.JSX.Element {
 
       {data !== undefined && !isEmpty && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="border-steel-300 brushed divide-steel-300 grid grid-cols-1 divide-y rounded-sm border sm:grid-cols-2 sm:divide-x lg:grid-cols-5 lg:divide-y-0">
             <KpiCard
+              primary
               label="Total Net Salary Paid"
               value={formatINRCompact(data.kpis.totalNetPaid)}
               tone={
@@ -284,15 +285,11 @@ export function PayrollDashboardPage(): React.JSX.Element {
           <Panel title="Payslip Status & Payroll Alerts">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <h3 className="text-muted mb-2 text-xs font-semibold tracking-wide uppercase">
-                  Status split
-                </h3>
+                <h3 className="eyebrow mb-2">Status split</h3>
                 <PayslipStatusChart data={data.payslipStatusSplit} />
               </div>
               <div>
-                <h3 className="text-muted mb-2 text-xs font-semibold tracking-wide uppercase">
-                  Alerts
-                </h3>
+                <h3 className="eyebrow mb-2">Alerts</h3>
                 {activeAlerts.length === 0 ? (
                   <p className="text-muted text-xs">
                     No active payroll alerts.
@@ -302,7 +299,7 @@ export function PayrollDashboardPage(): React.JSX.Element {
                     {activeAlerts.map((alert) => (
                       <li
                         key={alert.code}
-                        className="border-line flex items-center justify-between gap-3 rounded-md border px-3 py-2"
+                        className="border-steel-300 flex items-center justify-between gap-3 rounded-md border px-3 py-2"
                       >
                         <div className="flex items-center gap-2">
                           <StatusBadge
@@ -365,7 +362,7 @@ export function PayrollDashboardPage(): React.JSX.Element {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-muted border-line border-b text-left text-xs uppercase">
+                    <tr className="eyebrow border-steel-300 border-b text-left">
                       <th className="py-1.5 pr-2 font-medium">Type</th>
                       <th className="py-1.5 pr-2 font-medium">Approved Days</th>
                       <th className="py-1.5 pr-2 font-medium">Pending</th>
@@ -386,7 +383,7 @@ export function PayrollDashboardPage(): React.JSX.Element {
                       data.timeOff.map((row) => (
                         <tr
                           key={row.typeId}
-                          className="border-line/60 border-b last:border-0"
+                          className="border-steel-300/60 border-b last:border-0"
                         >
                           <td className="py-1.5 pr-2">{row.typeName}</td>
                           <td className="font-mono py-1.5 pr-2">
@@ -414,7 +411,7 @@ export function PayrollDashboardPage(): React.JSX.Element {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-muted border-line border-b text-left text-xs uppercase">
+                    <tr className="eyebrow border-steel-300 border-b text-left">
                       <th className="py-1.5 pr-2 font-medium">Department</th>
                       <th className="py-1.5 pr-2 font-medium">Headcount</th>
                       <th className="py-1.5 font-medium">Monthly Salary</th>
@@ -434,7 +431,7 @@ export function PayrollDashboardPage(): React.JSX.Element {
                       data.departments.map((department) => (
                         <tr
                           key={department.departmentId}
-                          className="border-line/60 border-b last:border-0"
+                          className="border-steel-300/60 border-b last:border-0"
                         >
                           <td className="py-1.5 pr-2">
                             {department.departmentName}
@@ -467,10 +464,8 @@ function AttendanceStat({
   value: string;
 }): React.JSX.Element {
   return (
-    <div className="border-line rounded-md border px-3 py-2.5">
-      <p className="text-muted text-xs font-medium tracking-wide uppercase">
-        {label}
-      </p>
+    <div className="border-steel-300 rounded-md border px-3 py-2.5">
+      <p className="eyebrow">{label}</p>
       <p className="font-mono mt-1 text-lg font-semibold tabular-nums">
         {value}
       </p>

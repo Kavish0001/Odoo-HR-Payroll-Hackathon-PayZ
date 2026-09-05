@@ -2,6 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 
 import { useAuth } from '../lib/auth.js';
 
+import { HeaderStrip } from './HeaderStrip.js';
 import { Navbar } from './Navbar.js';
 
 export function AppLayout(): React.JSX.Element {
@@ -9,7 +10,7 @@ export function AppLayout(): React.JSX.Element {
 
   if (isLoading) {
     return (
-      <div className="text-muted flex min-h-screen items-center justify-center font-mono text-sm">
+      <div className="text-muted eyebrow flex min-h-screen items-center justify-center">
         Loading&hellip;
       </div>
     );
@@ -22,7 +23,8 @@ export function AppLayout(): React.JSX.Element {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="mx-auto max-w-[1400px] px-4 py-6">
+      <HeaderStrip />
+      <main className="mx-auto max-w-[1500px] px-5 py-8">
         <Outlet />
       </main>
     </div>

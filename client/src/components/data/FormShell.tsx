@@ -36,7 +36,7 @@ export function FormShell({
       {error !== null && error !== undefined && (
         <p
           role="alert"
-          className="border-danger/30 bg-danger/5 text-danger rounded-md border px-3 py-2 text-sm"
+          className="border-danger/30 bg-danger/5 text-danger rounded-sm border px-3 py-2 text-sm"
         >
           {error}
         </p>

@@ -18,11 +18,12 @@ export function Panel({
 }: PanelProps): React.JSX.Element {
   return (
     <Card className={className ?? 'p-4'}>
-      <h2 className="text-sm font-semibold">{title}</h2>
+      {/* Panel titles are eyebrows, not headings: the page has one heading. */}
+      <h2 className="eyebrow">{title}</h2>
       {subtitle !== undefined && (
-        <p className="text-muted mt-0.5 text-xs">{subtitle}</p>
+        <p className="text-muted mt-1 text-xs">{subtitle}</p>
       )}
-      <div className="mt-3">{children}</div>
+      <div className="mt-4">{children}</div>
     </Card>
   );
 }

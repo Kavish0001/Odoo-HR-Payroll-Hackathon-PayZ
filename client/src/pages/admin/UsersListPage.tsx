@@ -21,12 +21,17 @@ const ROLE_OPTIONS = ROLES.map((value) => ({
 }));
 
 /** Higher roles read as more consequential, so they carry more weight. */
+/**
+ * Roles do not separate by hue in this palette. Admin is the only one that
+ * carries the accent, because it is the only one that can change everyone
+ * else's access.
+ */
 const ROLE_TONE: Record<Role, string> = {
-  EMPLOYEE: 'bg-neutral-soft text-neutral',
-  HR_MANAGER: 'bg-info-soft text-info',
-  HR_PAYROLL_USER: 'bg-teal-soft text-teal',
-  HR_PAYROLL_MANAGER: 'bg-accent-soft text-accent',
-  ADMIN: 'bg-danger-soft text-danger',
+  EMPLOYEE: 'border-steel-300 text-muted',
+  HR_MANAGER: 'border-steel-300 bg-steel-100 text-ink',
+  HR_PAYROLL_USER: 'border-steel-300 bg-steel-100 text-ink',
+  HR_PAYROLL_MANAGER: 'border-steel-300 bg-steel-100 text-ink',
+  ADMIN: 'border-danger-line bg-danger-soft text-ink',
 };
 
 function RoleChips({ roles }: { roles: Role[] }): React.JSX.Element {
@@ -35,7 +40,7 @@ function RoleChips({ roles }: { roles: Role[] }): React.JSX.Element {
       {roles.map((role) => (
         <span
           key={role}
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${ROLE_TONE[role]}`}
+          className={`font-mono rounded-sm border px-2 py-0.5 text-[10px] tracking-wide uppercase ${ROLE_TONE[role]}`}
         >
           {ROLE_LABELS[role]}
         </span>

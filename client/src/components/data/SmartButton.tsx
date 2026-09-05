@@ -34,7 +34,7 @@ export function SmartButton({
   return (
     <Link
       to={to}
-      className="border-line hover:bg-surface flex min-w-24 flex-col items-center rounded-md border px-4 py-2 text-center transition-colors"
+      className="border-steel-300 hover:bg-steel-50 flex min-w-24 flex-col items-center rounded-sm border px-4 py-2 text-center transition-colors"
     >
       <span className={cn('font-mono text-lg font-bold', TONE_TEXT[tone])}>
         {count}

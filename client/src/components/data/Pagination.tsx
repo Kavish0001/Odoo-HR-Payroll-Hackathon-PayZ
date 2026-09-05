@@ -32,7 +32,7 @@ export function Pagination({
           onClick={() => {
             onPageChange(page - 1);
           }}
-          className="border-line hover:bg-line/60 rounded-md border px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+          className="border-steel-300 hover:bg-steel-100 rounded-sm border px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Previous
         </button>
@@ -45,7 +45,7 @@ export function Pagination({
           onClick={() => {
             onPageChange(page + 1);
           }}
-          className="border-line hover:bg-line/60 rounded-md border px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+          className="border-steel-300 hover:bg-steel-100 rounded-sm border px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Next
         </button>

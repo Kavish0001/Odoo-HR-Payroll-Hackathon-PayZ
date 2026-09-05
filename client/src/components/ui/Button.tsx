@@ -10,16 +10,23 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
 }
 
+/**
+ * Buttons are machined edges, not soft chips: hairline border, square-ish
+ * corners, monospace label so they read as controls rather than prose.
+ *
+ * Red is reserved for destructive actions only. The primary action is ink on
+ * white, which keeps the accent meaningful everywhere else on the page.
+ */
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  primary: 'bg-metal-900 text-white hover:bg-metal-700',
-  secondary: 'border border-line bg-raised hover:bg-line/60',
-  ghost: 'hover:bg-line/60',
-  danger: 'bg-danger text-white hover:opacity-90',
+  primary: 'bg-ink text-steel-50 border border-ink hover:bg-ink/85',
+  secondary: 'border border-steel-300 bg-raised text-ink hover:bg-steel-100',
+  ghost: 'border border-transparent text-ink hover:bg-steel-100',
+  danger: 'border border-signal bg-signal text-white hover:bg-danger-strong',
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
-  sm: 'px-2.5 py-1 text-xs',
-  md: 'px-3 py-2 text-sm',
+  sm: 'px-2.5 py-1 text-[11px]',
+  md: 'px-3.5 py-2 text-xs',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -32,7 +39,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         type={type}
         className={cn(
-          'inline-flex items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+          'font-mono inline-flex items-center justify-center gap-1.5 rounded-sm font-medium tracking-wide uppercase whitespace-nowrap transition-colors',
+          'disabled:cursor-not-allowed disabled:opacity-40',
           VARIANT_CLASS[variant],
           SIZE_CLASS[size],
           className,

@@ -24,7 +24,7 @@ export function PageHeader({
     <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
       <div>
         {breadcrumbs !== undefined && breadcrumbs.length > 0 && (
-          <nav className="text-muted mb-1 flex items-center gap-1 text-xs">
+          <nav className="eyebrow mb-2 flex items-center gap-1.5">
             {breadcrumbs.map((crumb, index) => (
               <span key={crumb.label} className="flex items-center gap-1">
                 {index > 0 && <span aria-hidden="true">/</span>}
@@ -42,9 +42,11 @@ export function PageHeader({
             ))}
           </nav>
         )}
-        <h1 className="text-xl font-bold tracking-tight">{title}</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight">
+          {title}
+        </h1>
         {subtitle !== undefined && (
-          <p className="text-muted mt-0.5 text-sm">{subtitle}</p>
+          <p className="text-muted mt-1.5 max-w-2xl text-sm">{subtitle}</p>
         )}
       </div>
       {actions !== undefined && (

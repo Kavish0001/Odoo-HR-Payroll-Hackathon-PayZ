@@ -14,7 +14,7 @@ import {
 } from 'recharts';
 
 import { toAmount, type TooltipValue } from './format.js';
-import { AXIS_TICK_STYLE, GRID_STROKE } from './theme.js';
+import { AXIS_TICK_STYLE, TOOLTIP_STYLE, GRID_STROKE } from './theme.js';
 
 interface SalaryTrendChartProps {
   data: readonly SalaryTrendPoint[];
@@ -62,15 +62,20 @@ export function SalaryTrendChart({
             formatINR(toAmount(value)),
             'Net salary',
           ]}
-          contentStyle={{ fontSize: 12, borderRadius: 8 }}
+          contentStyle={TOOLTIP_STYLE}
         />
         <Line
           type="monotone"
           dataKey="totalNet"
           name="Net salary"
-          stroke="var(--color-chart-1)"
+          stroke="var(--color-ink)"
           strokeWidth={2}
-          dot={{ r: 3, fill: 'var(--color-chart-1)' }}
+          dot={{
+            r: 3,
+            fill: 'var(--color-raised)',
+            stroke: 'var(--color-ink)',
+            strokeWidth: 1.5,
+          }}
           activeDot={{ r: 5 }}
         />
       </LineChart>

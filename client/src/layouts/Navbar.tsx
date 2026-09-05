@@ -117,10 +117,20 @@ const NAV: NavItem[] = [
   },
 ];
 
+/**
+ * Nav items are monospace and uppercase, so navigation reads as machine
+ * chrome rather than prose. The active item is marked by a red rule beneath
+ * it: the same accent as the logo underline, and one of the very few places
+ * red appears at all.
+ */
 const linkClass = (isActive: boolean): string =>
-  `rounded-md px-3 py-1.5 text-sm ${
-    isActive ? 'bg-metal-300/40 font-medium' : 'hover:bg-line/60'
-  }`;
+  [
+    'font-mono relative px-3 py-1.5 text-[11px] tracking-wider uppercase transition-colors',
+    isActive ? 'text-ink' : 'text-muted hover:text-ink',
+    isActive
+      ? 'after:bg-signal after:absolute after:inset-x-3 after:-bottom-px after:h-[2px] after:content-[""]'
+      : '',
+  ].join(' ');
 
 export function Navbar(): React.JSX.Element {
   const { user, allowed, signOut } = useAuth();
@@ -130,11 +140,10 @@ export function Navbar(): React.JSX.Element {
   const visible = NAV.filter((item) => allowed(...item.permission));
 
   return (
-    <header className="border-line bg-raised sticky top-0 z-20 border-b">
-      <nav className="flex h-14 items-center gap-1 px-4">
-        <NavLink to="/employees" className="mr-4 flex items-center gap-2">
-          <Logo size={28} />
-          <span className="text-base font-bold tracking-tight">PayZ</span>
+    <header className="border-steel-300 brushed sticky top-0 z-20 border-b">
+      <nav className="flex h-16 items-center gap-1 px-5">
+        <NavLink to="/employees" className="mr-6 flex items-center gap-2.5">
+          <Logo size={30} withWordmark />
         </NavLink>
 
         {visible.map((item) =>
@@ -150,11 +159,11 @@ export function Navbar(): React.JSX.Element {
             <div key={item.label} className="group relative">
               <button
                 type="button"
-                className="hover:bg-line/60 rounded-md px-3 py-1.5 text-sm"
+                className="font-mono text-muted hover:text-ink px-3 py-1.5 text-[11px] tracking-wider uppercase transition-colors"
               >
                 {item.label} <span aria-hidden="true">&#9662;</span>
               </button>
-              <div className="border-line bg-raised invisible absolute left-0 z-30 mt-1 min-w-44 rounded-md border py-1 opacity-0 shadow-lg transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+              <div className="border-steel-300 bg-raised invisible absolute left-0 z-30 mt-2 min-w-48 rounded-sm border py-1 opacity-0 transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
                 {item.children
                   .filter((child) => allowed(...child.permission))
                   .map((child) => (
@@ -162,11 +171,12 @@ export function Navbar(): React.JSX.Element {
                       key={child.to}
                       to={child.to}
                       className={({ isActive }) =>
-                        `block px-3 py-1.5 text-sm ${
+                        [
+                          'font-mono block px-3 py-2 text-[11px] tracking-wider uppercase',
                           isActive
-                            ? 'bg-metal-300/40 font-medium'
-                            : 'hover:bg-line/60'
-                        }`
+                            ? 'bg-steel-100 text-ink border-signal border-l-2'
+                            : 'text-muted hover:bg-steel-100 hover:text-ink border-l-2 border-transparent',
+                        ].join(' ')
                       }
                     >
                       {child.label}
@@ -188,20 +198,20 @@ export function Navbar(): React.JSX.Element {
             </NavLink>
           )}
           <AttendanceWidget />
-          <div className="text-right leading-tight">
-            <div className="text-sm font-medium">
+          <div className="border-steel-300 border-l pl-3 text-right leading-tight">
+            <div className="text-xs font-medium">
               {user?.employeeName ?? user?.email}
             </div>
-            {user?.departmentName != null && (
-              <div className="text-muted text-xs">{user.departmentName}</div>
-            )}
+            <div className="eyebrow mt-0.5">
+              {user?.departmentName ?? user?.roles[0]?.replace(/_/g, ' ')}
+            </div>
           </div>
           <button
             type="button"
             onClick={() => {
               void signOut();
             }}
-            className="border-line hover:bg-line/60 rounded-md border px-3 py-1.5 text-sm"
+            className="border-steel-300 hover:bg-steel-100 font-mono rounded-sm border px-3 py-1.5 text-[11px] tracking-wider uppercase"
           >
             Sign out
           </button>

@@ -1,6 +1,6 @@
 import type { PayslipStatus } from '@payz/shared';
 
-import { chartColor } from './theme.js';
+import { CHART_FILL } from './theme.js';
 
 interface PayslipStatusChartProps {
   data: readonly { status: PayslipStatus; count: number }[];
@@ -32,7 +32,7 @@ export function PayslipStatusChart({
 
   return (
     <ul className="space-y-2.5" aria-label="Payslip status breakdown">
-      {STATUS_ORDER.map((status, index) => {
+      {STATUS_ORDER.map((status) => {
         const count = byStatus.get(status) ?? 0;
         const share = total === 0 ? 0 : (count / total) * 100;
         return (
@@ -42,7 +42,7 @@ export function PayslipStatusChart({
                 <span
                   aria-hidden="true"
                   className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: chartColor(index) }}
+                  style={{ backgroundColor: CHART_FILL }}
                 />
                 {STATUS_LABEL[status]}
               </span>
@@ -53,7 +53,7 @@ export function PayslipStatusChart({
                 className="h-full rounded-full"
                 style={{
                   width: `${String(share)}%`,
-                  backgroundColor: chartColor(index),
+                  backgroundColor: CHART_FILL,
                 }}
               />
             </div>

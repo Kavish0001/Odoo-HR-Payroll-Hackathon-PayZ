@@ -22,16 +22,13 @@ export function Field({
 }: FieldProps): React.JSX.Element {
   return (
     <div className={className}>
-      <label
-        htmlFor={htmlFor}
-        className="text-muted mb-1 block text-xs font-medium tracking-wide uppercase"
-      >
+      <label htmlFor={htmlFor} className="eyebrow mb-1.5 block">
         {label}
-        {required && <span className="text-danger"> *</span>}
+        {required && <span className="text-signal"> *</span>}
       </label>
       {children}
       {error !== undefined ? (
-        <p className="text-danger mt-1 text-xs">{error}</p>
+        <p className="text-signal mt-1 text-xs">{error}</p>
       ) : hint !== undefined ? (
         <p className="text-muted mt-1 text-xs">{hint}</p>
       ) : null}

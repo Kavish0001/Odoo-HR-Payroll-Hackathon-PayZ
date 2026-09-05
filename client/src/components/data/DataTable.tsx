@@ -66,19 +66,16 @@ export function DataTable<T>({
   const showRows = !isLoading && !isError && data.length > 0;
 
   return (
-    <div className="border-line bg-raised overflow-hidden rounded-lg border">
+    <div className="border-steel-300 bg-raised overflow-hidden rounded-sm border">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-sm">
-          <thead className="bg-surface border-line border-b">
+          <thead className="bg-steel-100/60 border-steel-300 border-b">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   const sorted = header.column.getIsSorted();
                   return (
-                    <th
-                      key={header.id}
-                      className="text-muted px-4 py-2.5 text-xs font-medium tracking-wide uppercase"
-                    >
+                    <th key={header.id} className="eyebrow px-4 py-3 text-left">
                       {header.isPlaceholder ? null : header.column.getCanSort() ? (
                         <button
                           type="button"
@@ -110,7 +107,7 @@ export function DataTable<T>({
               Array.from({ length: skeletonRows }).map((_, rowIndex) => (
                 <tr
                   key={`skeleton-${String(rowIndex)}`}
-                  className="border-line border-b last:border-0"
+                  className="border-steel-300 border-b last:border-0"
                 >
                   {columns.map((_column, colIndex) => (
                     <td key={colIndex} className="px-4 py-3">
@@ -156,9 +153,9 @@ export function DataTable<T>({
                       : undefined
                   }
                   className={cn(
-                    'border-line border-b last:border-0',
+                    'border-steel-300 border-b last:border-0',
                     onRowClick !== undefined &&
-                      'hover:bg-surface cursor-pointer',
+                      'hover:bg-steel-100/50 cursor-pointer',
                     rowClassName?.(row.original),
                   )}
                 >

@@ -31,11 +31,19 @@ export function Logo({
         draggable={false}
       />
       {withWordmark && (
-        <span
-          className="font-semibold tracking-tight"
-          style={{ fontSize: Math.round(size * 0.62) }}
-        >
-          PayZ
+        // The red underline is the one place the wordmark carries accent, and
+        // it is deliberately short: it underlines the mark, not the page.
+        <span className="inline-flex flex-col">
+          <span
+            className="font-display leading-none font-bold tracking-tight"
+            style={{ fontSize: Math.round(size * 0.62) }}
+          >
+            PayZ
+          </span>
+          <span
+            aria-hidden="true"
+            className="bg-signal mt-1 h-[2px] w-7 rounded-full"
+          />
         </span>
       )}
     </span>
