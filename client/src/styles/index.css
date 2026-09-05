@@ -1,0 +1,53 @@
+@import 'tailwindcss';
+
+/* Space Grotesk for the interface, Space Mono for figures and identifiers.
+   Self-hosted rather than pulled from a CDN, so hackathon wifi cannot make
+   the demo render in a fallback face. Font files land here in P1. */
+@theme {
+  --font-sans:
+    'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  /* Palette taken from the PayZ coin: gunmetal body, red mint mark. */
+  --color-ink: oklch(0.26 0.008 260);
+  --color-muted: oklch(0.56 0.008 260);
+  --color-line: oklch(0.9 0.004 260);
+  --color-surface: oklch(0.99 0.002 260);
+  --color-raised: oklch(1 0 0);
+
+  /* Gunmetal, from the coin face gradient (#2B2E33 - #9EA3A9). */
+  --color-metal-900: oklch(0.29 0.008 260);
+  --color-metal-700: oklch(0.45 0.008 260);
+  --color-metal-500: oklch(0.68 0.006 260);
+  --color-metal-300: oklch(0.86 0.004 260);
+
+  /* Mint-mark red. Reserved for destructive actions and blocking warnings,
+     so it keeps its urgency. */
+  --color-brand: oklch(0.52 0.21 26);
+  --color-brand-strong: oklch(0.42 0.19 26);
+
+  /* Status colours for payroll and leave states. */
+  --color-success: oklch(0.6 0.13 155);
+  --color-warning: oklch(0.72 0.15 75);
+  --color-danger: oklch(0.55 0.21 26);
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Every numeric column aligns: salary figures are read down a page, and
+   proportional digits leave them ragged. */
+.font-mono,
+[data-numeric] {
+  font-variant-numeric: tabular-nums;
+}
