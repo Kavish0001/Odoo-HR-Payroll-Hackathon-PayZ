@@ -34,7 +34,7 @@ export function LoginPage(): React.JSX.Element {
   });
 
   return (
-    <main className="bg-steel-50 dot-grid flex min-h-screen items-center justify-center px-6">
+    <main className="dot-grid flex min-h-screen items-center justify-center px-6">
       <MachinedBackdrop />
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">

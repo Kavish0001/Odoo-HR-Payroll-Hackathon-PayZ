@@ -69,7 +69,7 @@ const STAGES = [
 
 export function LandingPage(): React.JSX.Element {
   return (
-    <div className="bg-steel-50 text-ink relative min-h-screen">
+    <div className="text-ink relative min-h-screen">
       <MachinedBackdrop />
       {/* ---- Top bar ------------------------------------------------------ */}
       <header className="border-steel-300 border-b">
