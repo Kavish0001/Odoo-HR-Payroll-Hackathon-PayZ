@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { Logo } from '../../components/brand/Logo.js';
+import { MachinedBackdrop } from '../../components/brand/MachinedBackdrop.js';
 
 import { FlowDiagram } from './FlowDiagram.js';
 
@@ -35,15 +36,41 @@ const FEATURES = [
   },
 ] as const;
 
+/** Figures from the seeded workspace, so the page does not invent numbers. */
 const NUMBERS = [
-  { value: '4', label: 'Modules, one record' },
-  { value: '12', label: 'Salary rules, in sequence' },
+  { value: '33', label: 'Payroll periods on record' },
+  { value: '56,512', label: 'Salary lines, each computed' },
   { value: '0', label: 'Hardcoded figures' },
+] as const;
+
+/** The workflow, stated as the product's spine. */
+const STAGES = [
+  {
+    step: '01',
+    name: 'Draft',
+    body: 'Pick a structure and a period, then choose exactly who is in the run.',
+  },
+  {
+    step: '02',
+    name: 'Compute',
+    body: 'Rules run in sequence against each period contract. Warnings surface here.',
+  },
+  {
+    step: '03',
+    name: 'Validate',
+    body: 'Blocking issues stop the run. Advisory ones must be acknowledged first.',
+  },
+  {
+    step: '04',
+    name: 'Mark Paid',
+    body: 'The batch locks and becomes history. Payslips print and send.',
+  },
 ] as const;
 
 export function LandingPage(): React.JSX.Element {
   return (
-    <div className="bg-steel-50 text-ink min-h-screen">
+    <div className="bg-steel-50 text-ink relative min-h-screen">
+      <MachinedBackdrop />
       {/* ---- Top bar ------------------------------------------------------ */}
       <header className="border-steel-300 border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
@@ -149,6 +176,43 @@ export function LandingPage(): React.JSX.Element {
         </div>
       </section>
 
+      {/* ---- Workflow ------------------------------------------------------ */}
+      <section className="border-steel-300 border-b">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <p className="eyebrow">// The payrun</p>
+          <h2 className="font-display mt-4 max-w-2xl text-3xl font-bold tracking-tight">
+            Four steps, and no way to skip one.
+          </h2>
+          <p className="text-muted mt-4 max-w-xl text-sm leading-relaxed">
+            The state machine is enforced on the server, not in the interface. A
+            paid payrun refuses every further write, so last quarter&rsquo;s
+            payroll still says what it said when it was paid.
+          </p>
+
+          <ol className="divide-steel-300 border-steel-300 bg-raised mt-12 grid divide-y rounded-sm border sm:grid-cols-2 sm:divide-x lg:grid-cols-4 lg:divide-y-0">
+            {STAGES.map((stage, index) => (
+              <li key={stage.step} className="p-6">
+                <div className="flex items-baseline gap-2">
+                  <span className="eyebrow">{stage.step}</span>
+                  <span
+                    aria-hidden="true"
+                    className={`h-px flex-1 ${
+                      index === STAGES.length - 1 ? 'bg-signal' : 'bg-steel-300'
+                    }`}
+                  />
+                </div>
+                <h3 className="font-display mt-3 text-lg font-bold tracking-tight">
+                  {stage.name}
+                </h3>
+                <p className="text-muted mt-2 text-xs leading-relaxed">
+                  {stage.body}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
       {/* ---- Call to action ----------------------------------------------- */}
       <section className="dot-grid border-steel-300 border-b">
         <div className="mx-auto max-w-6xl px-6 py-24 text-center">
@@ -156,8 +220,8 @@ export function LandingPage(): React.JSX.Element {
             Ready to run a payrun?
           </h2>
           <p className="text-muted mx-auto mt-4 max-w-md text-sm">
-            The demo workspace is loaded with employees, contracts, attendance
-            and five finalised payroll periods.
+            The demo workspace holds 130 employees, three years of payroll and
+            34,000 attendance records. Nothing in it is a placeholder.
           </p>
           <Link
             to="/login"

@@ -26,6 +26,7 @@ import { idParamsSchema } from '../common/params.js';
 import { expectedMinutesForWeekday } from '../schedules/weekly-hours.js';
 
 import { resolveScheduleLines } from './resolve-schedule-lines.js';
+import { closeStaleSessions, findLiveSession } from './stale-sessions.js';
 import {
   deriveStatus,
   endOfDay,
@@ -206,9 +207,11 @@ attendanceRouter.get(
   asyncRoute(async (req, res) => {
     const employeeId = requireEmployeeId(req);
 
-    const open = await prisma.attendance.findFirst({
-      where: { employeeId, checkOut: null },
-    });
+    // A punch left open on a previous day is a forgotten check-out, not a
+    // live session. Tidy those first so the widget never reports an elapsed
+    // time measured in weeks (rule A4).
+    await closeStaleSessions(employeeId);
+    const open = await findLiveSession(employeeId);
 
     if (open === null) {
       res.json(CLOSED_SESSION);
@@ -240,6 +243,11 @@ attendanceRouter.post(
   asyncRoute(async (req, res) => {
     const employeeId = requireEmployeeId(req);
     const checkIn = new Date();
+
+    // Close any punch left open on an earlier day first. The partial unique
+    // index allows one open row per employee, so without this a single
+    // forgotten check-out would lock the person out of checking in forever.
+    await closeStaleSessions(employeeId, checkIn);
 
     const computed = await computeAttendanceFields(employeeId, checkIn, null);
 
@@ -276,9 +284,11 @@ attendanceRouter.post(
   asyncRoute(async (req, res) => {
     const employeeId = requireEmployeeId(req);
 
-    const open = await prisma.attendance.findFirst({
-      where: { employeeId, checkOut: null },
-    });
+    // A punch left open on a previous day is a forgotten check-out, not a
+    // live session. Tidy those first so the widget never reports an elapsed
+    // time measured in weeks (rule A4).
+    await closeStaleSessions(employeeId);
+    const open = await findLiveSession(employeeId);
     if (open === null) {
       throw conflict('No open attendance session to check out of');
     }

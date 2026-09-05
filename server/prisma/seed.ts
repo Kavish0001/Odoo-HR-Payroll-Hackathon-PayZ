@@ -10,6 +10,8 @@ import {
 } from '../src/modules/payroll/engine.js';
 
 import {
+  buildScaleRoster,
+  roleForPosition,
   DEPARTMENTS,
   INTERN_SALARY_RULES,
   JOB_POSITIONS,
@@ -32,29 +34,58 @@ const DEMO_PASSWORD = 'payz-demo-2026';
  * chart has real history to plot; September is left open so the Draft to
  * Compute to Validate to Mark Paid flow can be demonstrated live.
  */
-const PERIODS = [
-  {
-    name: 'April 2026',
-    start: '2026-04-01',
-    end: '2026-04-30',
-    status: 'PAID',
-  },
-  { name: 'May 2026', start: '2026-05-01', end: '2026-05-31', status: 'PAID' },
-  { name: 'June 2026', start: '2026-06-01', end: '2026-06-30', status: 'PAID' },
-  { name: 'July 2026', start: '2026-07-01', end: '2026-07-31', status: 'PAID' },
-  {
-    name: 'August 2026',
-    start: '2026-08-01',
-    end: '2026-08-31',
-    status: 'VALIDATED',
-  },
-  {
-    name: 'September 2026',
-    start: '2026-09-01',
-    end: '2026-09-30',
-    status: 'DRAFT',
-  },
-] as const;
+/**
+ * Payroll history across three years.
+ *
+ * Everything before the current month is finalised so the trend chart, the
+ * previous-period comparison and "paid vs pending" all have real history to
+ * work from. The current month is left DRAFT so the Compute to Validate to
+ * Mark Paid flow can be demonstrated live.
+ */
+interface SeedPeriod {
+  name: string;
+  start: string;
+  end: string;
+  status: 'PAID' | 'VALIDATED' | 'DRAFT';
+}
+
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+function buildPeriods(): SeedPeriod[] {
+  const periods: SeedPeriod[] = [];
+  // January 2024 through September 2026.
+  for (let year = 2024; year <= 2026; year += 1) {
+    const lastMonth = year === 2026 ? 9 : 12;
+    for (let month = 1; month <= lastMonth; month += 1) {
+      const last = new Date(Date.UTC(year, month, 0)).getUTCDate();
+      const pad = (n: number): string => String(n).padStart(2, '0');
+      const isCurrent = year === 2026 && month === 9;
+      const isPrevious = year === 2026 && month === 8;
+      periods.push({
+        name: `${MONTH_NAMES[month - 1] ?? ''} ${String(year)}`,
+        start: `${String(year)}-${pad(month)}-01`,
+        end: `${String(year)}-${pad(month)}-${pad(last)}`,
+        status: isCurrent ? 'DRAFT' : isPrevious ? 'VALIDATED' : 'PAID',
+      });
+    }
+  }
+  return periods;
+}
+
+const PERIODS: SeedPeriod[] = buildPeriods();
 
 function assertLocalDatabase(): void {
   const url = process.env['DATABASE_URL'] ?? '';
@@ -69,6 +100,13 @@ function assertLocalDatabase(): void {
 
 const at = (hour: number, minute = 0): number => hour * 60 + minute;
 const day = (iso: string): Date => new Date(`${iso}T00:00:00Z`);
+
+/** 23:59 on the day a punch happened, for closing a forgotten check-out. */
+function endOfSeedDay(date: Date): Date {
+  const end = new Date(date);
+  end.setUTCHours(23, 59, 0, 0);
+  return end;
+}
 
 function isWeekend(date: Date): boolean {
   const weekday = date.getUTCDay();
@@ -132,6 +170,9 @@ async function main(): Promise<void> {
   await clearAll();
 
   const random = makeRandom(20260905);
+
+  // The named cast a walkthrough visits, plus generated staff for volume.
+  const ROSTER = [...PEOPLE, ...buildScaleRoster(random, PEOPLE.length)];
 
   // ---- Organisation ------------------------------------------------------
   const company = await prisma.company.create({
@@ -274,13 +315,28 @@ async function main(): Promise<void> {
     }
   >();
 
-  for (const person of PEOPLE) {
+  // Work emails must be unique, and a generated roster repeats name pairs.
+  // The named cast keeps a clean address; a collision falls back to including
+  // the employee code, which is unique by construction.
+  const takenEmails = new Set<string>();
+  const workEmailFor = (person: (typeof ROSTER)[number]): string => {
+    const plain = `${person.firstName.toLowerCase()}.${person.lastName.toLowerCase()}@oxp.com`;
+    if (!takenEmails.has(plain)) {
+      takenEmails.add(plain);
+      return plain;
+    }
+    const unique = `${person.firstName.toLowerCase()}.${person.lastName.toLowerCase()}.${person.code.toLowerCase()}@oxp.com`;
+    takenEmails.add(unique);
+    return unique;
+  };
+
+  for (const person of ROSTER) {
     const record = await prisma.employee.create({
       data: {
         code: person.code,
         firstName: person.firstName,
         lastName: person.lastName,
-        workEmail: `${person.firstName.toLowerCase()}.${person.lastName.toLowerCase()}@oxp.com`,
+        workEmail: workEmailFor(person),
         phone: `+91 9${String(80000000 + Math.floor(random() * 19999999))}`,
         companyId: company.id,
         departmentId: departments.get(person.department) ?? null,
@@ -348,7 +404,7 @@ async function main(): Promise<void> {
     { contractId: string; wage: number }
   >();
 
-  for (const person of PEOPLE) {
+  for (const person of ROSTER) {
     const employee = employees.get(person.code);
     if (employee === undefined) {
       continue;
@@ -462,9 +518,11 @@ async function main(): Promise<void> {
     source: 'WIDGET' | 'MANUAL';
   }[] = [];
 
-  const attendanceDays = eachWorkingDay(day('2026-06-01'), day('2026-09-04'));
+  // A year of attendance. Long enough that the overview, the coverage
+  // percentage and the manual-edit counter are computed over real volume.
+  const attendanceDays = eachWorkingDay(day('2025-09-01'), day('2026-09-04'));
 
-  for (const person of PEOPLE) {
+  for (const person of ROSTER) {
     const employee = employees.get(person.code);
     if (employee === undefined) {
       continue;
@@ -526,22 +584,30 @@ async function main(): Promise<void> {
 
   // The partial unique index allows only one open session per employee, so
   // every unclosed record but the most recent one per employee is closed.
-  const seenOpen = new Set<string>();
-  for (let i = attendanceRows.length - 1; i >= 0; i -= 1) {
-    const row = attendanceRows[i];
-    if (row?.checkOut !== null) {
+  // Every missing check-out is closed at end of day. A row left genuinely
+  // open would block that employee from ever checking in again, because the
+  // partial unique index permits one open row each; the widget resolves live
+  // sessions by date instead.
+  for (const row of attendanceRows) {
+    if (row.checkOut !== null) {
       continue;
     }
-    if (seenOpen.has(row.employeeId)) {
-      row.checkOut = new Date(row.checkIn.getTime() + 8 * 60 * 60_000);
-      row.workedMinutes = 480;
-      row.status = 'PRESENT';
-    } else {
-      seenOpen.add(row.employeeId);
-    }
+    // Closed at end of day with no worked time: the punch is still flagged as
+    // a missing check-out for the dashboard to count, but it is history rather
+    // than an open session, and it holds nobody's check-in hostage.
+    row.checkOut = endOfSeedDay(row.checkIn);
+    row.workedMinutes = 0;
+    row.overtimeMinutes = 0;
+    row.status = 'MISSING_CHECKOUT';
   }
 
-  await prisma.attendance.createMany({ data: attendanceRows });
+  // Chunked: one createMany with a hundred thousand rows exceeds the driver's
+  // parameter budget.
+  for (let i = 0; i < attendanceRows.length; i += 2000) {
+    await prisma.attendance.createMany({
+      data: attendanceRows.slice(i, i + 2000),
+    });
+  }
 
   // ---- Time off ----------------------------------------------------------
   const typeIds = new Map<string, string>();
@@ -568,7 +634,7 @@ async function main(): Promise<void> {
   let approvedLeaveDays = 0;
   let pendingRequests = 0;
 
-  for (const person of PEOPLE) {
+  for (const person of ROSTER) {
     const employee = employees.get(person.code);
     if (employee === undefined || ptoTypeId === undefined) {
       continue;
@@ -684,7 +750,6 @@ async function main(): Promise<void> {
 
   let payslipNumber = 1;
   let totalNetPaid = 0;
-  let payslipCount = 0;
 
   for (const period of PERIODS) {
     const periodStart = day(period.start);
@@ -715,7 +780,7 @@ async function main(): Promise<void> {
       continue;
     }
 
-    for (const person of PEOPLE) {
+    for (const person of ROSTER) {
       const employee = employees.get(person.code);
       const contractId = contracts.get(person.code);
       if (employee === undefined || contractId === undefined) {
@@ -768,22 +833,26 @@ async function main(): Promise<void> {
           deductionAmount: result.totals.deduction,
           netAmount: result.totals.net,
           status: period.status === 'PAID' ? 'PAID' : 'DONE',
-          lines: {
-            create: result.lines.map((line) => ({
-              ruleId: line.ruleId,
-              code: line.code,
-              name: line.name,
-              category: line.category,
-              sequence: line.sequence,
-              quantity: line.quantity,
-              rate: line.rate,
-              amount: line.amount,
-            })),
-          },
         },
       });
 
-      payslipCount += 1;
+      // Lines are inserted in one statement per payslip rather than through a
+      // nested create, which across thirty-three periods is thousands fewer
+      // round trips.
+      await prisma.payslipLine.createMany({
+        data: result.lines.map((line) => ({
+          payslipId: payslip.id,
+          ruleId: line.ruleId,
+          code: line.code,
+          name: line.name,
+          category: line.category,
+          sequence: line.sequence,
+          quantity: line.quantity,
+          rate: line.rate,
+          amount: line.amount,
+        })),
+      });
+
       if (period.status === 'PAID') {
         totalNetPaid += result.totals.net;
       }
@@ -817,7 +886,9 @@ async function main(): Promise<void> {
 
   // ---- Accounts ----------------------------------------------------------
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12);
-  const accounts: { email: string; roles: Role[]; code: string | null }[] = [
+  // Named accounts for the walkthrough, kept at stable addresses so the
+  // credentials sheet does not change every reseed.
+  const NAMED: { email: string; roles: Role[]; code: string }[] = [
     { email: 'payroll@oxp.com', roles: ['HR_PAYROLL_MANAGER'], code: 'EMP001' },
     {
       email: 'payrolluser@oxp.com',
@@ -827,48 +898,97 @@ async function main(): Promise<void> {
     { email: 'hr@oxp.com', roles: ['HR_MANAGER'], code: 'EMP004' },
     { email: 'employee@oxp.com', roles: ['EMPLOYEE'], code: 'EMP007' },
   ];
+  const namedByCode = new Map(NAMED.map((a) => [a.code, a]));
 
-  for (const account of accounts) {
-    await prisma.user.create({
-      data: {
-        email: account.email,
-        passwordHash,
-        roles: account.roles,
-        employeeId:
-          account.code === null
-            ? null
-            : (employees.get(account.code)?.id ?? null),
-      },
-    });
+  // admin@oxp.com already exists: it was created earlier as the author of the
+  // seeded payruns. It stays unlinked to any employee on purpose, because
+  // employeeId is unique and Sara Khan already holds the HR Manager account.
+  // A system administrator is a role, not necessarily a person on the payroll.
+
+  /**
+   * Every employee gets an account.
+   *
+   * A roster of a hundred and thirty people behind five logins is exactly the
+   * mismatch that makes user management look broken: the Users screen showed a
+   * handful of rows that had no relationship to the Employees screen. Now the
+   * two line up, and the role each account carries follows from the job the
+   * person actually does.
+   */
+  const userRows: {
+    email: string;
+    passwordHash: string;
+    roles: Role[];
+    employeeId: string;
+  }[] = [];
+
+  for (const person of ROSTER) {
+    const employee = employees.get(person.code);
+    if (employee === undefined) {
+      continue;
+    }
+
+    const named = namedByCode.get(person.code);
+    const email =
+      named?.email ??
+      `${person.firstName.toLowerCase()}.${person.lastName.toLowerCase()}.${person.code.toLowerCase()}@oxp.com`;
+    const roles =
+      named?.roles ??
+      ([roleForPosition(person.position, person.department)] as Role[]);
+
+    userRows.push({ email, passwordHash, roles, employeeId: employee.id });
   }
 
-  const attendanceCount = await prisma.attendance.count();
-  const requestCount = await prisma.timeOffRequest.count();
+  for (let i = 0; i < userRows.length; i += 500) {
+    await prisma.user.createMany({ data: userRows.slice(i, i + 500) });
+  }
+
+  const accounts = NAMED;
+
+  const [
+    employeeCount,
+    userCount,
+    attendanceTotal,
+    payslipTotal,
+    lineCount,
+    requestTotal,
+  ] = await Promise.all([
+    prisma.employee.count(),
+    prisma.user.count(),
+    prisma.attendance.count(),
+    prisma.payslip.count(),
+    prisma.payslipLine.count(),
+    prisma.timeOffRequest.count(),
+  ]);
+
+  const pad = (label: string): string => label.padEnd(20);
+  const n = (value: number): string => value.toLocaleString('en-IN');
 
   console.log('PayZ demo data');
   console.log('==============');
-  console.log(`  company           ${company.name}`);
-  console.log(`  departments       ${String(DEPARTMENTS.length)}`);
-  console.log(`  employees         ${String(PEOPLE.length)}`);
-  console.log(`  contracts         ${String(reference - 1)}`);
-  console.log(`  schedules         3`);
+  console.log(`  ${pad('company')}${company.name}`);
+  console.log(`  ${pad('departments')}${n(DEPARTMENTS.length)}`);
+  console.log(`  ${pad('employees')}${n(employeeCount)}`);
   console.log(
-    `  salary rules      ${String(REGULAR_SALARY_RULES.length)} regular + ${String(INTERN_SALARY_RULES.length)} intern`,
+    `  ${pad('user accounts')}${n(userCount)} (one per employee, plus the admin)`,
+  );
+  console.log(`  ${pad('contracts')}${n(reference - 1)}`);
+  console.log(
+    `  ${pad('salary rules')}${n(REGULAR_SALARY_RULES.length)} regular + ${n(INTERN_SALARY_RULES.length)} intern`,
   );
   console.log(
-    `  attendance        ${String(attendanceCount)} records over 3 months`,
+    `  ${pad('attendance')}${n(attendanceTotal)} records, Sep 2025 - Sep 2026`,
   );
   console.log(
-    `  time off requests ${String(requestCount)} (${String(approvedLeaveDays)} approved days, ${String(pendingRequests)} pending)`,
+    `  ${pad('time off')}${n(requestTotal)} requests (${n(approvedLeaveDays)} approved days, ${n(pendingRequests)} pending)`,
   );
   console.log(
-    `  payruns           ${String(PERIODS.length)} (5 finalised + September draft)`,
+    `  ${pad('payruns')}${n(PERIODS.length)} periods, Jan 2024 - Sep 2026`,
   );
   console.log(
-    `  payslips          ${String(payslipCount)}, all computed by the rule engine`,
+    `  ${pad('payslips')}${n(payslipTotal)} with ${n(lineCount)} computed lines`,
   );
   console.log(
-    `  net salary paid   Rs ${(totalNetPaid / 100).toLocaleString('en-IN')}`,
+    `  ${pad('net salary paid')}Rs ${n(Math.round(totalNetPaid / 100))}`,
   );
   console.log('');
   console.log(`Sign in with any of these. Password: ${DEMO_PASSWORD}`);
@@ -876,6 +996,11 @@ async function main(): Promise<void> {
   for (const account of accounts) {
     console.log(`  ${account.email.padEnd(20)} ${account.roles.join(', ')}`);
   }
+  console.log('');
+  console.log('Every other employee has an account at');
+  console.log(
+    '  firstname.lastname@oxp.com  (or .empNNN@oxp.com where names repeat)',
+  );
 }
 
 main()

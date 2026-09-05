@@ -714,3 +714,246 @@ export function makeRandom(seed: number): () => number {
     return state / 4_294_967_296;
   };
 }
+
+// ---------------------------------------------------------------------------
+// Scale-out roster
+// ---------------------------------------------------------------------------
+
+/**
+ * The twenty-eight people above are the demo cast: named, hand-tuned, and the
+ * ones a walkthrough actually visits. Everyone below is generated to give the
+ * database realistic volume, so list pagination, dashboard aggregates and a
+ * payrun over hundreds of payslips are exercised under something like real
+ * load rather than against a handful of rows.
+ */
+
+const FIRST_NAMES = [
+  'Aditi',
+  'Rahul',
+  'Sanjay',
+  'Kavya',
+  'Imran',
+  'Deepa',
+  'Varun',
+  'Anjali',
+  'Suresh',
+  'Ritu',
+  'Naveen',
+  'Shalini',
+  'Gaurav',
+  'Preeti',
+  'Amit',
+  'Swati',
+  'Rakesh',
+  'Pallavi',
+  'Kunal',
+  'Sunita',
+  'Vivek',
+  'Madhuri',
+  'Ajay',
+  'Nidhi',
+  'Sandeep',
+  'Rekha',
+  'Yash',
+  'Bhavna',
+  'Alok',
+  'Trisha',
+  'Girish',
+  'Payal',
+  'Mohit',
+  'Aarti',
+  'Devendra',
+  'Kiran',
+  'Prashant',
+  'Leela',
+  'Tarun',
+  'Usha',
+] as const;
+
+const LAST_NAMES = [
+  'Sharma',
+  'Reddy',
+  'Nair',
+  'Banerjee',
+  'Chopra',
+  'Mishra',
+  'Saxena',
+  'Rane',
+  'Bhatia',
+  'Ghosh',
+  'Kaur',
+  'Naidu',
+  'Trivedi',
+  'Sinha',
+  'Chatterjee',
+  'Mehra',
+  'Pandey',
+  'Rathore',
+  'Dutta',
+  'Bajaj',
+  'Kohli',
+  'Sethi',
+  'Kapadia',
+  'Vora',
+] as const;
+
+const LOCATIONS = [
+  'Mumbai',
+  'Bengaluru',
+  'Pune',
+  'Delhi',
+  'Hyderabad',
+  'Chennai',
+  'Remote',
+] as const;
+
+/** Department mix, roughly matching how a services company actually staffs. */
+const SCALE_MIX: {
+  department: string;
+  position: string;
+  count: number;
+  baseWage: number;
+  spread: number;
+}[] = [
+  {
+    department: 'Engineering',
+    position: 'Developer',
+    count: 28,
+    baseWage: 76_000,
+    spread: 26_000,
+  },
+  {
+    department: 'Engineering',
+    position: 'Senior Developer',
+    count: 12,
+    baseWage: 128_000,
+    spread: 30_000,
+  },
+  {
+    department: 'Engineering',
+    position: 'QA Engineer',
+    count: 8,
+    baseWage: 64_000,
+    spread: 14_000,
+  },
+  {
+    department: 'Sales',
+    position: 'Sales Executive',
+    count: 20,
+    baseWage: 58_000,
+    spread: 16_000,
+  },
+  {
+    department: 'Support',
+    position: 'Support Engineer',
+    count: 14,
+    baseWage: 52_000,
+    spread: 12_000,
+  },
+  {
+    department: 'IT',
+    position: 'IT Administrator',
+    count: 7,
+    baseWage: 72_000,
+    spread: 16_000,
+  },
+  {
+    department: 'Finance',
+    position: 'Data Analyst',
+    count: 5,
+    baseWage: 74_000,
+    spread: 14_000,
+  },
+  {
+    department: 'HR',
+    position: 'HR Officer',
+    count: 4,
+    baseWage: 56_000,
+    spread: 10_000,
+  },
+  {
+    department: 'Engineering',
+    position: 'Intern',
+    count: 4,
+    baseWage: 24_000,
+    spread: 4_000,
+  },
+];
+
+/**
+ * Builds the generated roster deterministically from the same seeded random
+ * source, so the database is identical on every run and "the dashboard moved"
+ * always means the code changed rather than the dice.
+ */
+export function buildScaleRoster(
+  random: () => number,
+  startIndex: number,
+): SeedPerson[] {
+  const people: SeedPerson[] = [];
+  let n = startIndex;
+
+  for (const group of SCALE_MIX) {
+    for (let i = 0; i < group.count; i += 1) {
+      n += 1;
+      const first =
+        FIRST_NAMES[Math.floor(random() * FIRST_NAMES.length)] ?? 'Asha';
+      const last =
+        LAST_NAMES[Math.floor(random() * LAST_NAMES.length)] ?? 'Rao';
+      const isIntern = group.position === 'Intern';
+
+      // A wage spread inside each grade, so department totals and the average
+      // salary KPI are not the same number repeated.
+      const wage =
+        Math.round((group.baseWage + (random() - 0.5) * group.spread) / 500) *
+        500;
+
+      people.push({
+        code: `EMP${String(n).padStart(3, '0')}`,
+        firstName: first,
+        lastName: last,
+        department: group.department,
+        position: group.position,
+        wage: lakh(wage),
+        employeeType: isIntern
+          ? 'INTERN'
+          : random() < 0.08
+            ? 'CONTRACT'
+            : random() < 0.06
+              ? 'PART_TIME'
+              : 'FULL_TIME',
+        schedule: isIntern ? 'part' : random() < 0.12 ? 'flexible' : 'full',
+        joinYear: 2022 + Math.floor(random() * 4),
+        // A small slice without bank details, so the payroll warning has a
+        // realistic population rather than exactly one subject.
+        hasBankDetails: random() > 0.05,
+        location:
+          LOCATIONS[Math.floor(random() * LOCATIONS.length)] ?? 'Mumbai',
+      });
+    }
+  }
+
+  return people;
+}
+
+/**
+ * Which role an account gets, from the person's job.
+ *
+ * Every employee gets a login, because "employees and users not matching" is
+ * exactly the confusion that arises when only a handful of accounts exist for
+ * a roster of hundreds.
+ */
+export function roleForPosition(position: string, department: string): string {
+  if (position === 'Finance Manager' || position === 'Payroll Specialist') {
+    return 'HR_PAYROLL_MANAGER';
+  }
+  if (department === 'Finance' && position === 'Data Analyst') {
+    return 'HR_PAYROLL_USER';
+  }
+  if (position === 'HR Manager') {
+    return 'ADMIN';
+  }
+  if (department === 'HR') {
+    return 'HR_MANAGER';
+  }
+  return 'EMPLOYEE';
+}

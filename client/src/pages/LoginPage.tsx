@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { toApiError } from '../api/client.js';
 import { Logo } from '../components/brand/Logo.js';
+import { MachinedBackdrop } from '../components/brand/MachinedBackdrop.js';
 import { useAuth } from '../lib/auth.js';
 
 export function LoginPage(): React.JSX.Element {
@@ -34,6 +35,7 @@ export function LoginPage(): React.JSX.Element {
 
   return (
     <main className="bg-steel-50 dot-grid flex min-h-screen items-center justify-center px-6">
+      <MachinedBackdrop />
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <Logo size={64} withWordmark />

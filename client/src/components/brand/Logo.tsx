@@ -1,5 +1,5 @@
 interface LogoProps {
-  /** Rendered size in pixels. Below 48 the simplified mark is used. */
+  /** Rendered size in pixels. */
   size?: number;
   /** Show the PayZ wordmark beside the coin. */
   withWordmark?: boolean;
@@ -9,21 +9,20 @@ interface LogoProps {
 /**
  * The PayZ coin.
  *
- * Two assets, chosen by size: the full coin carries a brush pattern, reeded
- * edge and machining rings that stop reading below roughly 48px, so smaller
- * renders get the simplified mark instead.
+ * One asset at every size. There was briefly a second, simplified mark for
+ * small renders, but two marks means the favicon, the navbar and the login
+ * screen can drift apart, and a logo that changes shape is not a logo. The
+ * single mark is drawn simply enough to survive 16px.
  */
 export function Logo({
   size = 32,
   withWordmark = false,
   className,
 }: LogoProps): React.JSX.Element {
-  const source = size >= 48 ? '/payz-icon.svg' : '/payz-mark.svg';
-
   return (
-    <span className={`inline-flex items-center gap-2 ${className ?? ''}`}>
+    <span className={`inline-flex items-center gap-2.5 ${className ?? ''}`}>
       <img
-        src={source}
+        src="/payz-mark.svg"
         width={size}
         height={size}
         alt=""
