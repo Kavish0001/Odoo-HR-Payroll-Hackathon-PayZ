@@ -2,7 +2,7 @@
 <div align="center">
 
 <img
-  src="https://capsule-render.vercel.app/api?type=waving&color=0:0d0d0d,55:2b2e33,100:ff0000&height=210&section=header&text=PayZ&fontSize=88&fontColor=ffffff&fontAlignY=34&desc=Integrated%20HR%20%26%20Payroll%20Operations%20Platform&descSize=17&descAlignY=54&animation=fadeIn"
+  src="https://capsule-render.vercel.app/api?type=waving&color=0:0d0d0d,55:2b2e33,100:ff0000&height=210&section=header&text=PayZ&fontSize=88&fontColor=ffffff&fontAlignY=34&desc=Integrated%20HR%20%26amp%3B%20Payroll%20Operations%20Platform&descSize=17&descAlignY=54&animation=fadeIn"
   alt="PayZ — Integrated HR & Payroll Operations Platform"
 />
 
