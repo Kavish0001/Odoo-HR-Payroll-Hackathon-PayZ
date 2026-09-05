@@ -290,7 +290,7 @@ npm run db:seed               # load demo employees, contracts, rules, payroll h
 npm run dev                   # API :4000 + client :5173
 ```
 
-Open **http://localhost:5173**. Adminer is at **http://localhost:8080** if you want to browse tables directly.
+Open **http://localhost:5173**. Adminer is at **http://localhost:8081** if you want to browse tables directly.
 
 ### Environment variables
 
