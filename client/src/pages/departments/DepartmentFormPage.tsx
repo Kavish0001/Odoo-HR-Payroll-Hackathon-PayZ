@@ -93,7 +93,11 @@ export function DepartmentFormPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title={isNew ? 'New Department' : (departmentQuery.data?.name ?? 'Department')}
+        title={
+          isNew
+            ? 'New Department'
+            : (departmentQuery.data?.name ?? 'Department')
+        }
         breadcrumbs={[
           { label: 'Departments', to: '/departments' },
           { label: isNew ? 'New' : (departmentQuery.data?.name ?? '...') },
@@ -117,13 +121,26 @@ export function DepartmentFormPage(): React.JSX.Element {
         error={formError}
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Name" htmlFor="name" required error={errors.name?.message}>
+          <Field
+            label="Name"
+            htmlFor="name"
+            required
+            error={errors.name?.message}
+          >
             <Input id="name" {...register('name')} />
           </Field>
           <Field label="Code" htmlFor="code" error={errors.code?.message}>
-            <Input id="code" className="font-mono" {...register('code', { setValueAs: emptyToUndefined })} />
+            <Input
+              id="code"
+              className="font-mono"
+              {...register('code', { setValueAs: emptyToUndefined })}
+            />
           </Field>
-          <Field label="Manager" htmlFor="managerId" error={errors.managerId?.message}>
+          <Field
+            label="Manager"
+            htmlFor="managerId"
+            error={errors.managerId?.message}
+          >
             <Select
               id="managerId"
               options={managerOptions}

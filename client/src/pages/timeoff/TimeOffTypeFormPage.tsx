@@ -123,7 +123,11 @@ export function TimeOffTypeFormPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title={isNew ? 'New Time Off Type' : (typeQuery.data?.name ?? 'Time Off Type')}
+        title={
+          isNew
+            ? 'New Time Off Type'
+            : (typeQuery.data?.name ?? 'Time Off Type')
+        }
         breadcrumbs={[
           { label: 'Time Off Types', to: '/time-off/types' },
           { label: isNew ? 'New' : (typeQuery.data?.name ?? '...') },
@@ -147,13 +151,32 @@ export function TimeOffTypeFormPage(): React.JSX.Element {
         error={formError}
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Name" htmlFor="name" required error={errors.name?.message}>
+          <Field
+            label="Name"
+            htmlFor="name"
+            required
+            error={errors.name?.message}
+          >
             <Input id="name" {...register('name')} />
           </Field>
-          <Field label="Code" htmlFor="code" required error={errors.code?.message}>
-            <Input id="code" className="font-mono uppercase" {...register('code')} />
+          <Field
+            label="Code"
+            htmlFor="code"
+            required
+            error={errors.code?.message}
+          >
+            <Input
+              id="code"
+              className="font-mono uppercase"
+              {...register('code')}
+            />
           </Field>
-          <Field label="Unit" htmlFor="unit" required error={errors.unit?.message}>
+          <Field
+            label="Unit"
+            htmlFor="unit"
+            required
+            error={errors.unit?.message}
+          >
             <Select id="unit" options={UNIT_OPTIONS} {...register('unit')} />
           </Field>
           <Field
@@ -176,14 +199,19 @@ export function TimeOffTypeFormPage(): React.JSX.Element {
           >
             <Input
               id="payrollWorkEntry"
-              {...register('payrollWorkEntry', { setValueAs: emptyToUndefined })}
+              {...register('payrollWorkEntry', {
+                setValueAs: emptyToUndefined,
+              })}
             />
           </Field>
           <Field label="Color" htmlFor="color" error={errors.color?.message}>
             <Input id="color" {...register('color')} />
           </Field>
           <div className="flex items-center gap-2 pt-6">
-            <Checkbox id="requiresAllocation" {...register('requiresAllocation')} />
+            <Checkbox
+              id="requiresAllocation"
+              {...register('requiresAllocation')}
+            />
             <label htmlFor="requiresAllocation" className="text-sm">
               Requires an approved allocation to take leave
             </label>

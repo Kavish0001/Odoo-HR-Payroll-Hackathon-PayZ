@@ -118,17 +118,26 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title={isNew ? 'New Time Off Request' : (detail?.typeName ?? 'Time Off Request')}
+        title={
+          isNew
+            ? 'New Time Off Request'
+            : (detail?.typeName ?? 'Time Off Request')
+        }
         breadcrumbs={[
           { label: 'Time Off', to: '/time-off/requests' },
           { label: isNew ? 'New' : (detail?.typeName ?? '...') },
         ]}
-        actions={detail !== undefined ? <StatusBadge status={detail.status} /> : undefined}
+        actions={
+          detail !== undefined ? (
+            <StatusBadge status={detail.status} />
+          ) : undefined
+        }
       />
 
       {requestQuery.isError && !isNew && (
         <p className="border-danger/30 bg-danger/5 text-danger mb-4 rounded-md border px-3 py-2 text-sm">
-          Could not load this time off request. The API may still be starting up.
+          Could not load this time off request. The API may still be starting
+          up.
         </p>
       )}
 
@@ -172,7 +181,12 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
         }
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Employee" htmlFor="employeeId" required error={errors.employeeId?.message}>
+          <Field
+            label="Employee"
+            htmlFor="employeeId"
+            required
+            error={errors.employeeId?.message}
+          >
             <Select
               id="employeeId"
               options={employeeOptions}
@@ -181,7 +195,12 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
               {...register('employeeId')}
             />
           </Field>
-          <Field label="Time Off Type" htmlFor="typeId" required error={errors.typeId?.message}>
+          <Field
+            label="Time Off Type"
+            htmlFor="typeId"
+            required
+            error={errors.typeId?.message}
+          >
             <Select
               id="typeId"
               options={typeOptions}
@@ -190,11 +209,31 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
               {...register('typeId')}
             />
           </Field>
-          <Field label="Start Date" htmlFor="startDate" required error={errors.startDate?.message}>
-            <Input id="startDate" type="date" disabled={!isEditable} {...register('startDate')} />
+          <Field
+            label="Start Date"
+            htmlFor="startDate"
+            required
+            error={errors.startDate?.message}
+          >
+            <Input
+              id="startDate"
+              type="date"
+              disabled={!isEditable}
+              {...register('startDate')}
+            />
           </Field>
-          <Field label="End Date" htmlFor="endDate" required error={errors.endDate?.message}>
-            <Input id="endDate" type="date" disabled={!isEditable} {...register('endDate')} />
+          <Field
+            label="End Date"
+            htmlFor="endDate"
+            required
+            error={errors.endDate?.message}
+          >
+            <Input
+              id="endDate"
+              type="date"
+              disabled={!isEditable}
+              {...register('endDate')}
+            />
           </Field>
           {!isNew && (
             <>

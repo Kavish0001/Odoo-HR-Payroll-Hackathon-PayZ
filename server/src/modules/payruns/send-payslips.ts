@@ -60,7 +60,14 @@ async function deliver(mail: Mail): Promise<void> {
     text: mail.text,
     ...(mail.attachment === undefined
       ? {}
-      : { attachments: [{ filename: mail.attachment.filename, content: mail.attachment.content }] }),
+      : {
+          attachments: [
+            {
+              filename: mail.attachment.filename,
+              content: mail.attachment.content,
+            },
+          ],
+        }),
   });
 }
 
@@ -107,7 +114,10 @@ export async function sendPayslipsForPayrun(
       const attachment =
         buildPdf === undefined
           ? undefined
-          : { filename: `${target.number}.pdf`, content: await buildPdf(target.payslipId) };
+          : {
+              filename: `${target.number}.pdf`,
+              content: await buildPdf(target.payslipId),
+            };
 
       await deliver({
         to: redirectTo.length > 0 ? redirectTo : target.employeeEmail,
@@ -117,13 +127,24 @@ export async function sendPayslipsForPayrun(
       });
 
       logger.info(
-        { employeeId: target.employeeId, transport: hasSmtpCredentials ? 'smtp' : 'console' },
+        {
+          employeeId: target.employeeId,
+          transport: hasSmtpCredentials ? 'smtp' : 'console',
+        },
         'Payslip email sent',
       );
-      return { payslipId: target.payslipId, employeeId: target.employeeId, success: true };
+      return {
+        payslipId: target.payslipId,
+        employeeId: target.employeeId,
+        success: true,
+      };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown mail error';
-      logger.warn({ employeeId: target.employeeId, err: message }, 'Payslip email failed');
+      const message =
+        error instanceof Error ? error.message : 'Unknown mail error';
+      logger.warn(
+        { employeeId: target.employeeId, err: message },
+        'Payslip email failed',
+      );
       return {
         payslipId: target.payslipId,
         employeeId: target.employeeId,

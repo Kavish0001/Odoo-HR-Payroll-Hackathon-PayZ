@@ -29,7 +29,8 @@ export function PayrunsListPage(): React.JSX.Element {
         header: 'Period',
         cell: ({ row }) => (
           <span>
-            {row.original.periodStart.slice(0, 10)} – {row.original.periodEnd.slice(0, 10)}
+            {row.original.periodStart.slice(0, 10)} –{' '}
+            {row.original.periodEnd.slice(0, 10)}
           </span>
         ),
       },

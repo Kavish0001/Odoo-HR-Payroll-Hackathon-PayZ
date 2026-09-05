@@ -32,13 +32,14 @@ export const allocationsRouter: Router = Router();
 
 type AllocationQuery = z.infer<typeof allocationQuerySchema>;
 
-const allocationWithRelations = Prisma.validator<Prisma.TimeOffAllocationDefaultArgs>()({
-  include: {
-    employee: { select: { firstName: true, lastName: true } },
-    type: { select: { name: true, unit: true } },
-    approver: { select: { firstName: true, lastName: true } },
-  },
-});
+const allocationWithRelations =
+  Prisma.validator<Prisma.TimeOffAllocationDefaultArgs>()({
+    include: {
+      employee: { select: { firstName: true, lastName: true } },
+      type: { select: { name: true, unit: true } },
+      approver: { select: { firstName: true, lastName: true } },
+    },
+  });
 type AllocationWithRelations = Prisma.TimeOffAllocationGetPayload<
   typeof allocationWithRelations
 >;
@@ -68,7 +69,8 @@ function toRow(
     takenQty: balance.takenQty,
     remainingQty: balance.remainingQty,
     validFrom: toDateOnly(allocation.validFrom),
-    validTo: allocation.validTo === null ? null : toDateOnly(allocation.validTo),
+    validTo:
+      allocation.validTo === null ? null : toDateOnly(allocation.validTo),
     status: allocation.status,
     approverName:
       allocation.approver === null
@@ -161,7 +163,9 @@ allocationsRouter.get(
     }
     mustBeSelf(req, allocation.employeeId);
 
-    const takenMap = await sumApprovedDurationByAllocation(prisma, [allocation.id]);
+    const takenMap = await sumApprovedDurationByAllocation(prisma, [
+      allocation.id,
+    ]);
     res.json(toRow(allocation, takenMap.get(allocation.id) ?? 0));
   }),
 );
@@ -197,7 +201,9 @@ allocationsRouter.patch(
         data: toAllocationData(body),
         ...allocationWithRelations,
       });
-      const takenMap = await sumApprovedDurationByAllocation(prisma, [allocation.id]);
+      const takenMap = await sumApprovedDurationByAllocation(prisma, [
+        allocation.id,
+      ]);
       res.json(toRow(allocation, takenMap.get(allocation.id) ?? 0));
     } catch (error) {
       if (
@@ -248,7 +254,9 @@ allocationsRouter.post(
   asyncRoute(async (req, res) => {
     const { id } = req.params as unknown as { id: string };
 
-    const allocation = await prisma.timeOffAllocation.findUnique({ where: { id } });
+    const allocation = await prisma.timeOffAllocation.findUnique({
+      where: { id },
+    });
     if (allocation === null) {
       throw notFound('Allocation not found');
     }
@@ -269,7 +277,9 @@ allocationsRouter.post(
       data: { status: 'APPROVED', approverId },
       ...allocationWithRelations,
     });
-    const takenMap = await sumApprovedDurationByAllocation(prisma, [updated.id]);
+    const takenMap = await sumApprovedDurationByAllocation(prisma, [
+      updated.id,
+    ]);
     res.json(toRow(updated, takenMap.get(updated.id) ?? 0));
   }),
 );
@@ -282,7 +292,9 @@ allocationsRouter.post(
   asyncRoute(async (req, res) => {
     const { id } = req.params as unknown as { id: string };
 
-    const allocation = await prisma.timeOffAllocation.findUnique({ where: { id } });
+    const allocation = await prisma.timeOffAllocation.findUnique({
+      where: { id },
+    });
     if (allocation === null) {
       throw notFound('Allocation not found');
     }

@@ -1,4 +1,9 @@
-import type { EmployeeDetail, EmployeeInput, EmployeeRow, Paginated } from '@payz/shared';
+import type {
+  EmployeeDetail,
+  EmployeeInput,
+  EmployeeRow,
+  Paginated,
+} from '@payz/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from './client.js';

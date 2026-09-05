@@ -195,7 +195,9 @@ export function AttendanceListPage(): React.JSX.Element {
           placeholder="All statuses"
           value={status ?? ''}
           onChange={(event) => {
-            setStatus(event.target.value === '' ? undefined : event.target.value);
+            setStatus(
+              event.target.value === '' ? undefined : event.target.value,
+            );
             setPage(1);
           }}
         />

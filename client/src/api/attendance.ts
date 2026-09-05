@@ -87,8 +87,9 @@ export function useCheckIn() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const { data } =
-        await api.post<AttendanceSession>('/attendance/check-in');
+      const { data } = await api.post<AttendanceSession>(
+        '/attendance/check-in',
+      );
       return data;
     },
     onSuccess: async (session) => {
@@ -102,8 +103,9 @@ export function useCheckOut() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const { data } =
-        await api.post<AttendanceSession>('/attendance/check-out');
+      const { data } = await api.post<AttendanceSession>(
+        '/attendance/check-out',
+      );
       return data;
     },
     onSuccess: async (session) => {

@@ -22,10 +22,9 @@ export function useDepartments(params: DepartmentListParams = {}) {
   return useQuery({
     queryKey: ['departments', 'list', params],
     queryFn: async () => {
-      const { data } = await api.get<Paginated<DepartmentRow>>(
-        '/departments',
-        { params },
-      );
+      const { data } = await api.get<Paginated<DepartmentRow>>('/departments', {
+        params,
+      });
       return data;
     },
   });
@@ -48,10 +47,7 @@ export function useCreateDepartment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: DepartmentInput) => {
-      const { data } = await api.post<DepartmentDetail>(
-        '/departments',
-        input,
-      );
+      const { data } = await api.post<DepartmentDetail>('/departments', input);
       return data;
     },
     onSuccess: async () => {

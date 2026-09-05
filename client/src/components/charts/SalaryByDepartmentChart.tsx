@@ -1,4 +1,8 @@
-import { formatINR, formatINRCompact, type DepartmentSalaryPoint } from '@payz/shared';
+import {
+  formatINR,
+  formatINRCompact,
+  type DepartmentSalaryPoint,
+} from '@payz/shared';
 import {
   Bar,
   BarChart,
@@ -35,7 +39,11 @@ export function SalaryByDepartmentChart({
         role="img"
         aria-label="Bar chart of net salary cost by department"
       >
-        <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+        <CartesianGrid
+          strokeDasharray="3 3"
+          stroke={GRID_STROKE}
+          vertical={false}
+        />
         <XAxis
           dataKey="name"
           tick={AXIS_TICK_STYLE}
@@ -51,7 +59,10 @@ export function SalaryByDepartmentChart({
           tickFormatter={(value: number) => formatINRCompact(value)}
         />
         <Tooltip
-          formatter={(value: TooltipValue) => [formatINR(toAmount(value)), 'Net salary']}
+          formatter={(value: TooltipValue) => [
+            formatINR(toAmount(value)),
+            'Net salary',
+          ]}
           contentStyle={{ fontSize: 12, borderRadius: 8 }}
         />
         <Bar dataKey="totalNet" name="Net salary" radius={[4, 4, 0, 0]}>

@@ -39,7 +39,10 @@ export function PayslipDetailPage(): React.JSX.Element {
     <div>
       <PageHeader
         title={payslip.number}
-        breadcrumbs={[{ label: 'Payslips', to: '/payroll/payslips' }, { label: payslip.number }]}
+        breadcrumbs={[
+          { label: 'Payslips', to: '/payroll/payslips' },
+          { label: payslip.number },
+        ]}
         subtitle={`${payslip.employeeName} · ${payslip.periodStart.slice(0, 10)} – ${payslip.periodEnd.slice(0, 10)}`}
         actions={
           <Button
@@ -64,7 +67,9 @@ export function PayslipDetailPage(): React.JSX.Element {
           <p className="mt-1 text-sm font-medium">{payslip.employeeName}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-muted text-xs tracking-wide uppercase">Structure</p>
+          <p className="text-muted text-xs tracking-wide uppercase">
+            Structure
+          </p>
           <p className="mt-1 text-sm font-medium">{payslip.structureName}</p>
         </Card>
         <Card className="p-4">
@@ -79,7 +84,8 @@ export function PayslipDetailPage(): React.JSX.Element {
         <Card className="p-4">
           <p className="text-muted text-xs tracking-wide uppercase">Period</p>
           <p className="mt-1 text-sm font-medium">
-            {payslip.periodStart.slice(0, 10)} – {payslip.periodEnd.slice(0, 10)}
+            {payslip.periodStart.slice(0, 10)} –{' '}
+            {payslip.periodEnd.slice(0, 10)}
           </p>
         </Card>
         <Card className="p-4">
@@ -89,8 +95,12 @@ export function PayslipDetailPage(): React.JSX.Element {
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-muted text-xs tracking-wide uppercase">Worked Days</p>
-          <p className="mt-1 font-mono text-sm font-medium">{payslip.workedDays}</p>
+          <p className="text-muted text-xs tracking-wide uppercase">
+            Worked Days
+          </p>
+          <p className="mt-1 font-mono text-sm font-medium">
+            {payslip.workedDays}
+          </p>
         </Card>
       </div>
 
@@ -98,10 +108,18 @@ export function PayslipDetailPage(): React.JSX.Element {
         <table className="w-full border-collapse text-left text-sm">
           <thead className="bg-surface border-line border-b">
             <tr>
-              <th className="text-muted px-4 py-2.5 text-xs font-medium tracking-wide uppercase">Rule</th>
-              <th className="text-muted px-4 py-2.5 text-xs font-medium tracking-wide uppercase">Category</th>
-              <th className="text-muted px-4 py-2.5 text-right text-xs font-medium tracking-wide uppercase">Amount</th>
-              <th className="text-muted px-4 py-2.5 text-right text-xs font-medium tracking-wide uppercase">Code</th>
+              <th className="text-muted px-4 py-2.5 text-xs font-medium tracking-wide uppercase">
+                Rule
+              </th>
+              <th className="text-muted px-4 py-2.5 text-xs font-medium tracking-wide uppercase">
+                Category
+              </th>
+              <th className="text-muted px-4 py-2.5 text-right text-xs font-medium tracking-wide uppercase">
+                Amount
+              </th>
+              <th className="text-muted px-4 py-2.5 text-right text-xs font-medium tracking-wide uppercase">
+                Code
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -124,18 +142,28 @@ export function PayslipDetailPage(): React.JSX.Element {
                           : 'border-line border-b last:border-0'
                       }
                     >
-                      <td className={`px-4 py-2.5 ${emphasise ? 'font-semibold' : ''}`}>{line.name}</td>
+                      <td
+                        className={`px-4 py-2.5 ${emphasise ? 'font-semibold' : ''}`}
+                      >
+                        {line.name}
+                      </td>
                       <td className="px-4 py-2.5">
                         <CategoryBadge category={line.category} />
                       </td>
                       <td
                         className={`px-4 py-2.5 text-right font-mono ${
-                          isDeduction ? 'text-danger' : emphasise ? 'font-semibold' : ''
+                          isDeduction
+                            ? 'text-danger'
+                            : emphasise
+                              ? 'font-semibold'
+                              : ''
                         }`}
                       >
                         {formatINR(line.amount)}
                       </td>
-                      <td className="text-muted px-4 py-2.5 text-right font-mono">{line.code}</td>
+                      <td className="text-muted px-4 py-2.5 text-right font-mono">
+                        {line.code}
+                      </td>
                     </tr>
                   );
                 })}
@@ -147,7 +175,10 @@ export function PayslipDetailPage(): React.JSX.Element {
               <td colSpan={2} className="px-4 py-2.5 text-sm font-bold">
                 Net Pay
               </td>
-              <td colSpan={2} className="px-4 py-2.5 text-right font-mono text-sm font-bold">
+              <td
+                colSpan={2}
+                className="px-4 py-2.5 text-right font-mono text-sm font-bold"
+              >
                 {formatINR(payslip.netAmount)}
               </td>
             </tr>

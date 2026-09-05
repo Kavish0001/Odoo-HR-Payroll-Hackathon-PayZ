@@ -14,7 +14,11 @@ import { Router } from 'express';
 import { z } from 'zod';
 
 import { prisma } from '../../config/prisma.js';
-import { getUser, requireAuth, requirePermission } from '../../middleware/auth.js';
+import {
+  getUser,
+  requireAuth,
+  requirePermission,
+} from '../../middleware/auth.js';
 import { conflict, notFound, unprocessable } from '../../middleware/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { renderPayslipPdf } from '../../pdf/payslip-document.js';
@@ -150,7 +154,9 @@ payrunsRouter.post(
     const invalidIds = uniqueIds.filter((id) => !eligibleIds.has(id));
 
     if (invalidIds.length > 0) {
-      const excludedReasons = new Map(excluded.map((e) => [e.employeeId, e.reason]));
+      const excludedReasons = new Map(
+        excluded.map((e) => [e.employeeId, e.reason]),
+      );
       throw unprocessable(
         'INELIGIBLE_EMPLOYEES',
         'Some selected employees are not eligible for this payrun.',
@@ -281,10 +287,16 @@ payrunsRouter.post(
 
       const updated = await tx.payrun.updateMany({
         where: { id, version },
-        data: { status: 'COMPUTED', computedAt: new Date(), version: { increment: 1 } },
+        data: {
+          status: 'COMPUTED',
+          computedAt: new Date(),
+          version: { increment: 1 },
+        },
       });
       if (updated.count === 0) {
-        throw conflict('This payrun was updated concurrently. Reload and try again.');
+        throw conflict(
+          'This payrun was updated concurrently. Reload and try again.',
+        );
       }
     });
 
@@ -313,17 +325,26 @@ payrunsRouter.post(
       select: { blocking: true, acknowledgedAt: true },
     });
     if (!canValidatePayrun(warnings)) {
-      throw conflict('This payrun has unresolved warnings and cannot be validated.', {
-        reasons: unresolvedWarningReasons(warnings),
-      });
+      throw conflict(
+        'This payrun has unresolved warnings and cannot be validated.',
+        {
+          reasons: unresolvedWarningReasons(warnings),
+        },
+      );
     }
 
     const updated = await prisma.payrun.updateMany({
       where: { id, version },
-      data: { status: 'VALIDATED', validatedAt: new Date(), version: { increment: 1 } },
+      data: {
+        status: 'VALIDATED',
+        validatedAt: new Date(),
+        version: { increment: 1 },
+      },
     });
     if (updated.count === 0) {
-      throw conflict('This payrun was updated concurrently. Reload and try again.');
+      throw conflict(
+        'This payrun was updated concurrently. Reload and try again.',
+      );
     }
 
     res.json(await getPayrunDetail(prisma, id));
@@ -352,7 +373,9 @@ payrunsRouter.post(
         data: { status: 'PAID', paidAt: new Date(), version: { increment: 1 } },
       });
       if (updated.count === 0) {
-        throw conflict('This payrun was updated concurrently. Reload and try again.');
+        throw conflict(
+          'This payrun was updated concurrently. Reload and try again.',
+        );
       }
       await tx.payslip.updateMany({
         where: { payrunId: id, status: { not: 'CANCELLED' } },
@@ -386,7 +409,9 @@ payrunsRouter.post(
         data: { status: 'CANCELLED', version: { increment: 1 } },
       });
       if (updated.count === 0) {
-        throw conflict('This payrun was updated concurrently. Reload and try again.');
+        throw conflict(
+          'This payrun was updated concurrently. Reload and try again.',
+        );
       }
       await tx.payslip.updateMany({
         where: { payrunId: id },
@@ -410,7 +435,14 @@ payrunsRouter.post(
 
     const payrun = await prisma.payrun.findUnique({
       where: { id },
-      select: { id: true, status: true, version: true, name: true, periodStart: true, periodEnd: true },
+      select: {
+        id: true,
+        status: true,
+        version: true,
+        name: true,
+        periodStart: true,
+        periodEnd: true,
+      },
     });
     if (payrun === null) {
       throw notFound('Payrun not found');
@@ -420,7 +452,16 @@ payrunsRouter.post(
 
     const payslips = await prisma.payslip.findMany({
       where: { payrunId: id, status: { in: ['DONE', 'PAID'] } },
-      include: { employee: { select: { id: true, firstName: true, lastName: true, workEmail: true } } },
+      include: {
+        employee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            workEmail: true,
+          },
+        },
+      },
     });
 
     const periodLabel = `${payrun.periodStart.toISOString().slice(0, 10)} to ${payrun.periodEnd.toISOString().slice(0, 10)}`;
@@ -440,7 +481,9 @@ payrunsRouter.post(
       },
     );
 
-    const successfulIds = results.filter((r) => r.success).map((r) => r.payslipId);
+    const successfulIds = results
+      .filter((r) => r.success)
+      .map((r) => r.payslipId);
 
     await prisma.$transaction(async (tx) => {
       if (successfulIds.length > 0) {
@@ -454,7 +497,9 @@ payrunsRouter.post(
         data: { payslipsSentAt: new Date(), version: { increment: 1 } },
       });
       if (updated.count === 0) {
-        throw conflict('This payrun was updated concurrently. Reload and try again.');
+        throw conflict(
+          'This payrun was updated concurrently. Reload and try again.',
+        );
       }
     });
 
@@ -474,16 +519,24 @@ payrunsRouter.post(
   requirePermission('update', 'payrun'),
   validate({ params: warningParamsSchema }),
   asyncRoute(async (req, res) => {
-    const { id, warningId } = req.params as unknown as { id: string; warningId: string };
+    const { id, warningId } = req.params as unknown as {
+      id: string;
+      warningId: string;
+    };
     const user = getUser(req);
 
-    const payrun = await prisma.payrun.findUnique({ where: { id }, select: { status: true } });
+    const payrun = await prisma.payrun.findUnique({
+      where: { id },
+      select: { status: true },
+    });
     if (payrun === null) {
       throw notFound('Payrun not found');
     }
     ensureNotLocked(payrun.status);
 
-    const warning = await prisma.payrollWarning.findUnique({ where: { id: warningId } });
+    const warning = await prisma.payrollWarning.findUnique({
+      where: { id: warningId },
+    });
     if (warning?.payrunId !== id) {
       throw notFound('Warning not found on this payrun');
     }

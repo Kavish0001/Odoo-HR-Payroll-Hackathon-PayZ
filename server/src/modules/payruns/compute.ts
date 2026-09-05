@@ -152,7 +152,10 @@ export async function computePayrunPayslips(
         duplicatePayrunName: duplicate?.payrunName ?? null,
         missingBankAccount: employee.bankAccount === null,
         incompleteEmployee: isEmployeeIncomplete(employee),
-        contractExpiring: isContractExpiringSoon(contract.endDate, payrun.periodEnd),
+        contractExpiring: isContractExpiringSoon(
+          contract.endDate,
+          payrun.periodEnd,
+        ),
       }),
     );
 

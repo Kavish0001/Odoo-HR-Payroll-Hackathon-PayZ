@@ -1,7 +1,10 @@
 import { type Weekday } from '@payz/shared';
 import { type PrismaClient } from '@prisma/client';
 
-import { lineMinutes, type ScheduleLineLike } from '../schedules/weekly-hours.js';
+import {
+  lineMinutes,
+  type ScheduleLineLike,
+} from '../schedules/weekly-hours.js';
 
 /**
  * Rule T6: a request's duration is working days counted against the

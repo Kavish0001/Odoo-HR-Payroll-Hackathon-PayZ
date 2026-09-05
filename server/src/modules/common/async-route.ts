@@ -1,4 +1,9 @@
-import { type NextFunction, type Request, type RequestHandler, type Response } from 'express';
+import {
+  type NextFunction,
+  type Request,
+  type RequestHandler,
+  type Response,
+} from 'express';
 
 /**
  * Wraps an async controller so a rejection reaches the central error handler

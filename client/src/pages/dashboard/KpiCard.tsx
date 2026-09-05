@@ -19,8 +19,12 @@ export function KpiCard({
 }: KpiCardProps): React.JSX.Element {
   return (
     <Card className="p-4">
-      <p className="text-muted text-xs font-medium tracking-wide uppercase">{label}</p>
-      <p className="font-mono mt-1.5 text-2xl font-bold tabular-nums">{value}</p>
+      <p className="text-muted text-xs font-medium tracking-wide uppercase">
+        {label}
+      </p>
+      <p className="font-mono mt-1.5 text-2xl font-bold tabular-nums">
+        {value}
+      </p>
       {sublabel !== undefined && (
         <p
           className={cn(

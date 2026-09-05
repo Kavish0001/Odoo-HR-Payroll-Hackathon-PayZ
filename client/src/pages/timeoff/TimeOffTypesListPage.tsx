@@ -53,10 +53,13 @@ export function TimeOffTypesListPage(): React.JSX.Element {
       {
         id: 'allocation',
         header: 'Allocation',
-        accessorFn: (row) => (row.requiresAllocation ? 'Required' : 'Not Required'),
+        accessorFn: (row) =>
+          row.requiresAllocation ? 'Required' : 'Not Required',
         cell: ({ row }) => (
           <StatusBadge
-            status={row.original.requiresAllocation ? 'Required' : 'Not Required'}
+            status={
+              row.original.requiresAllocation ? 'Required' : 'Not Required'
+            }
             tone={row.original.requiresAllocation ? 'info' : 'neutral'}
           />
         ),
@@ -71,7 +74,10 @@ export function TimeOffTypesListPage(): React.JSX.Element {
         header: 'Status',
         accessorFn: (row) => (row.active ? 'ACTIVE' : 'INACTIVE'),
         cell: ({ row }) => (
-          <StatusBadge status={row.original.active ? 'ACTIVE' : 'INACTIVE'} dot />
+          <StatusBadge
+            status={row.original.active ? 'ACTIVE' : 'INACTIVE'}
+            dot
+          />
         ),
       },
     ],

@@ -164,7 +164,9 @@ export function EmployeesListPage(): React.JSX.Element {
             }}
             className={cn(
               'rounded px-2.5 py-1 text-xs font-medium',
-              view === 'kanban' ? 'bg-metal-900 text-white' : 'hover:bg-line/60',
+              view === 'kanban'
+                ? 'bg-metal-900 text-white'
+                : 'hover:bg-line/60',
             )}
           >
             Kanban

@@ -37,17 +37,19 @@ import {
 
 export const attendanceRouter: Router = Router();
 
-const attendanceWithEmployee = Prisma.validator<Prisma.AttendanceDefaultArgs>()({
-  include: {
-    employee: {
-      select: {
-        firstName: true,
-        lastName: true,
-        department: { select: { name: true } },
+const attendanceWithEmployee = Prisma.validator<Prisma.AttendanceDefaultArgs>()(
+  {
+    include: {
+      employee: {
+        select: {
+          firstName: true,
+          lastName: true,
+          department: { select: { name: true } },
+        },
       },
     },
   },
-});
+);
 type AttendanceWithEmployee = Prisma.AttendanceGetPayload<
   typeof attendanceWithEmployee
 >;
@@ -99,7 +101,9 @@ async function computeAttendanceFields(
   const expectedMinutes = expectedMinutesForWeekday(lines, weekday);
 
   const worked =
-    checkOut === null ? 0 : workedMinutes(checkIn, checkOut, scheduledBreakMinutes);
+    checkOut === null
+      ? 0
+      : workedMinutes(checkIn, checkOut, scheduledBreakMinutes);
   const overtime = overtimeMinutes(worked, expectedMinutes);
   const status = deriveStatus({ checkIn, checkOut, scheduledStartMinute, now });
 

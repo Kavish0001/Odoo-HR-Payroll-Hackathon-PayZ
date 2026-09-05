@@ -50,13 +50,20 @@ export function WorkingSchedulesListPage(): React.JSX.Element {
       },
       // The schema has no multi-company field yet, so "Calendar Type" stands
       // in for the wireframe's "Company" column.
-      { id: 'calendarType', header: 'Calendar Type', accessorKey: 'calendarType' },
+      {
+        id: 'calendarType',
+        header: 'Calendar Type',
+        accessorKey: 'calendarType',
+      },
       {
         id: 'status',
         header: 'Status',
         accessorFn: (row) => (row.active ? 'ACTIVE' : 'INACTIVE'),
         cell: ({ row }) => (
-          <StatusBadge status={row.original.active ? 'ACTIVE' : 'INACTIVE'} dot />
+          <StatusBadge
+            status={row.original.active ? 'ACTIVE' : 'INACTIVE'}
+            dot
+          />
         ),
       },
     ],

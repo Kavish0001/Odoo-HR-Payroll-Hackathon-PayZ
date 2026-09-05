@@ -38,14 +38,13 @@ type StructureWithCount = Prisma.SalaryStructureGetPayload<
   typeof structureWithCount
 >;
 
-const structureWithRules = Prisma.validator<Prisma.SalaryStructureDefaultArgs>()(
-  {
+const structureWithRules =
+  Prisma.validator<Prisma.SalaryStructureDefaultArgs>()({
     include: {
       rules: { orderBy: { sequence: 'asc' } },
       _count: { select: { rules: true } },
     },
-  },
-);
+  });
 type StructureWithRules = Prisma.SalaryStructureGetPayload<
   typeof structureWithRules
 >;

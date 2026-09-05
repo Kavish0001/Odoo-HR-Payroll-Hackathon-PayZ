@@ -19,7 +19,10 @@ import { conflict } from '../../middleware/errors.js';
  */
 
 /** Throws a 409 naming the legal next states when `to` is not one of them. */
-export function ensureLegalTransition(from: PayrunStatus, to: PayrunStatus): void {
+export function ensureLegalTransition(
+  from: PayrunStatus,
+  to: PayrunStatus,
+): void {
   if (!canTransition(from, to)) {
     const legal = allowedTransitions(from);
     throw conflict(

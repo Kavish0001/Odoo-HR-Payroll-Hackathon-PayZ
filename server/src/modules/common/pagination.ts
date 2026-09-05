@@ -1,9 +1,10 @@
 import { type Paginated, type Pagination } from '@payz/shared';
 
 /** Prisma `skip`/`take` pair for a parsed pagination query. */
-export function paginationArgs(
-  query: Pick<Pagination, 'page' | 'pageSize'>,
-): { skip: number; take: number } {
+export function paginationArgs(query: Pick<Pagination, 'page' | 'pageSize'>): {
+  skip: number;
+  take: number;
+} {
   return { skip: (query.page - 1) * query.pageSize, take: query.pageSize };
 }
 
@@ -23,8 +24,9 @@ export function toPaginated<T>(
  * non-empty; this never returns `undefined` itself so it can be assigned
  * straight into a Prisma `where` clause under `exactOptionalPropertyTypes`.
  */
-export function containsInsensitive(
-  search: string,
-): { contains: string; mode: 'insensitive' } {
+export function containsInsensitive(search: string): {
+  contains: string;
+  mode: 'insensitive';
+} {
   return { contains: search, mode: 'insensitive' };
 }

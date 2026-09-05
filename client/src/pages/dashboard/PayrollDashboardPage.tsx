@@ -57,7 +57,9 @@ export function PayrollDashboardPage(): React.JSX.Element {
   const periodEnd = searchParams.get('periodEnd') ?? '';
   const departmentId = searchParams.get('departmentId') ?? '';
   const employeeTypeParam = searchParams.get('employeeType') ?? '';
-  const employeeType = isEmployeeType(employeeTypeParam) ? employeeTypeParam : undefined;
+  const employeeType = isEmployeeType(employeeTypeParam)
+    ? employeeTypeParam
+    : undefined;
 
   const setParam = (key: string, value: string): void => {
     setSearchParams((prev) => {
@@ -115,7 +117,11 @@ export function PayrollDashboardPage(): React.JSX.Element {
       />
 
       <Card className="mb-4 flex flex-wrap items-end gap-3 p-3">
-        <Field label="Period start" htmlFor="dashboard-period-start" className="w-40">
+        <Field
+          label="Period start"
+          htmlFor="dashboard-period-start"
+          className="w-40"
+        >
           <Input
             id="dashboard-period-start"
             type="date"
@@ -125,7 +131,11 @@ export function PayrollDashboardPage(): React.JSX.Element {
             }}
           />
         </Field>
-        <Field label="Period end" htmlFor="dashboard-period-end" className="w-40">
+        <Field
+          label="Period end"
+          htmlFor="dashboard-period-end"
+          className="w-40"
+        >
           <Input
             id="dashboard-period-end"
             type="date"
@@ -135,7 +145,11 @@ export function PayrollDashboardPage(): React.JSX.Element {
             }}
           />
         </Field>
-        <Field label="Department" htmlFor="dashboard-department" className="w-48">
+        <Field
+          label="Department"
+          htmlFor="dashboard-department"
+          className="w-48"
+        >
           <Select
             id="dashboard-department"
             value={departmentId}
@@ -146,7 +160,11 @@ export function PayrollDashboardPage(): React.JSX.Element {
             placeholder="All departments"
           />
         </Field>
-        <Field label="Employee type" htmlFor="dashboard-employee-type" className="w-44">
+        <Field
+          label="Employee type"
+          htmlFor="dashboard-employee-type"
+          className="w-44"
+        >
           <Select
             id="dashboard-employee-type"
             value={employeeTypeParam}
@@ -199,9 +217,12 @@ export function PayrollDashboardPage(): React.JSX.Element {
 
       {data !== undefined && isEmpty && (
         <Card className="p-10 text-center">
-          <p className="text-sm font-semibold">No payroll data for this period</p>
+          <p className="text-sm font-semibold">
+            No payroll data for this period
+          </p>
           <p className="text-muted mt-1 text-xs">
-            Try a wider period, or clear the department and employee type filters.
+            Try a wider period, or clear the department and employee type
+            filters.
           </p>
         </Card>
       )}
@@ -212,7 +233,9 @@ export function PayrollDashboardPage(): React.JSX.Element {
             <KpiCard
               label="Total Net Salary Paid"
               value={formatINRCompact(data.kpis.totalNetPaid)}
-              tone={netDelta === null ? 'neutral' : netDelta >= 0 ? 'up' : 'down'}
+              tone={
+                netDelta === null ? 'neutral' : netDelta >= 0 ? 'up' : 'down'
+              }
               sublabel={
                 netDelta === null
                   ? 'No prior period to compare'
@@ -271,7 +294,9 @@ export function PayrollDashboardPage(): React.JSX.Element {
                   Alerts
                 </h3>
                 {activeAlerts.length === 0 ? (
-                  <p className="text-muted text-xs">No active payroll alerts.</p>
+                  <p className="text-muted text-xs">
+                    No active payroll alerts.
+                  </p>
                 ) : (
                   <ul className="space-y-2">
                     {activeAlerts.map((alert) => (
@@ -282,7 +307,11 @@ export function PayrollDashboardPage(): React.JSX.Element {
                         <div className="flex items-center gap-2">
                           <StatusBadge
                             status={alert.severity}
-                            tone={alert.severity === 'blocking' ? 'danger' : 'warning'}
+                            tone={
+                              alert.severity === 'blocking'
+                                ? 'danger'
+                                : 'warning'
+                            }
                             dot
                           />
                           <span className="text-sm">{alert.message}</span>
@@ -300,9 +329,18 @@ export function PayrollDashboardPage(): React.JSX.Element {
 
           <Panel title="Attendance Overview">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <AttendanceStat label="Present" value={String(data.attendance.present)} />
-              <AttendanceStat label="Late" value={String(data.attendance.late)} />
-              <AttendanceStat label="Absent" value={String(data.attendance.absent)} />
+              <AttendanceStat
+                label="Present"
+                value={String(data.attendance.present)}
+              />
+              <AttendanceStat
+                label="Late"
+                value={String(data.attendance.late)}
+              />
+              <AttendanceStat
+                label="Absent"
+                value={String(data.attendance.absent)}
+              />
               <AttendanceStat
                 label="Overtime"
                 value={`${String(data.attendance.overtimeHours)}h`}
@@ -311,8 +349,14 @@ export function PayrollDashboardPage(): React.JSX.Element {
                 label="Missing Check-outs"
                 value={String(data.attendance.missingCheckouts)}
               />
-              <AttendanceStat label="Manual Edits" value={String(data.attendance.manualEdits)} />
-              <AttendanceStat label="Coverage" value={`${String(data.attendance.coverage)}%`} />
+              <AttendanceStat
+                label="Manual Edits"
+                value={String(data.attendance.manualEdits)}
+              />
+              <AttendanceStat
+                label="Coverage"
+                value={`${String(data.attendance.coverage)}%`}
+              />
             </div>
           </Panel>
 
@@ -331,20 +375,28 @@ export function PayrollDashboardPage(): React.JSX.Element {
                   <tbody>
                     {data.timeOff.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="text-muted py-4 text-center text-xs">
+                        <td
+                          colSpan={4}
+                          className="text-muted py-4 text-center text-xs"
+                        >
                           No time off types configured.
                         </td>
                       </tr>
                     ) : (
                       data.timeOff.map((row) => (
-                        <tr key={row.typeId} className="border-line/60 border-b last:border-0">
+                        <tr
+                          key={row.typeId}
+                          className="border-line/60 border-b last:border-0"
+                        >
                           <td className="py-1.5 pr-2">{row.typeName}</td>
                           <td className="font-mono py-1.5 pr-2">
                             {row.approvedDays % 1 === 0
                               ? row.approvedDays.toFixed(0)
                               : row.approvedDays.toFixed(1)}
                           </td>
-                          <td className="font-mono py-1.5 pr-2">{row.pending}</td>
+                          <td className="font-mono py-1.5 pr-2">
+                            {row.pending}
+                          </td>
                           <td className="font-mono py-1.5">
                             {row.remainingBalance === null
                               ? 'N/A'
@@ -371,7 +423,10 @@ export function PayrollDashboardPage(): React.JSX.Element {
                   <tbody>
                     {data.departments.length === 0 ? (
                       <tr>
-                        <td colSpan={3} className="text-muted py-4 text-center text-xs">
+                        <td
+                          colSpan={3}
+                          className="text-muted py-4 text-center text-xs"
+                        >
                           No departments match the current filters.
                         </td>
                       </tr>
@@ -381,9 +436,15 @@ export function PayrollDashboardPage(): React.JSX.Element {
                           key={department.departmentId}
                           className="border-line/60 border-b last:border-0"
                         >
-                          <td className="py-1.5 pr-2">{department.departmentName}</td>
-                          <td className="font-mono py-1.5 pr-2">{department.headcount}</td>
-                          <td className="font-mono py-1.5">{formatINR(department.totalNet)}</td>
+                          <td className="py-1.5 pr-2">
+                            {department.departmentName}
+                          </td>
+                          <td className="font-mono py-1.5 pr-2">
+                            {department.headcount}
+                          </td>
+                          <td className="font-mono py-1.5">
+                            {formatINR(department.totalNet)}
+                          </td>
                         </tr>
                       ))
                     )}
@@ -398,11 +459,21 @@ export function PayrollDashboardPage(): React.JSX.Element {
   );
 }
 
-function AttendanceStat({ label, value }: { label: string; value: string }): React.JSX.Element {
+function AttendanceStat({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}): React.JSX.Element {
   return (
     <div className="border-line rounded-md border px-3 py-2.5">
-      <p className="text-muted text-xs font-medium tracking-wide uppercase">{label}</p>
-      <p className="font-mono mt-1 text-lg font-semibold tabular-nums">{value}</p>
+      <p className="text-muted text-xs font-medium tracking-wide uppercase">
+        {label}
+      </p>
+      <p className="font-mono mt-1 text-lg font-semibold tabular-nums">
+        {value}
+      </p>
     </div>
   );
 }

@@ -133,7 +133,9 @@ export function usePayruns(params: PayrunListParams = {}) {
   return useQuery({
     queryKey: ['payruns', 'list', params],
     queryFn: async () => {
-      const { data } = await api.get<Paginated<PayrunRow>>('/payruns', { params });
+      const { data } = await api.get<Paginated<PayrunRow>>('/payruns', {
+        params,
+      });
       return data;
     },
   });
@@ -189,7 +191,12 @@ export function useCancelPayrun() {
 export interface SendPayslipsResult {
   sent: number;
   failed: number;
-  results: { payslipId: string; employeeId: string; success: boolean; error?: string }[];
+  results: {
+    payslipId: string;
+    employeeId: string;
+    success: boolean;
+    error?: string;
+  }[];
   payrun: PayrunDetail;
 }
 
@@ -206,7 +213,10 @@ export function useSendPayslips() {
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({ queryKey: ['payruns'] });
       await queryClient.invalidateQueries({ queryKey: ['payslips'] });
-      queryClient.setQueryData(['payruns', 'detail', data.payrun.id], data.payrun);
+      queryClient.setQueryData(
+        ['payruns', 'detail', data.payrun.id],
+        data.payrun,
+      );
     },
   });
 }
@@ -214,7 +224,13 @@ export function useSendPayslips() {
 export function useAcknowledgeWarning() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ payrunId, warningId }: { payrunId: string; warningId: string }) => {
+    mutationFn: async ({
+      payrunId,
+      warningId,
+    }: {
+      payrunId: string;
+      warningId: string;
+    }) => {
       const { data } = await api.post<PayrunDetail>(
         `/payruns/${payrunId}/warnings/${warningId}/acknowledge`,
       );
@@ -243,7 +259,9 @@ export function usePayslips(params: PayslipListParams = {}) {
   return useQuery({
     queryKey: ['payslips', 'list', params],
     queryFn: async () => {
-      const { data } = await api.get<Paginated<PayslipRow>>('/payslips', { params });
+      const { data } = await api.get<Paginated<PayslipRow>>('/payslips', {
+        params,
+      });
       return data;
     },
   });

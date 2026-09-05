@@ -84,7 +84,9 @@ export function ContractFormPage(): React.JSX.Element {
     reset,
     formState: { errors },
   } = useForm<ContractFormValues, unknown, ContractInput>({
-    resolver: typedZodResolver<ContractFormValues, ContractInput>(contractSchema),
+    resolver: typedZodResolver<ContractFormValues, ContractInput>(
+      contractSchema,
+    ),
     defaultValues: EMPTY_VALUES(prefillEmployeeId),
   });
 
@@ -147,7 +149,9 @@ export function ContractFormPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title={isNew ? 'New Contract' : (contractQuery.data?.reference ?? 'Contract')}
+        title={
+          isNew ? 'New Contract' : (contractQuery.data?.reference ?? 'Contract')
+        }
         breadcrumbs={[
           { label: 'Contracts', to: '/contracts' },
           { label: isNew ? 'New' : (contractQuery.data?.reference ?? '...') },
@@ -171,10 +175,20 @@ export function ContractFormPage(): React.JSX.Element {
         error={formError}
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Reference" htmlFor="reference" required error={errors.reference?.message}>
+          <Field
+            label="Reference"
+            htmlFor="reference"
+            required
+            error={errors.reference?.message}
+          >
             <Input id="reference" {...register('reference')} />
           </Field>
-          <Field label="Employee" htmlFor="employeeId" required error={errors.employeeId?.message}>
+          <Field
+            label="Employee"
+            htmlFor="employeeId"
+            required
+            error={errors.employeeId?.message}
+          >
             <Select
               id="employeeId"
               options={employeeOptions}
@@ -183,7 +197,12 @@ export function ContractFormPage(): React.JSX.Element {
               {...register('employeeId')}
             />
           </Field>
-          <Field label="Start Date" htmlFor="startDate" required error={errors.startDate?.message}>
+          <Field
+            label="Start Date"
+            htmlFor="startDate"
+            required
+            error={errors.startDate?.message}
+          >
             <Input id="startDate" type="date" {...register('startDate')} />
           </Field>
           <Field
@@ -192,9 +211,18 @@ export function ContractFormPage(): React.JSX.Element {
             hint="Leave empty for an open-ended contract."
             error={errors.endDate?.message}
           >
-            <Input id="endDate" type="date" {...register('endDate', { setValueAs: emptyToUndefined })} />
+            <Input
+              id="endDate"
+              type="date"
+              {...register('endDate', { setValueAs: emptyToUndefined })}
+            />
           </Field>
-          <Field label="Wage / Month (₹)" htmlFor="wageMonthly" required error={errors.wageMonthly?.message}>
+          <Field
+            label="Wage / Month (₹)"
+            htmlFor="wageMonthly"
+            required
+            error={errors.wageMonthly?.message}
+          >
             <Input
               id="wageMonthly"
               type="number"
@@ -204,10 +232,23 @@ export function ContractFormPage(): React.JSX.Element {
               {...register('wageMonthly', { valueAsNumber: true })}
             />
           </Field>
-          <Field label="Status" htmlFor="status" required error={errors.status?.message}>
-            <Select id="status" options={STATUS_OPTIONS} {...register('status')} />
+          <Field
+            label="Status"
+            htmlFor="status"
+            required
+            error={errors.status?.message}
+          >
+            <Select
+              id="status"
+              options={STATUS_OPTIONS}
+              {...register('status')}
+            />
           </Field>
-          <Field label="Department" htmlFor="departmentId" error={errors.departmentId?.message}>
+          <Field
+            label="Department"
+            htmlFor="departmentId"
+            error={errors.departmentId?.message}
+          >
             <Select
               id="departmentId"
               options={departmentOptions}
@@ -215,7 +256,11 @@ export function ContractFormPage(): React.JSX.Element {
               {...register('departmentId', { setValueAs: emptyToUndefined })}
             />
           </Field>
-          <Field label="Job Position" htmlFor="jobPositionId" error={errors.jobPositionId?.message}>
+          <Field
+            label="Job Position"
+            htmlFor="jobPositionId"
+            error={errors.jobPositionId?.message}
+          >
             <Select
               id="jobPositionId"
               options={jobPositionOptions}
@@ -223,12 +268,18 @@ export function ContractFormPage(): React.JSX.Element {
               {...register('jobPositionId', { setValueAs: emptyToUndefined })}
             />
           </Field>
-          <Field label="Working Schedule" htmlFor="workingScheduleId" error={errors.workingScheduleId?.message}>
+          <Field
+            label="Working Schedule"
+            htmlFor="workingScheduleId"
+            error={errors.workingScheduleId?.message}
+          >
             <Select
               id="workingScheduleId"
               options={scheduleOptions}
               placeholder="No schedule"
-              {...register('workingScheduleId', { setValueAs: emptyToUndefined })}
+              {...register('workingScheduleId', {
+                setValueAs: emptyToUndefined,
+              })}
             />
           </Field>
           <Field
@@ -240,11 +291,22 @@ export function ContractFormPage(): React.JSX.Element {
             <Input
               id="salaryStructureId"
               className="font-mono"
-              {...register('salaryStructureId', { setValueAs: emptyToUndefined })}
+              {...register('salaryStructureId', {
+                setValueAs: emptyToUndefined,
+              })}
             />
           </Field>
-          <Field label="Notes" htmlFor="notes" className="sm:col-span-2" error={errors.notes?.message}>
-            <Textarea id="notes" rows={3} {...register('notes', { setValueAs: emptyToUndefined })} />
+          <Field
+            label="Notes"
+            htmlFor="notes"
+            className="sm:col-span-2"
+            error={errors.notes?.message}
+          >
+            <Textarea
+              id="notes"
+              rows={3}
+              {...register('notes', { setValueAs: emptyToUndefined })}
+            />
           </Field>
         </div>
       </FormShell>

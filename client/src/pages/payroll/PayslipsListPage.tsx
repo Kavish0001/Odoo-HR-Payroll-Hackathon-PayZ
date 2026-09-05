@@ -19,7 +19,12 @@ export function PayslipsListPage(): React.JSX.Element {
 
   const [page, setPage] = useState(1);
 
-  const payslipsQuery = usePayslips({ page, pageSize: PAGE_SIZE, payrunId, employeeId });
+  const payslipsQuery = usePayslips({
+    page,
+    pageSize: PAGE_SIZE,
+    payrunId,
+    employeeId,
+  });
   const rows = payslipsQuery.data?.rows ?? [];
 
   const columns = useMemo<ColumnDef<PayslipRow>[]>(
@@ -42,24 +47,35 @@ export function PayslipsListPage(): React.JSX.Element {
         header: 'Period',
         cell: ({ row }) => (
           <span>
-            {row.original.periodStart.slice(0, 10)} – {row.original.periodEnd.slice(0, 10)}
+            {row.original.periodStart.slice(0, 10)} –{' '}
+            {row.original.periodEnd.slice(0, 10)}
           </span>
         ),
       },
       {
         id: 'basic',
         header: 'Basic',
-        cell: ({ row }) => <span className="font-mono">{formatINR(row.original.basicAmount)}</span>,
+        cell: ({ row }) => (
+          <span className="font-mono">
+            {formatINR(row.original.basicAmount)}
+          </span>
+        ),
       },
       {
         id: 'gross',
         header: 'Gross',
-        cell: ({ row }) => <span className="font-mono">{formatINR(row.original.grossAmount)}</span>,
+        cell: ({ row }) => (
+          <span className="font-mono">
+            {formatINR(row.original.grossAmount)}
+          </span>
+        ),
       },
       {
         id: 'net',
         header: 'Net',
-        cell: ({ row }) => <span className="font-mono">{formatINR(row.original.netAmount)}</span>,
+        cell: ({ row }) => (
+          <span className="font-mono">{formatINR(row.original.netAmount)}</span>
+        ),
       },
       { id: 'structure', header: 'Structure', accessorKey: 'structureName' },
       {

@@ -47,7 +47,9 @@ async function resolvePeriod(query: DashboardQuery): Promise<Period | null> {
     select: { periodStart: true, periodEnd: true },
   });
 
-  return latest === null ? null : { start: latest.periodStart, end: latest.periodEnd };
+  return latest === null
+    ? null
+    : { start: latest.periodStart, end: latest.periodEnd };
 }
 
 /** An equal-length window immediately before `period`, for the KPI delta. */
@@ -271,7 +273,10 @@ async function loadAlerts(
 
   const duplicateWhere: Prisma.PayrollWarningWhereInput = {
     code: 'DUPLICATE_PAYSLIP',
-    payrun: { periodStart: { gte: period.start }, periodEnd: { lte: period.end } },
+    payrun: {
+      periodStart: { gte: period.start },
+      periodEnd: { lte: period.end },
+    },
   };
   if (hasEmployeeFilter) {
     duplicateWhere.payslip = { employee: employeeWhere };
@@ -304,13 +309,17 @@ async function loadAlerts(
       code: 'MISSING_BANK_ACCOUNT',
       message: 'Employees missing bank account details',
       count: missingBank,
-      severity: isBlockingWarning('MISSING_BANK_ACCOUNT') ? 'blocking' : 'advisory',
+      severity: isBlockingWarning('MISSING_BANK_ACCOUNT')
+        ? 'blocking'
+        : 'advisory',
     },
     {
       code: 'DUPLICATE_PAYSLIP',
       message: 'Duplicate payslip warnings on record',
       count: duplicatePayslips,
-      severity: isBlockingWarning('DUPLICATE_PAYSLIP') ? 'blocking' : 'advisory',
+      severity: isBlockingWarning('DUPLICATE_PAYSLIP')
+        ? 'blocking'
+        : 'advisory',
     },
     {
       code: 'DRAFT_NOT_VALIDATED',
@@ -322,7 +331,9 @@ async function loadAlerts(
       code: 'CONTRACT_EXPIRING',
       message: 'Contracts expiring within 30 days',
       count: expiringContracts,
-      severity: isBlockingWarning('CONTRACT_EXPIRING') ? 'blocking' : 'advisory',
+      severity: isBlockingWarning('CONTRACT_EXPIRING')
+        ? 'blocking'
+        : 'advisory',
     },
   ];
 
@@ -343,12 +354,18 @@ async function loadAttendance(
   };
 
   const [statusCounts, overtime, manualEdits] = await Promise.all([
-    prisma.attendance.groupBy({ by: ['status'], where, _count: { _all: true } }),
+    prisma.attendance.groupBy({
+      by: ['status'],
+      where,
+      _count: { _all: true },
+    }),
     prisma.attendance.aggregate({ where, _sum: { overtimeMinutes: true } }),
     prisma.attendance.count({ where: { ...where, source: 'MANUAL' } }),
   ]);
 
-  const byStatus = new Map(statusCounts.map((row) => [row.status, row._count._all]));
+  const byStatus = new Map(
+    statusCounts.map((row) => [row.status, row._count._all]),
+  );
   const present = byStatus.get('PRESENT') ?? 0;
   const late = byStatus.get('LATE') ?? 0;
   const absent = byStatus.get('ABSENT') ?? 0;
@@ -357,7 +374,9 @@ async function loadAttendance(
 
   const expectedRecords = headcount * countWorkingDays(period);
   const coverage =
-    expectedRecords === 0 ? 0 : Math.round((totalRecords / expectedRecords) * 100);
+    expectedRecords === 0
+      ? 0
+      : Math.round((totalRecords / expectedRecords) * 100);
 
   return {
     present,
@@ -389,12 +408,20 @@ async function loadTimeOff(
     await Promise.all([
       prisma.timeOffRequest.groupBy({
         by: ['typeId'],
-        where: { ...overlapsPeriod, status: 'APPROVED', employee: employeeWhere },
+        where: {
+          ...overlapsPeriod,
+          status: 'APPROVED',
+          employee: employeeWhere,
+        },
         _sum: { duration: true },
       }),
       prisma.timeOffRequest.groupBy({
         by: ['typeId'],
-        where: { ...overlapsPeriod, status: 'TO_APPROVE', employee: employeeWhere },
+        where: {
+          ...overlapsPeriod,
+          status: 'TO_APPROVE',
+          employee: employeeWhere,
+        },
         _count: { _all: true },
       }),
       prisma.timeOffAllocation.groupBy({
@@ -410,10 +437,18 @@ async function loadTimeOff(
       }),
     ]);
 
-  const approvedMap = new Map(approvedInPeriod.map((row) => [row.typeId, row._sum.duration ?? 0]));
-  const pendingMap = new Map(pendingInPeriod.map((row) => [row.typeId, row._count._all]));
-  const allocatedMap = new Map(allocated.map((row) => [row.typeId, row._sum.allocatedQty ?? 0]));
-  const usedMap = new Map(usedAllTime.map((row) => [row.typeId, row._sum.duration ?? 0]));
+  const approvedMap = new Map(
+    approvedInPeriod.map((row) => [row.typeId, row._sum.duration ?? 0]),
+  );
+  const pendingMap = new Map(
+    pendingInPeriod.map((row) => [row.typeId, row._count._all]),
+  );
+  const allocatedMap = new Map(
+    allocated.map((row) => [row.typeId, row._sum.allocatedQty ?? 0]),
+  );
+  const usedMap = new Map(
+    usedAllTime.map((row) => [row.typeId, row._sum.duration ?? 0]),
+  );
 
   let approvedDaysTotal = 0;
   const rows: TimeOffOverviewRow[] = types.map((type) => {
@@ -472,10 +507,16 @@ async function buildDashboard(query: DashboardQuery): Promise<DashboardData> {
     payslipsPaid: current.paid,
     payslipsPending: current.generated - current.paid,
     averageSalary:
-      current.generated === 0 ? 0 : Math.round(current.totalNet / current.generated),
+      current.generated === 0
+        ? 0
+        : Math.round(current.totalNet / current.generated),
     approvedTimeOffDays: timeOff.approvedDaysTotal,
     attendanceHealth:
-      attendance.present + attendance.late + attendance.absent + attendance.missingCheckouts === 0
+      attendance.present +
+        attendance.late +
+        attendance.absent +
+        attendance.missingCheckouts ===
+      0
         ? 0
         : Math.round(
             ((attendance.present + attendance.late) /

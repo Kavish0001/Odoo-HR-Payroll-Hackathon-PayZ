@@ -75,14 +75,20 @@ export function PayrunWizardModal(): React.JSX.Element {
 
   function toggleAll(): void {
     setSelected((prev) =>
-      prev.size === eligible.length ? new Set() : new Set(eligible.map((e) => e.employeeId)),
+      prev.size === eligible.length
+        ? new Set()
+        : new Set(eligible.map((e) => e.employeeId)),
     );
   }
 
   const onContinue = async (): Promise<void> => {
     setScopeError(null);
 
-    if (scope.salaryStructureId === '' || scope.periodStart === '' || scope.periodEnd === '') {
+    if (
+      scope.salaryStructureId === '' ||
+      scope.periodStart === '' ||
+      scope.periodEnd === ''
+    ) {
       setScopeError('Salary structure and both period dates are required.');
       return;
     }
@@ -99,7 +105,8 @@ export function PayrunWizardModal(): React.JSX.Element {
         salaryStructureId: scope.salaryStructureId,
         periodStart: scope.periodStart,
         periodEnd: scope.periodEnd,
-        employeeTypeScope: scope.employeeTypeScope === '' ? undefined : scope.employeeTypeScope,
+        employeeTypeScope:
+          scope.employeeTypeScope === '' ? undefined : scope.employeeTypeScope,
       });
       setExcluded(result.excluded);
       setSelected(new Set(result.eligible.map((e) => e.employeeId)));
@@ -125,7 +132,8 @@ export function PayrunWizardModal(): React.JSX.Element {
         salaryStructureId: scope.salaryStructureId,
         periodStart: scope.periodStart,
         periodEnd: scope.periodEnd,
-        employeeTypeScope: scope.employeeTypeScope === '' ? undefined : scope.employeeTypeScope,
+        employeeTypeScope:
+          scope.employeeTypeScope === '' ? undefined : scope.employeeTypeScope,
         name: name.trim(),
         employeeIds: [...selected],
       });
@@ -152,7 +160,9 @@ export function PayrunWizardModal(): React.JSX.Element {
             <h2 className="text-lg font-bold tracking-tight">
               {step === 'scope' ? 'New Pay Run' : 'Select Employee Records'}
             </h2>
-            <p className="text-muted text-xs">Step {step === 'scope' ? '1' : '2'} of 2</p>
+            <p className="text-muted text-xs">
+              Step {step === 'scope' ? '1' : '2'} of 2
+            </p>
           </div>
         </div>
 
@@ -168,21 +178,31 @@ export function PayrunWizardModal(): React.JSX.Element {
                   onChange={(event) => {
                     setScope((prev) => ({
                       ...prev,
-                      employeeTypeScope: event.target.value as EmployeeType | '',
+                      employeeTypeScope: event.target.value as
+                        EmployeeType | '',
                     }));
                   }}
                 />
               </Field>
-              <Field label="Salary Structure" htmlFor="salaryStructureId" required>
+              <Field
+                label="Salary Structure"
+                htmlFor="salaryStructureId"
+                required
+              >
                 <Select
                   id="salaryStructureId"
                   options={structureOptions}
                   placeholder={
-                    structuresQuery.isLoading ? 'Loading…' : 'Select a structure'
+                    structuresQuery.isLoading
+                      ? 'Loading…'
+                      : 'Select a structure'
                   }
                   value={scope.salaryStructureId}
                   onChange={(event) => {
-                    setScope((prev) => ({ ...prev, salaryStructureId: event.target.value }));
+                    setScope((prev) => ({
+                      ...prev,
+                      salaryStructureId: event.target.value,
+                    }));
                   }}
                 />
               </Field>
@@ -192,7 +212,10 @@ export function PayrunWizardModal(): React.JSX.Element {
                   type="date"
                   value={scope.periodStart}
                   onChange={(event) => {
-                    setScope((prev) => ({ ...prev, periodStart: event.target.value }));
+                    setScope((prev) => ({
+                      ...prev,
+                      periodStart: event.target.value,
+                    }));
                   }}
                 />
               </Field>
@@ -202,7 +225,10 @@ export function PayrunWizardModal(): React.JSX.Element {
                   type="date"
                   value={scope.periodEnd}
                   onChange={(event) => {
-                    setScope((prev) => ({ ...prev, periodEnd: event.target.value }));
+                    setScope((prev) => ({
+                      ...prev,
+                      periodEnd: event.target.value,
+                    }));
                   }}
                 />
               </Field>
@@ -245,7 +271,8 @@ export function PayrunWizardModal(): React.JSX.Element {
 
             {excluded.length > 0 && (
               <p className="border-warning-line bg-warning-soft text-warning-strong rounded-md border px-3 py-2 text-xs">
-                {excluded.length} employee{excluded.length === 1 ? '' : 's'} excluded:{' '}
+                {excluded.length} employee{excluded.length === 1 ? '' : 's'}{' '}
+                excluded:{' '}
                 {excluded.map((e) => `${e.fullName} (${e.reason})`).join('; ')}
               </p>
             )}
@@ -257,7 +284,10 @@ export function PayrunWizardModal(): React.JSX.Element {
                     <tr>
                       <th className="px-3 py-2">
                         <Checkbox
-                          checked={eligible.length > 0 && selected.size === eligible.length}
+                          checked={
+                            eligible.length > 0 &&
+                            selected.size === eligible.length
+                          }
                           onChange={toggleAll}
                           aria-label="Select all"
                         />
@@ -279,13 +309,19 @@ export function PayrunWizardModal(): React.JSX.Element {
                   <tbody>
                     {eligible.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="text-muted px-3 py-6 text-center text-sm">
+                        <td
+                          colSpan={5}
+                          className="text-muted px-3 py-6 text-center text-sm"
+                        >
                           No eligible employees for this scope.
                         </td>
                       </tr>
                     )}
                     {eligible.map((employee) => (
-                      <tr key={employee.employeeId} className="border-line border-b last:border-0">
+                      <tr
+                        key={employee.employeeId}
+                        className="border-line border-b last:border-0"
+                      >
                         <td className="px-3 py-2">
                           <Checkbox
                             checked={selected.has(employee.employeeId)}
@@ -299,7 +335,9 @@ export function PayrunWizardModal(): React.JSX.Element {
                           <div>{employee.fullName}</div>
                           <div className="text-muted text-xs">
                             {employee.code}
-                            {employee.departmentName !== null ? ` · ${employee.departmentName}` : ''}
+                            {employee.departmentName !== null
+                              ? ` · ${employee.departmentName}`
+                              : ''}
                           </div>
                           {employee.duplicateWarning !== null && (
                             <span className="bg-warning-soft text-warning-strong mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium">
@@ -307,8 +345,12 @@ export function PayrunWizardModal(): React.JSX.Element {
                             </span>
                           )}
                         </td>
-                        <td className="px-3 py-2">{employee.scheduleName ?? '—'}</td>
-                        <td className="px-3 py-2">{employee.contractStartDate.slice(0, 10)}</td>
+                        <td className="px-3 py-2">
+                          {employee.scheduleName ?? '—'}
+                        </td>
+                        <td className="px-3 py-2">
+                          {employee.contractStartDate.slice(0, 10)}
+                        </td>
                         <td className="px-3 py-2 text-right font-mono">
                           {formatINR(employee.wageMonthly)}
                         </td>

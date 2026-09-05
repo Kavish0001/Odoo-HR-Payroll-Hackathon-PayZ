@@ -41,7 +41,9 @@ export interface EmployeeCompletenessInput {
 }
 
 /** A record missing basics HR would expect before payroll relies on it. */
-export function isEmployeeIncomplete(employee: EmployeeCompletenessInput): boolean {
+export function isEmployeeIncomplete(
+  employee: EmployeeCompletenessInput,
+): boolean {
   return (
     employee.departmentId === null ||
     employee.jobPositionId === null ||
@@ -64,7 +66,9 @@ export interface BuildWarningsParams {
  * The full, recomputed warning list for one payslip. Pure, so the decision
  * of what fires is unit-testable without touching the database.
  */
-export function buildPayslipWarnings(params: BuildWarningsParams): WarningInput[] {
+export function buildPayslipWarnings(
+  params: BuildWarningsParams,
+): WarningInput[] {
   const warnings: WarningInput[] = [];
 
   if (!params.hasContract) {
@@ -112,7 +116,8 @@ export function buildPayslipWarnings(params: BuildWarningsParams): WarningInput[
   return warnings;
 }
 
-type WarningDb = Pick<PrismaClient, 'payrollWarning'> | Prisma.TransactionClient;
+type WarningDb =
+  Pick<PrismaClient, 'payrollWarning'> | Prisma.TransactionClient;
 
 /**
  * Deletes this payslip's stored warnings and rewrites them from the freshly
@@ -133,7 +138,10 @@ export async function replacePayslipWarnings(
   const previousAck = new Map(
     existing.map((warning) => [
       warning.code,
-      { acknowledgedAt: warning.acknowledgedAt, acknowledgedByUserId: warning.acknowledgedByUserId },
+      {
+        acknowledgedAt: warning.acknowledgedAt,
+        acknowledgedByUserId: warning.acknowledgedByUserId,
+      },
     ]),
   );
 

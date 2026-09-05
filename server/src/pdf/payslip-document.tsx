@@ -1,4 +1,9 @@
-import { formatINR, RULE_CATEGORIES, RULE_CATEGORY_LABELS, type RuleCategory } from '@payz/shared';
+import {
+  formatINR,
+  RULE_CATEGORIES,
+  RULE_CATEGORY_LABELS,
+  type RuleCategory,
+} from '@payz/shared';
 import {
   Document,
   Page,
@@ -94,12 +99,22 @@ const styles = StyleSheet.create({
   },
   cellRule: { flex: 3, padding: 5 },
   cellCategory: { flex: 2, padding: 5 },
-  cellAmount: { flex: 2, padding: 5, textAlign: 'right', fontFamily: 'Helvetica' },
+  cellAmount: {
+    flex: 2,
+    padding: 5,
+    textAlign: 'right',
+    fontFamily: 'Helvetica',
+  },
   cellCode: { flex: 1.5, padding: 5, textAlign: 'right' },
   headerCell: { fontFamily: 'Helvetica-Bold', fontSize: 9 },
   categoryLabel: { fontFamily: 'Helvetica-Bold', fontSize: 9, padding: 5 },
   totals: { marginTop: 14, alignItems: 'flex-end' },
-  totalRow: { flexDirection: 'row', width: 220, justifyContent: 'space-between', marginBottom: 3 },
+  totalRow: {
+    flexDirection: 'row',
+    width: 220,
+    justifyContent: 'space-between',
+    marginBottom: 3,
+  },
   totalLabel: { fontSize: 10 },
   totalValue: { fontSize: 10, fontFamily: 'Helvetica' },
   netRow: {
@@ -126,7 +141,11 @@ function formatDate(isoDate: string): string {
   }).format(date);
 }
 
-export function PayslipDocument({ data }: { data: PayslipPdfData }): React.JSX.Element {
+export function PayslipDocument({
+  data,
+}: {
+  data: PayslipPdfData;
+}): React.JSX.Element {
   const linesByCategory = RULE_CATEGORIES.map((category) => ({
     category,
     lines: data.lines
@@ -171,7 +190,9 @@ export function PayslipDocument({ data }: { data: PayslipPdfData }): React.JSX.E
         <View style={styles.table}>
           <View style={styles.tableHeaderRow}>
             <Text style={[styles.cellRule, styles.headerCell]}>Rule</Text>
-            <Text style={[styles.cellCategory, styles.headerCell]}>Category</Text>
+            <Text style={[styles.cellCategory, styles.headerCell]}>
+              Category
+            </Text>
             <Text style={[styles.cellAmount, styles.headerCell]}>Amount</Text>
             <Text style={[styles.cellCode, styles.headerCell]}>Code</Text>
           </View>
@@ -189,7 +210,9 @@ export function PayslipDocument({ data }: { data: PayslipPdfData }): React.JSX.E
                   <Text style={styles.cellCategory}>
                     {RULE_CATEGORY_LABELS[line.category]}
                   </Text>
-                  <Text style={styles.cellAmount}>{formatINR(line.amount)}</Text>
+                  <Text style={styles.cellAmount}>
+                    {formatINR(line.amount)}
+                  </Text>
                   <Text style={styles.cellCode}>{line.code}</Text>
                 </View>
               ))}
@@ -204,7 +227,9 @@ export function PayslipDocument({ data }: { data: PayslipPdfData }): React.JSX.E
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Allowances</Text>
-            <Text style={styles.totalValue}>{formatINR(data.allowanceAmount)}</Text>
+            <Text style={styles.totalValue}>
+              {formatINR(data.allowanceAmount)}
+            </Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Gross</Text>
@@ -212,7 +237,9 @@ export function PayslipDocument({ data }: { data: PayslipPdfData }): React.JSX.E
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Deductions</Text>
-            <Text style={styles.totalValue}>{formatINR(data.deductionAmount)}</Text>
+            <Text style={styles.totalValue}>
+              {formatINR(data.deductionAmount)}
+            </Text>
           </View>
           <View style={styles.netRow}>
             <Text style={styles.netLabel}>Net Pay</Text>

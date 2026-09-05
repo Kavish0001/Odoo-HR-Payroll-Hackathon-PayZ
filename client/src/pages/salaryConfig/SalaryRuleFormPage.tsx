@@ -105,9 +105,8 @@ export function SalaryRuleFormPage(): React.JSX.Element {
   const { allowed } = useAuth();
 
   const [formError, setFormError] = useState<string | null>(null);
-  const [previewResult, setPreviewResult] = useState<FormulaPreviewResult | null>(
-    null,
-  );
+  const [previewResult, setPreviewResult] =
+    useState<FormulaPreviewResult | null>(null);
   const [sampleWage, setSampleWage] = useState(50000);
   const [sampleWorkedDays, setSampleWorkedDays] = useState(30);
   const [sampleSeniorityYears, setSampleSeniorityYears] = useState(1);
@@ -210,7 +209,9 @@ export function SalaryRuleFormPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title={isNew ? 'New Salary Rule' : (ruleQuery.data?.name ?? 'Salary Rule')}
+        title={
+          isNew ? 'New Salary Rule' : (ruleQuery.data?.name ?? 'Salary Rule')
+        }
         breadcrumbs={[
           { label: 'Salary Rules', to: '/payroll/rules' },
           { label: isNew ? 'New' : (ruleQuery.data?.name ?? '...') },
@@ -249,14 +250,33 @@ export function SalaryRuleFormPage(): React.JSX.Element {
                 {...register('structureId')}
               />
             </Field>
-            <Field label="Rule Name" htmlFor="name" required error={errors.name?.message}>
+            <Field
+              label="Rule Name"
+              htmlFor="name"
+              required
+              error={errors.name?.message}
+            >
               <Input id="name" {...register('name')} />
             </Field>
-            <Field label="Code" htmlFor="code" required error={errors.code?.message}>
+            <Field
+              label="Code"
+              htmlFor="code"
+              required
+              error={errors.code?.message}
+            >
               <Input id="code" className="font-mono" {...register('code')} />
             </Field>
-            <Field label="Category" htmlFor="category" required error={errors.category?.message}>
-              <Select id="category" options={CATEGORY_OPTIONS} {...register('category')} />
+            <Field
+              label="Category"
+              htmlFor="category"
+              required
+              error={errors.category?.message}
+            >
+              <Select
+                id="category"
+                options={CATEGORY_OPTIONS}
+                {...register('category')}
+              />
             </Field>
             <Field
               label="Sequence"
@@ -272,7 +292,11 @@ export function SalaryRuleFormPage(): React.JSX.Element {
                 {...register('sequence', { valueAsNumber: true })}
               />
             </Field>
-            <Field label="Quantity" htmlFor="quantity" error={errors.quantity?.message}>
+            <Field
+              label="Quantity"
+              htmlFor="quantity"
+              error={errors.quantity?.message}
+            >
               <Input
                 id="quantity"
                 type="number"
@@ -430,7 +454,9 @@ export function SalaryRuleFormPage(): React.JSX.Element {
                             className="font-mono"
                             value={sampleSeniorityYears}
                             onChange={(event) => {
-                              setSampleSeniorityYears(Number(event.target.value));
+                              setSampleSeniorityYears(
+                                Number(event.target.value),
+                              );
                             }}
                           />
                         </Field>
@@ -448,7 +474,9 @@ export function SalaryRuleFormPage(): React.JSX.Element {
                           void runFormulaTest();
                         }}
                       >
-                        {previewMutation.isPending ? 'Testing…' : 'Test formula'}
+                        {previewMutation.isPending
+                          ? 'Testing…'
+                          : 'Test formula'}
                       </Button>
                       {previewResult !== null &&
                         (previewResult.ok ? (
@@ -479,8 +507,11 @@ export function SalaryRuleFormPage(): React.JSX.Element {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Structure">
               <p className="text-sm">
-                {structureOptions.find((o) => o.value === ruleQuery.data?.structureId)
-                  ?.label ?? ruleQuery.data?.structureName ?? '—'}
+                {structureOptions.find(
+                  (o) => o.value === ruleQuery.data?.structureId,
+                )?.label ??
+                  ruleQuery.data?.structureName ??
+                  '—'}
               </p>
             </Field>
             <Field label="Rule Name">
@@ -497,7 +528,9 @@ export function SalaryRuleFormPage(): React.JSX.Element {
               )}
             </Field>
             <Field label="Sequence">
-              <p className="font-mono text-sm">{ruleQuery.data?.sequence ?? '—'}</p>
+              <p className="font-mono text-sm">
+                {ruleQuery.data?.sequence ?? '—'}
+              </p>
             </Field>
             <Field label="Computation Type">
               <p className="text-sm">

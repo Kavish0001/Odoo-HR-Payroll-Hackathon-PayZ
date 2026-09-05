@@ -14,7 +14,11 @@ import { conflict, notFound } from '../../middleware/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { asyncRoute } from '../common/async-route.js';
 import { getDefaultCompanyId } from '../common/company.js';
-import { containsInsensitive, paginationArgs, toPaginated } from '../common/pagination.js';
+import {
+  containsInsensitive,
+  paginationArgs,
+  toPaginated,
+} from '../common/pagination.js';
 import { idParamsSchema } from '../common/params.js';
 
 import { daysPerWeek, lineMinutes, weeklyHours } from './weekly-hours.js';
@@ -26,12 +30,13 @@ const scheduleQuerySchema = paginationSchema.extend({
 });
 type ScheduleQuery = z.infer<typeof scheduleQuerySchema>;
 
-const scheduleWithRelations = Prisma.validator<Prisma.WorkingScheduleDefaultArgs>()({
-  include: {
-    lines: true,
-    _count: { select: { employees: true } },
-  },
-});
+const scheduleWithRelations =
+  Prisma.validator<Prisma.WorkingScheduleDefaultArgs>()({
+    include: {
+      lines: true,
+      _count: { select: { employees: true } },
+    },
+  });
 type ScheduleWithRelations = Prisma.WorkingScheduleGetPayload<
   typeof scheduleWithRelations
 >;

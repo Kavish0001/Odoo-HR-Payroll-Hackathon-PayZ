@@ -271,9 +271,9 @@ describe('forward references are refused before computing', () => {
         fixedAmount: 100,
       }),
     ];
-    expect(() => { assertNoForwardReferences(rules); }).toThrow(
-      PayrollComputationError,
-    );
+    expect(() => {
+      assertNoForwardReferences(rules);
+    }).toThrow(PayrollComputationError);
     expect(() => computePayslip(rules, input)).toThrow(/not computed yet/);
   });
 
@@ -287,11 +287,15 @@ describe('forward references are refused before computing', () => {
         formula: "rules['SELF'] + 1",
       }),
     ];
-    expect(() => { assertNoForwardReferences(rules); }).toThrow(/not computed yet/);
+    expect(() => {
+      assertNoForwardReferences(rules);
+    }).toThrow(/not computed yet/);
   });
 
   it('allows a rule reading an earlier one', () => {
-    expect(() => { assertNoForwardReferences(regularSalary); }).not.toThrow();
+    expect(() => {
+      assertNoForwardReferences(regularSalary);
+    }).not.toThrow();
   });
 });
 

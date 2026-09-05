@@ -13,7 +13,11 @@ import { conflict, notFound } from '../../middleware/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { asyncRoute } from '../common/async-route.js';
 import { getDefaultCompanyId } from '../common/company.js';
-import { containsInsensitive, paginationArgs, toPaginated } from '../common/pagination.js';
+import {
+  containsInsensitive,
+  paginationArgs,
+  toPaginated,
+} from '../common/pagination.js';
 import { idParamsSchema } from '../common/params.js';
 
 export const departmentsRouter: Router = Router();
@@ -28,12 +32,13 @@ interface DepartmentDetail extends DepartmentRow {
   managerId: string | null;
 }
 
-const departmentWithRelations = Prisma.validator<Prisma.DepartmentDefaultArgs>()({
-  include: {
-    manager: { select: { firstName: true, lastName: true } },
-    _count: { select: { employees: true } },
-  },
-});
+const departmentWithRelations =
+  Prisma.validator<Prisma.DepartmentDefaultArgs>()({
+    include: {
+      manager: { select: { firstName: true, lastName: true } },
+      _count: { select: { employees: true } },
+    },
+  });
 type DepartmentWithRelations = Prisma.DepartmentGetPayload<
   typeof departmentWithRelations
 >;
@@ -177,7 +182,10 @@ departmentsRouter.delete(
     try {
       // Soft delete: a department may be referenced by historical contracts
       // and payslips, which must never be orphaned.
-      await prisma.department.update({ where: { id }, data: { active: false } });
+      await prisma.department.update({
+        where: { id },
+        data: { active: false },
+      });
       res.status(204).end();
     } catch (error) {
       if (

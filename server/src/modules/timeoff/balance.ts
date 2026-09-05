@@ -65,7 +65,9 @@ export async function sumApprovedDuration(
     where: {
       allocationId,
       status: 'APPROVED',
-      ...(excludeRequestId !== undefined ? { id: { not: excludeRequestId } } : {}),
+      ...(excludeRequestId !== undefined
+        ? { id: { not: excludeRequestId } }
+        : {}),
     },
     _sum: { duration: true },
   });
@@ -153,7 +155,11 @@ export async function computeAllocationBalance(
   allocation: { id: string; allocatedQty: number; status: TimeOffStatus },
 ): Promise<AllocationBalance> {
   if (!allocationGrantsBalance(allocation.status)) {
-    return { allocatedQty: allocation.allocatedQty, takenQty: 0, remainingQty: 0 };
+    return {
+      allocatedQty: allocation.allocatedQty,
+      takenQty: 0,
+      remainingQty: 0,
+    };
   }
   const takenQty = await sumApprovedDuration(client, allocation.id);
   return deriveBalance(allocation.status, allocation.allocatedQty, takenQty);

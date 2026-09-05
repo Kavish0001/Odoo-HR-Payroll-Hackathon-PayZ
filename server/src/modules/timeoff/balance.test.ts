@@ -68,7 +68,8 @@ function fakeClient(requests: FakeRequest[]): BalanceClient {
             ) {
               byAllocation.set(
                 request.allocationId,
-                (byAllocation.get(request.allocationId) ?? 0) + request.duration,
+                (byAllocation.get(request.allocationId) ?? 0) +
+                  request.duration,
               );
             }
           }
@@ -106,7 +107,11 @@ describe('rule T1: only APPROVED allocations grant balance', () => {
 
   it('reports the real taken/remaining split once the allocation is APPROVED', () => {
     const balance = deriveBalance('APPROVED', 20, 5);
-    expect(balance).toEqual({ allocatedQty: 20, takenQty: 5, remainingQty: 15 });
+    expect(balance).toEqual({
+      allocatedQty: 20,
+      takenQty: 5,
+      remainingQty: 15,
+    });
   });
 });
 
@@ -121,7 +126,12 @@ describe('rule T2: remaining is derived from approved requests', () => {
   it('sums only APPROVED requests linked to the allocation', async () => {
     const client = fakeClient([
       { id: 'r1', allocationId: 'alloc-1', status: 'APPROVED', duration: 3 },
-      { id: 'r2', allocationId: 'alloc-1', status: 'TO_APPROVE', duration: 100 },
+      {
+        id: 'r2',
+        allocationId: 'alloc-1',
+        status: 'TO_APPROVE',
+        duration: 100,
+      },
       { id: 'r3', allocationId: 'alloc-1', status: 'REFUSED', duration: 100 },
       { id: 'r4', allocationId: 'alloc-2', status: 'APPROVED', duration: 100 },
     ]);
@@ -147,10 +157,18 @@ describe('rule T2: remaining is derived from approved requests', () => {
     const client = fakeClient([
       { id: 'r1', allocationId: 'alloc-1', status: 'APPROVED', duration: 3 },
       { id: 'r2', allocationId: 'alloc-2', status: 'APPROVED', duration: 4 },
-      { id: 'r3', allocationId: 'alloc-2', status: 'TO_APPROVE', duration: 100 },
+      {
+        id: 'r3',
+        allocationId: 'alloc-2',
+        status: 'TO_APPROVE',
+        duration: 100,
+      },
     ]);
 
-    const map = await sumApprovedDurationByAllocation(client, ['alloc-1', 'alloc-2']);
+    const map = await sumApprovedDurationByAllocation(client, [
+      'alloc-1',
+      'alloc-2',
+    ]);
     expect(map.get('alloc-1')).toBe(3);
     expect(map.get('alloc-2')).toBe(4);
   });
@@ -233,7 +251,11 @@ describe('rule T5: refusing/cancelling an approved request returns the days', ()
       { id: 'r1', allocationId: 'alloc-1', status: 'APPROVED', duration: 4 },
     ];
     const client = fakeClient(requests);
-    const allocation = { id: 'alloc-1', allocatedQty: 10, status: 'APPROVED' as TimeOffStatus };
+    const allocation = {
+      id: 'alloc-1',
+      allocatedQty: 10,
+      status: 'APPROVED' as TimeOffStatus,
+    };
 
     const before = deriveBalance(
       allocation.status,
@@ -268,7 +290,10 @@ describe('rule T9: a request outside the allocation window cannot consume it', (
   });
 
   it('covers a request that lands exactly on the validity boundaries', () => {
-    const allocation = { validFrom: day('2026-01-01'), validTo: day('2026-12-31') };
+    const allocation = {
+      validFrom: day('2026-01-01'),
+      validTo: day('2026-12-31'),
+    };
     expect(
       allocationCoversWindow(allocation, day('2026-01-01'), day('2026-12-31')),
     ).toBe(true);
@@ -282,7 +307,10 @@ describe('rule T9: a request outside the allocation window cannot consume it', (
   });
 
   it('rejects a request that ends after the allocation expires', () => {
-    const allocation = { validFrom: day('2026-01-01'), validTo: day('2026-06-30') };
+    const allocation = {
+      validFrom: day('2026-01-01'),
+      validTo: day('2026-06-30'),
+    };
     expect(
       allocationCoversWindow(allocation, day('2026-06-20'), day('2026-07-05')),
     ).toBe(false);

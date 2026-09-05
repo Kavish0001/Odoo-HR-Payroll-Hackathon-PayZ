@@ -1,0 +1,13 @@
+# Normalise line endings.
+#
+# Prettier is configured with endOfLine: "lf" and CI runs on Linux, so the
+# working tree must be LF even on Windows, where core.autocrlf would otherwise
+# hand out CRLF and make `format:check` fail locally for everyone.
+* text=auto eol=lf
+
+# Binary assets git must never touch.
+*.png binary
+*.jpg binary
+*.pdf binary
+*.woff2 binary
+*.ico binary

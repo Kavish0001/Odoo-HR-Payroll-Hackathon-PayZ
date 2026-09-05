@@ -36,7 +36,10 @@ export function isApplicableToPeriod(
   if (contract.startDate.getTime() > periodEnd.getTime()) {
     return false;
   }
-  if (contract.endDate !== null && contract.endDate.getTime() < periodStart.getTime()) {
+  if (
+    contract.endDate !== null &&
+    contract.endDate.getTime() < periodStart.getTime()
+  ) {
     return false;
   }
   return true;

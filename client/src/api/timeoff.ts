@@ -139,7 +139,9 @@ export function useCreateAllocation() {
       return data;
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['time-off-allocations'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['time-off-allocations'],
+      });
     },
   });
 }
@@ -155,7 +157,9 @@ export function useUpdateAllocation(id: string) {
       return data;
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['time-off-allocations'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['time-off-allocations'],
+      });
     },
   });
 }
@@ -167,7 +171,9 @@ export function useDeleteAllocation() {
       await api.delete(`/time-off/allocations/${id}`);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['time-off-allocations'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['time-off-allocations'],
+      });
     },
   });
 }
@@ -182,7 +188,9 @@ export function useApproveAllocation() {
       return data;
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['time-off-allocations'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['time-off-allocations'],
+      });
     },
   });
 }
@@ -197,7 +205,9 @@ export function useRefuseAllocation() {
       return data;
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['time-off-allocations'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['time-off-allocations'],
+      });
     },
   });
 }
@@ -282,7 +292,9 @@ export function useDeleteTimeOffRequest() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['time-off-requests'] });
-      await queryClient.invalidateQueries({ queryKey: ['time-off-allocations'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['time-off-allocations'],
+      });
       await queryClient.invalidateQueries({ queryKey: ['time-off-balances'] });
     },
   });
@@ -299,7 +311,9 @@ export function useApproveTimeOffRequest() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['time-off-requests'] });
-      await queryClient.invalidateQueries({ queryKey: ['time-off-allocations'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['time-off-allocations'],
+      });
       await queryClient.invalidateQueries({ queryKey: ['time-off-balances'] });
     },
   });
@@ -316,7 +330,9 @@ export function useRefuseTimeOffRequest() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['time-off-requests'] });
-      await queryClient.invalidateQueries({ queryKey: ['time-off-allocations'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['time-off-allocations'],
+      });
       await queryClient.invalidateQueries({ queryKey: ['time-off-balances'] });
     },
   });

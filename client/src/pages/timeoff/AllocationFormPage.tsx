@@ -133,7 +133,11 @@ export function AllocationFormPage(): React.JSX.Element {
           { label: 'Allocations', to: '/time-off/allocations' },
           { label: isNew ? 'New' : (detail?.name ?? '...') },
         ]}
-        actions={detail !== undefined ? <StatusBadge status={detail.status} /> : undefined}
+        actions={
+          detail !== undefined ? (
+            <StatusBadge status={detail.status} />
+          ) : undefined
+        }
       />
 
       {allocationQuery.isError && !isNew && (
@@ -145,7 +149,9 @@ export function AllocationFormPage(): React.JSX.Element {
       {detail !== undefined && (
         <Card className="mb-4 grid grid-cols-3 gap-4 p-4 text-center">
           <div>
-            <p className="text-muted text-xs tracking-wide uppercase">Allocated</p>
+            <p className="text-muted text-xs tracking-wide uppercase">
+              Allocated
+            </p>
             <p className="font-mono text-lg font-bold">
               {formatQty(detail.allocatedQty, detail.unit)}
             </p>
@@ -157,7 +163,9 @@ export function AllocationFormPage(): React.JSX.Element {
             </p>
           </div>
           <div>
-            <p className="text-muted text-xs tracking-wide uppercase">Remaining</p>
+            <p className="text-muted text-xs tracking-wide uppercase">
+              Remaining
+            </p>
             <p className="text-success font-mono text-lg font-bold">
               {formatQty(detail.remainingQty, detail.unit)}
             </p>
@@ -204,7 +212,12 @@ export function AllocationFormPage(): React.JSX.Element {
         }
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Employee" htmlFor="employeeId" required error={errors.employeeId?.message}>
+          <Field
+            label="Employee"
+            htmlFor="employeeId"
+            required
+            error={errors.employeeId?.message}
+          >
             <Select
               id="employeeId"
               options={employeeOptions}
@@ -213,7 +226,12 @@ export function AllocationFormPage(): React.JSX.Element {
               {...register('employeeId')}
             />
           </Field>
-          <Field label="Time Off Type" htmlFor="typeId" required error={errors.typeId?.message}>
+          <Field
+            label="Time Off Type"
+            htmlFor="typeId"
+            required
+            error={errors.typeId?.message}
+          >
             <Select
               id="typeId"
               options={typeOptions}
@@ -221,7 +239,12 @@ export function AllocationFormPage(): React.JSX.Element {
               {...register('typeId')}
             />
           </Field>
-          <Field label="Name" htmlFor="name" required error={errors.name?.message}>
+          <Field
+            label="Name"
+            htmlFor="name"
+            required
+            error={errors.name?.message}
+          >
             <Input id="name" {...register('name')} />
           </Field>
           <Field
@@ -239,7 +262,12 @@ export function AllocationFormPage(): React.JSX.Element {
               {...register('allocatedQty', { valueAsNumber: true })}
             />
           </Field>
-          <Field label="Valid From" htmlFor="validFrom" required error={errors.validFrom?.message}>
+          <Field
+            label="Valid From"
+            htmlFor="validFrom"
+            required
+            error={errors.validFrom?.message}
+          >
             <Input id="validFrom" type="date" {...register('validFrom')} />
           </Field>
           <Field
@@ -248,7 +276,11 @@ export function AllocationFormPage(): React.JSX.Element {
             hint="Leave empty for an open-ended allocation."
             error={errors.validTo?.message}
           >
-            <Input id="validTo" type="date" {...register('validTo', { setValueAs: emptyToUndefined })} />
+            <Input
+              id="validTo"
+              type="date"
+              {...register('validTo', { setValueAs: emptyToUndefined })}
+            />
           </Field>
           <Field
             label="Description"
@@ -256,7 +288,11 @@ export function AllocationFormPage(): React.JSX.Element {
             className="sm:col-span-2"
             error={errors.description?.message}
           >
-            <Textarea id="description" rows={3} {...register('description', { setValueAs: emptyToUndefined })} />
+            <Textarea
+              id="description"
+              rows={3}
+              {...register('description', { setValueAs: emptyToUndefined })}
+            />
           </Field>
         </div>
       </FormShell>

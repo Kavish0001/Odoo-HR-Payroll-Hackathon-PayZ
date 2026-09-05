@@ -68,10 +68,36 @@ export function PayrunDetailPage(): React.JSX.Element {
             </span>
           ),
       },
-      { id: 'basic', header: 'Basic', cell: ({ row }) => <span className="font-mono">{formatINR(row.original.basicAmount)}</span> },
-      { id: 'gross', header: 'Gross', cell: ({ row }) => <span className="font-mono">{formatINR(row.original.grossAmount)}</span> },
-      { id: 'net', header: 'Net', cell: ({ row }) => <span className="font-mono">{formatINR(row.original.netAmount)}</span> },
-      { id: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
+      {
+        id: 'basic',
+        header: 'Basic',
+        cell: ({ row }) => (
+          <span className="font-mono">
+            {formatINR(row.original.basicAmount)}
+          </span>
+        ),
+      },
+      {
+        id: 'gross',
+        header: 'Gross',
+        cell: ({ row }) => (
+          <span className="font-mono">
+            {formatINR(row.original.grossAmount)}
+          </span>
+        ),
+      },
+      {
+        id: 'net',
+        header: 'Net',
+        cell: ({ row }) => (
+          <span className="font-mono">{formatINR(row.original.netAmount)}</span>
+        ),
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      },
     ],
     [],
   );
@@ -107,13 +133,18 @@ export function PayrunDetailPage(): React.JSX.Element {
 
   const blockingWarnings = payrun.warnings.filter((w) => w.blocking);
   const advisoryWarnings = payrun.warnings.filter((w) => !w.blocking);
-  const unacknowledgedAdvisory = advisoryWarnings.filter((w) => w.acknowledgedAt === null);
+  const unacknowledgedAdvisory = advisoryWarnings.filter(
+    (w) => w.acknowledgedAt === null,
+  );
 
   return (
     <div>
       <PageHeader
         title={payrun.name}
-        breadcrumbs={[{ label: 'Payruns', to: '/payroll/payruns' }, { label: payrun.name }]}
+        breadcrumbs={[
+          { label: 'Payruns', to: '/payroll/payruns' },
+          { label: payrun.name },
+        ]}
         subtitle={`${payrun.structureName} · ${payrun.periodStart.slice(0, 10)} – ${payrun.periodEnd.slice(0, 10)}`}
         actions={<StatusBadge status={payrun.status} dot />}
       />
@@ -123,7 +154,12 @@ export function PayrunDetailPage(): React.JSX.Element {
           <Button
             disabled={!canCompute(payrun.status) || computeMutation.isPending}
             onClick={() => {
-              void run(() => computeMutation.mutateAsync({ id: payrun.id, version: payrun.version }));
+              void run(() =>
+                computeMutation.mutateAsync({
+                  id: payrun.id,
+                  version: payrun.version,
+                }),
+              );
             }}
           >
             {computeMutation.isPending ? 'Computing…' : 'Compute'}
@@ -143,21 +179,36 @@ export function PayrunDetailPage(): React.JSX.Element {
                   : undefined
             }
             onClick={() => {
-              void run(() => validateMutation.mutateAsync({ id: payrun.id, version: payrun.version }));
+              void run(() =>
+                validateMutation.mutateAsync({
+                  id: payrun.id,
+                  version: payrun.version,
+                }),
+              );
             }}
           >
             {validateMutation.isPending ? 'Validating…' : 'Validate'}
           </Button>
           <Button
-            disabled={!canTransition(payrun.status, 'PAID') || markPaidMutation.isPending}
+            disabled={
+              !canTransition(payrun.status, 'PAID') ||
+              markPaidMutation.isPending
+            }
             onClick={() => {
-              void run(() => markPaidMutation.mutateAsync({ id: payrun.id, version: payrun.version }));
+              void run(() =>
+                markPaidMutation.mutateAsync({
+                  id: payrun.id,
+                  version: payrun.version,
+                }),
+              );
             }}
           >
             {markPaidMutation.isPending ? 'Marking Paid…' : 'Mark Paid'}
           </Button>
           <Button
-            disabled={!isPayrunLocked(payrun.status) || sendPayslipsMutation.isPending}
+            disabled={
+              !isPayrunLocked(payrun.status) || sendPayslipsMutation.isPending
+            }
             onClick={() => {
               void run(async () => {
                 const result = await sendPayslipsMutation.mutateAsync({
@@ -173,9 +224,17 @@ export function PayrunDetailPage(): React.JSX.Element {
           <Button
             variant="ghost"
             className="text-danger ml-auto"
-            disabled={!canTransition(payrun.status, 'CANCELLED') || cancelMutation.isPending}
+            disabled={
+              !canTransition(payrun.status, 'CANCELLED') ||
+              cancelMutation.isPending
+            }
             onClick={() => {
-              void run(() => cancelMutation.mutateAsync({ id: payrun.id, version: payrun.version }));
+              void run(() =>
+                cancelMutation.mutateAsync({
+                  id: payrun.id,
+                  version: payrun.version,
+                }),
+              );
             }}
           >
             Cancel Payrun
@@ -214,7 +273,10 @@ export function PayrunDetailPage(): React.JSX.Element {
                 canWrite && warning.acknowledgedAt === null
                   ? () => {
                       void run(() =>
-                        acknowledgeMutation.mutateAsync({ payrunId: payrun.id, warningId: warning.id }),
+                        acknowledgeMutation.mutateAsync({
+                          payrunId: payrun.id,
+                          warningId: warning.id,
+                        }),
                       );
                     }
                   : undefined
@@ -250,16 +312,24 @@ function WarningRow({
     : 'border-warning-line bg-warning-soft text-warning-strong';
 
   return (
-    <div className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${tone}`}>
+    <div
+      className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${tone}`}
+    >
       <div>
         <span className="font-medium">{WARNING_LABELS[warning.code]}</span>
-        {warning.employeeName !== null && <span> — {warning.employeeName}</span>}
+        {warning.employeeName !== null && (
+          <span> — {warning.employeeName}</span>
+        )}
         <span className="block text-xs opacity-80">{warning.message}</span>
       </div>
       {warning.blocking ? (
-        <span className="text-xs font-medium whitespace-nowrap">Fix &amp; recompute</span>
+        <span className="text-xs font-medium whitespace-nowrap">
+          Fix &amp; recompute
+        </span>
       ) : warning.acknowledgedAt !== null ? (
-        <span className="text-xs font-medium whitespace-nowrap">Acknowledged</span>
+        <span className="text-xs font-medium whitespace-nowrap">
+          Acknowledged
+        </span>
       ) : onAcknowledge !== undefined ? (
         <Button size="sm" variant="secondary" onClick={onAcknowledge}>
           Acknowledge

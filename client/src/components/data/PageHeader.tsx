@@ -29,7 +29,10 @@ export function PageHeader({
               <span key={crumb.label} className="flex items-center gap-1">
                 {index > 0 && <span aria-hidden="true">/</span>}
                 {crumb.to !== undefined ? (
-                  <Link to={crumb.to} className="hover:text-ink hover:underline">
+                  <Link
+                    to={crumb.to}
+                    className="hover:text-ink hover:underline"
+                  >
                     {crumb.label}
                   </Link>
                 ) : (

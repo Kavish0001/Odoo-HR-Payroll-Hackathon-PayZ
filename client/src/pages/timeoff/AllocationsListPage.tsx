@@ -3,7 +3,11 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useApproveAllocation, useAllocations, useRefuseAllocation } from '../../api/timeoff.js';
+import {
+  useApproveAllocation,
+  useAllocations,
+  useRefuseAllocation,
+} from '../../api/timeoff.js';
 import { DataTable } from '../../components/data/DataTable.js';
 import { PageHeader } from '../../components/data/PageHeader.js';
 import { Pagination } from '../../components/data/Pagination.js';

@@ -19,7 +19,12 @@ import {
   requirePermission,
   selfScope,
 } from '../../middleware/auth.js';
-import { badRequest, conflict, forbidden, notFound } from '../../middleware/errors.js';
+import {
+  badRequest,
+  conflict,
+  forbidden,
+  notFound,
+} from '../../middleware/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { asyncRoute } from '../common/async-route.js';
 import { paginationArgs, toPaginated } from '../common/pagination.js';
@@ -37,20 +42,21 @@ export const timeOffRequestsRouter: Router = Router();
 
 type RequestQuery = z.infer<typeof timeOffRequestQuerySchema>;
 
-const requestWithRelations = Prisma.validator<Prisma.TimeOffRequestDefaultArgs>()({
-  include: {
-    employee: {
-      select: {
-        firstName: true,
-        lastName: true,
-        department: { select: { name: true } },
+const requestWithRelations =
+  Prisma.validator<Prisma.TimeOffRequestDefaultArgs>()({
+    include: {
+      employee: {
+        select: {
+          firstName: true,
+          lastName: true,
+          department: { select: { name: true } },
+        },
       },
+      type: { select: { name: true, unit: true } },
+      approver: { select: { firstName: true, lastName: true } },
+      allocation: { select: { name: true } },
     },
-    type: { select: { name: true, unit: true } },
-    approver: { select: { firstName: true, lastName: true } },
-    allocation: { select: { name: true } },
-  },
-});
+  });
 type RequestWithRelations = Prisma.TimeOffRequestGetPayload<
   typeof requestWithRelations
 >;

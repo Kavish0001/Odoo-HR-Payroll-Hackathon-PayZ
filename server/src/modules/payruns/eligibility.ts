@@ -40,7 +40,9 @@ function periodsOverlap(
   bStart: Date,
   bEnd: Date,
 ): boolean {
-  return aStart.getTime() <= bEnd.getTime() && bStart.getTime() <= aEnd.getTime();
+  return (
+    aStart.getTime() <= bEnd.getTime() && bStart.getTime() <= aEnd.getTime()
+  );
 }
 
 /**
@@ -60,7 +62,9 @@ export async function findDuplicatePayslip(
       employeeId,
       payrun: {
         status: { not: 'CANCELLED' },
-        ...(excludePayrunId === undefined ? {} : { id: { not: excludePayrunId } }),
+        ...(excludePayrunId === undefined
+          ? {}
+          : { id: { not: excludePayrunId } }),
       },
     },
     select: {
@@ -72,7 +76,12 @@ export async function findDuplicatePayslip(
   });
 
   const match = candidates.find((candidate) =>
-    periodsOverlap(periodStart, periodEnd, candidate.periodStart, candidate.periodEnd),
+    periodsOverlap(
+      periodStart,
+      periodEnd,
+      candidate.periodStart,
+      candidate.periodEnd,
+    ),
   );
 
   return match === undefined
@@ -89,7 +98,7 @@ interface EligibilityScope {
 
 export async function resolveEligibleEmployees(
   scope: EligibilityScope,
-  excludePayrunId?: string  ,
+  excludePayrunId?: string,
   client: EligibilityClient = defaultPrisma,
 ): Promise<EligibilityResult> {
   const candidates = await client.employee.findMany({

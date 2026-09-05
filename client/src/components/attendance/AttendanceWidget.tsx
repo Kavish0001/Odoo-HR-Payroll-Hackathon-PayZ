@@ -67,7 +67,9 @@ export function AttendanceWidget(): React.JSX.Element | null {
     }
     const checkInMs = new Date(checkInAt).getTime();
     const update = (): void => {
-      setElapsedMinutes(Math.max(0, Math.floor((Date.now() - checkInMs) / 60_000)));
+      setElapsedMinutes(
+        Math.max(0, Math.floor((Date.now() - checkInMs) / 60_000)),
+      );
     };
     update();
     const interval = setInterval(update, 1000);
@@ -96,7 +98,11 @@ export function AttendanceWidget(): React.JSX.Element | null {
 
   // Nothing to check in/out of for a caller who cannot see attendance at all,
   // or whose account carries no employee record.
-  if (!allowed('read', 'attendance') || user?.employeeId === null || user?.employeeId === undefined) {
+  if (
+    !allowed('read', 'attendance') ||
+    user?.employeeId === null ||
+    user?.employeeId === undefined
+  ) {
     return null;
   }
 
@@ -108,7 +114,9 @@ export function AttendanceWidget(): React.JSX.Element | null {
           setOpen((value) => !value);
         }}
         aria-label={
-          isOpenSession ? 'Attendance: checked in' : 'Attendance: not checked in'
+          isOpenSession
+            ? 'Attendance: checked in'
+            : 'Attendance: not checked in'
         }
         aria-expanded={open}
         className="border-line text-teal hover:bg-teal-soft relative rounded-md border p-2"

@@ -3,7 +3,12 @@ import { type Prisma } from '@prisma/client';
 import { Router } from 'express';
 
 import { prisma } from '../../config/prisma.js';
-import { mustBeSelf, requireAuth, requirePermission, selfScope } from '../../middleware/auth.js';
+import {
+  mustBeSelf,
+  requireAuth,
+  requirePermission,
+  selfScope,
+} from '../../middleware/auth.js';
 import { notFound } from '../../middleware/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { renderPayslipPdf } from '../../pdf/payslip-document.js';
@@ -11,7 +16,12 @@ import { asyncRoute } from '../common/async-route.js';
 import { paginationArgs, toPaginated } from '../common/pagination.js';
 import { idParamsSchema } from '../common/params.js';
 
-import { payslipDetailArgs, payslipWithRelationsArgs, toPayslipDetail, toPayslipRow } from './mappers.js';
+import {
+  payslipDetailArgs,
+  payslipWithRelationsArgs,
+  toPayslipDetail,
+  toPayslipRow,
+} from './mappers.js';
 import { loadPayslipPdfData } from './pdf-data.js';
 
 /**
@@ -66,7 +76,10 @@ payslipsRouter.get(
   asyncRoute(async (req, res) => {
     const { id } = req.params as unknown as { id: string };
 
-    const payslip = await prisma.payslip.findUnique({ where: { id }, ...payslipDetailArgs });
+    const payslip = await prisma.payslip.findUnique({
+      where: { id },
+      ...payslipDetailArgs,
+    });
     if (payslip === null) {
       throw notFound('Payslip not found');
     }

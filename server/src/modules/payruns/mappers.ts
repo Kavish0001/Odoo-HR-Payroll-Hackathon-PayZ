@@ -58,16 +58,27 @@ export function toPayrunRow(payrun: PayrunListPayload): PayrunRow {
 // Payslip
 // ---------------------------------------------------------------------------
 
-export const payslipWithRelationsArgs = Prisma.validator<Prisma.PayslipDefaultArgs>()({
-  include: {
-    employee: { select: { firstName: true, lastName: true, code: true, workEmail: true, department: { select: { name: true } } } },
-    structure: { select: { name: true } },
-    payrun: { select: { name: true } },
-    contract: { select: { reference: true } },
-    warnings: { select: { code: true } },
-  },
-});
-export type PayslipWithRelations = Prisma.PayslipGetPayload<typeof payslipWithRelationsArgs>;
+export const payslipWithRelationsArgs =
+  Prisma.validator<Prisma.PayslipDefaultArgs>()({
+    include: {
+      employee: {
+        select: {
+          firstName: true,
+          lastName: true,
+          code: true,
+          workEmail: true,
+          department: { select: { name: true } },
+        },
+      },
+      structure: { select: { name: true } },
+      payrun: { select: { name: true } },
+      contract: { select: { reference: true } },
+      warnings: { select: { code: true } },
+    },
+  });
+export type PayslipWithRelations = Prisma.PayslipGetPayload<
+  typeof payslipWithRelationsArgs
+>;
 
 export function toPayslipRow(payslip: PayslipWithRelations): PayslipRow {
   return {
@@ -99,7 +110,9 @@ export const payslipDetailArgs = Prisma.validator<Prisma.PayslipDefaultArgs>()({
     lines: { orderBy: { sequence: 'asc' } },
   },
 });
-export type PayslipDetailPayload = Prisma.PayslipGetPayload<typeof payslipDetailArgs>;
+export type PayslipDetailPayload = Prisma.PayslipGetPayload<
+  typeof payslipDetailArgs
+>;
 
 export function toPayslipLineRow(
   line: PayslipDetailPayload['lines'][number],
@@ -131,11 +144,14 @@ export function toPayslipDetail(payslip: PayslipDetailPayload): PayslipDetail {
 // Warnings
 // ---------------------------------------------------------------------------
 
-const warningWithEmployeeArgs = Prisma.validator<Prisma.PayrollWarningDefaultArgs>()({
-  include: {
-    payslip: { select: { employee: { select: { firstName: true, lastName: true } } } },
-  },
-});
+const warningWithEmployeeArgs =
+  Prisma.validator<Prisma.PayrollWarningDefaultArgs>()({
+    include: {
+      payslip: {
+        select: { employee: { select: { firstName: true, lastName: true } } },
+      },
+    },
+  });
 export type WarningWithEmployee = Prisma.PayrollWarningGetPayload<
   typeof warningWithEmployeeArgs
 >;
@@ -172,7 +188,10 @@ export async function getPayrunDetail(
   db: PayrunDb,
   id: string,
 ): Promise<PayrunDetail | null> {
-  const payrun = await db.payrun.findUnique({ where: { id }, ...payrunListArgs });
+  const payrun = await db.payrun.findUnique({
+    where: { id },
+    ...payrunListArgs,
+  });
   if (payrun === null) {
     return null;
   }

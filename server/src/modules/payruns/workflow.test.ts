@@ -141,14 +141,18 @@ describe('canValidatePayrun (rule W6)', () => {
   });
 
   it('blocks validation while any blocking warning stands, acknowledged or not', () => {
-    expect(canValidatePayrun([{ blocking: true, acknowledgedAt: null }])).toBe(false);
-    expect(canValidatePayrun([{ blocking: true, acknowledgedAt: new Date() }])).toBe(
+    expect(canValidatePayrun([{ blocking: true, acknowledgedAt: null }])).toBe(
       false,
     );
+    expect(
+      canValidatePayrun([{ blocking: true, acknowledgedAt: new Date() }]),
+    ).toBe(false);
   });
 
   it('blocks validation while an advisory warning is unacknowledged', () => {
-    expect(canValidatePayrun([{ blocking: false, acknowledgedAt: null }])).toBe(false);
+    expect(canValidatePayrun([{ blocking: false, acknowledgedAt: null }])).toBe(
+      false,
+    );
   });
 
   it('allows validation once every advisory warning is acknowledged', () => {
@@ -184,8 +188,10 @@ describe('unresolvedWarningReasons', () => {
   });
 
   it('is empty once nothing is unresolved', () => {
-    expect(unresolvedWarningReasons([{ blocking: false, acknowledgedAt: new Date() }])).toEqual(
-      [],
-    );
+    expect(
+      unresolvedWarningReasons([
+        { blocking: false, acknowledgedAt: new Date() },
+      ]),
+    ).toEqual([]);
   });
 });

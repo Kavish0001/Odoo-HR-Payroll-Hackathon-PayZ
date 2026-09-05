@@ -6,7 +6,12 @@ interface PayslipStatusChartProps {
   data: readonly { status: PayslipStatus; count: number }[];
 }
 
-const STATUS_ORDER: readonly PayslipStatus[] = ['PAID', 'DONE', 'DRAFT', 'CANCELLED'];
+const STATUS_ORDER: readonly PayslipStatus[] = [
+  'PAID',
+  'DONE',
+  'DRAFT',
+  'CANCELLED',
+];
 const STATUS_LABEL: Record<PayslipStatus, string> = {
   PAID: 'Paid',
   DONE: 'Done',
@@ -19,7 +24,9 @@ const STATUS_LABEL: Record<PayslipStatus, string> = {
  * an SVG chart, so the counts are readable text and the bar is decoration —
  * nothing here depends on colour alone to convey meaning.
  */
-export function PayslipStatusChart({ data }: PayslipStatusChartProps): React.JSX.Element {
+export function PayslipStatusChart({
+  data,
+}: PayslipStatusChartProps): React.JSX.Element {
   const byStatus = new Map(data.map((row) => [row.status, row.count]));
   const total = data.reduce((sum, row) => sum + row.count, 0);
 
@@ -44,7 +51,10 @@ export function PayslipStatusChart({ data }: PayslipStatusChartProps): React.JSX
             <div className="bg-line/60 h-1.5 w-full overflow-hidden rounded-full">
               <div
                 className="h-full rounded-full"
-                style={{ width: `${String(share)}%`, backgroundColor: chartColor(index) }}
+                style={{
+                  width: `${String(share)}%`,
+                  backgroundColor: chartColor(index),
+                }}
               />
             </div>
           </li>

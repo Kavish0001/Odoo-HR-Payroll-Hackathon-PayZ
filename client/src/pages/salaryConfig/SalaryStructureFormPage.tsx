@@ -158,7 +158,9 @@ export function SalaryStructureFormPage(): React.JSX.Element {
     <div>
       <PageHeader
         title={
-          isNew ? 'New Salary Structure' : (structureQuery.data?.name ?? 'Salary Structure')
+          isNew
+            ? 'New Salary Structure'
+            : (structureQuery.data?.name ?? 'Salary Structure')
         }
         breadcrumbs={[
           { label: 'Salary Structures', to: '/payroll/structures' },
@@ -168,7 +170,8 @@ export function SalaryStructureFormPage(): React.JSX.Element {
 
       {structureQuery.isError && !isNew && (
         <p className="border-danger/30 bg-danger/5 text-danger mb-4 rounded-md border px-3 py-2 text-sm">
-          Could not load this salary structure. The API may still be starting up.
+          Could not load this salary structure. The API may still be starting
+          up.
         </p>
       )}
 
@@ -184,10 +187,20 @@ export function SalaryStructureFormPage(): React.JSX.Element {
           error={formError}
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Structure Name" htmlFor="name" required error={errors.name?.message}>
+            <Field
+              label="Structure Name"
+              htmlFor="name"
+              required
+              error={errors.name?.message}
+            >
               <Input id="name" {...register('name')} />
             </Field>
-            <Field label="Code" htmlFor="code" required error={errors.code?.message}>
+            <Field
+              label="Code"
+              htmlFor="code"
+              required
+              error={errors.code?.message}
+            >
               <Input id="code" className="font-mono" {...register('code')} />
             </Field>
             <div className="flex items-center gap-2 pt-6">

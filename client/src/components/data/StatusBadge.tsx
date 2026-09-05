@@ -8,13 +8,7 @@
  */
 
 export type Tone =
-  | 'success'
-  | 'warning'
-  | 'info'
-  | 'accent'
-  | 'teal'
-  | 'danger'
-  | 'neutral';
+  'success' | 'warning' | 'info' | 'accent' | 'teal' | 'danger' | 'neutral';
 
 const TONE_CLASS: Record<Tone, string> = {
   success: 'bg-success-soft text-success',

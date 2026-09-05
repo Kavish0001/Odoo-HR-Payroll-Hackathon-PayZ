@@ -1,4 +1,8 @@
-import { formatINR, formatINRCompact, type SalaryTrendPoint } from '@payz/shared';
+import {
+  formatINR,
+  formatINRCompact,
+  type SalaryTrendPoint,
+} from '@payz/shared';
 import {
   CartesianGrid,
   Line,
@@ -17,7 +21,9 @@ interface SalaryTrendChartProps {
 }
 
 /** Line chart of net salary paid across the last few payroll periods. */
-export function SalaryTrendChart({ data }: SalaryTrendChartProps): React.JSX.Element {
+export function SalaryTrendChart({
+  data,
+}: SalaryTrendChartProps): React.JSX.Element {
   const chartData = data.map((point) => ({
     period: point.period,
     totalNet: point.totalNet,
@@ -32,7 +38,11 @@ export function SalaryTrendChart({ data }: SalaryTrendChartProps): React.JSX.Ele
         role="img"
         aria-label="Line chart of net salary trend across recent payroll periods"
       >
-        <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+        <CartesianGrid
+          strokeDasharray="3 3"
+          stroke={GRID_STROKE}
+          vertical={false}
+        />
         <XAxis
           dataKey="period"
           tick={AXIS_TICK_STYLE}
@@ -48,7 +58,10 @@ export function SalaryTrendChart({ data }: SalaryTrendChartProps): React.JSX.Ele
           tickFormatter={(value: number) => formatINRCompact(value)}
         />
         <Tooltip
-          formatter={(value: TooltipValue) => [formatINR(toAmount(value)), 'Net salary']}
+          formatter={(value: TooltipValue) => [
+            formatINR(toAmount(value)),
+            'Net salary',
+          ]}
           contentStyle={{ fontSize: 12, borderRadius: 8 }}
         />
         <Line

@@ -8,7 +8,11 @@ import { requireAuth, requirePermission } from '../../middleware/auth.js';
 import { conflict, notFound } from '../../middleware/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { asyncRoute } from '../common/async-route.js';
-import { containsInsensitive, paginationArgs, toPaginated } from '../common/pagination.js';
+import {
+  containsInsensitive,
+  paginationArgs,
+  toPaginated,
+} from '../common/pagination.js';
 import { idParamsSchema } from '../common/params.js';
 
 export const jobPositionsRouter: Router = Router();
@@ -27,9 +31,11 @@ export interface JobPositionRow {
   active: boolean;
 }
 
-const jobPositionWithCounts = Prisma.validator<Prisma.JobPositionDefaultArgs>()({
-  include: { _count: { select: { employees: true, contracts: true } } },
-});
+const jobPositionWithCounts = Prisma.validator<Prisma.JobPositionDefaultArgs>()(
+  {
+    include: { _count: { select: { employees: true, contracts: true } } },
+  },
+);
 type JobPositionWithCounts = Prisma.JobPositionGetPayload<
   typeof jobPositionWithCounts
 >;
@@ -153,7 +159,10 @@ jobPositionsRouter.delete(
     try {
       // Soft delete: contracts and employees keep pointing at this position
       // for their history.
-      await prisma.jobPosition.update({ where: { id }, data: { active: false } });
+      await prisma.jobPosition.update({
+        where: { id },
+        data: { active: false },
+      });
       res.status(204).end();
     } catch (error) {
       if (

@@ -81,7 +81,8 @@ export function AttendanceFormPage(): React.JSX.Element {
     reset({
       employeeId: detail.employeeId,
       checkIn: toDateTimeLocal(detail.checkIn),
-      checkOut: detail.checkOut !== null ? toDateTimeLocal(detail.checkOut) : undefined,
+      checkOut:
+        detail.checkOut !== null ? toDateTimeLocal(detail.checkOut) : undefined,
       notes: detail.notes ?? undefined,
     });
   }, [attendanceQuery.data, reset]);
@@ -115,7 +116,11 @@ export function AttendanceFormPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title={isNew ? 'New Attendance Record' : (detail?.employeeName ?? 'Attendance')}
+        title={
+          isNew
+            ? 'New Attendance Record'
+            : (detail?.employeeName ?? 'Attendance')
+        }
         breadcrumbs={[
           { label: 'Attendance', to: '/attendance' },
           { label: isNew ? 'New' : (detail?.employeeName ?? '...') },
@@ -124,14 +129,15 @@ export function AttendanceFormPage(): React.JSX.Element {
 
       {attendanceQuery.isError && !isNew && (
         <p className="border-danger/30 bg-danger/5 text-danger mb-4 rounded-md border px-3 py-2 text-sm">
-          Could not load this attendance record. The API may still be starting up.
+          Could not load this attendance record. The API may still be starting
+          up.
         </p>
       )}
 
       {!canEdit && (
         <p className="border-line bg-surface text-muted mb-4 rounded-md border px-3 py-2 text-sm">
-          You have read-only access to attendance records. Ask an HR Manager
-          to make changes.
+          You have read-only access to attendance records. Ask an HR Manager to
+          make changes.
         </p>
       )}
 
@@ -167,7 +173,9 @@ export function AttendanceFormPage(): React.JSX.Element {
               <div id="status-display" className="flex items-center gap-2 py-2">
                 <StatusBadge status={detail.status} />
                 <span className="text-muted text-xs">
-                  {detail.manuallyEdited ? 'Manually edited' : `Source: ${detail.source}`}
+                  {detail.manuallyEdited
+                    ? 'Manually edited'
+                    : `Source: ${detail.source}`}
                 </span>
               </div>
             </Field>
@@ -205,12 +213,18 @@ export function AttendanceFormPage(): React.JSX.Element {
           {!isNew && detail !== undefined && (
             <>
               <Field label="Worked Hours" htmlFor="workedHours-display">
-                <div id="workedHours-display" className="font-mono py-2 text-sm">
+                <div
+                  id="workedHours-display"
+                  className="font-mono py-2 text-sm"
+                >
                   {detail.workedHours.toFixed(2)}
                 </div>
               </Field>
               <Field label="Overtime Hours" htmlFor="overtimeHours-display">
-                <div id="overtimeHours-display" className="font-mono py-2 text-sm">
+                <div
+                  id="overtimeHours-display"
+                  className="font-mono py-2 text-sm"
+                >
                   {detail.overtimeHours.toFixed(2)}
                 </div>
               </Field>

@@ -20,7 +20,11 @@ import { conflict, notFound } from '../../middleware/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { asyncRoute } from '../common/async-route.js';
 import { getDefaultCompanyId } from '../common/company.js';
-import { containsInsensitive, paginationArgs, toPaginated } from '../common/pagination.js';
+import {
+  containsInsensitive,
+  paginationArgs,
+  toPaginated,
+} from '../common/pagination.js';
 import { idParamsSchema } from '../common/params.js';
 
 export const employeesRouter: Router = Router();
@@ -90,7 +94,8 @@ function toDetail(employee: EmployeeWithDetail): EmployeeDetail {
     bankAccount: employee.bankAccount,
     bankName: employee.bankName,
     bankIfsc: employee.bankIfsc,
-    joinDate: employee.joinDate === null ? null : employee.joinDate.toISOString(),
+    joinDate:
+      employee.joinDate === null ? null : employee.joinDate.toISOString(),
     departmentId: employee.departmentId,
     jobPositionId: employee.jobPositionId,
     managerId: employee.managerId,

@@ -12,7 +12,11 @@ import { requireAuth, requirePermission } from '../../middleware/auth.js';
 import { conflict, notFound } from '../../middleware/errors.js';
 import { validate } from '../../middleware/validate.js';
 import { asyncRoute } from '../common/async-route.js';
-import { containsInsensitive, paginationArgs, toPaginated } from '../common/pagination.js';
+import {
+  containsInsensitive,
+  paginationArgs,
+  toPaginated,
+} from '../common/pagination.js';
 import { idParamsSchema } from '../common/params.js';
 
 /**
@@ -177,7 +181,10 @@ timeOffTypesRouter.delete(
     try {
       // Soft delete: allocations and requests reference a type with a
       // Restrict foreign key, so history must stay intact.
-      await prisma.timeOffType.update({ where: { id }, data: { active: false } });
+      await prisma.timeOffType.update({
+        where: { id },
+        data: { active: false },
+      });
       res.status(204).end();
     } catch (error) {
       if (

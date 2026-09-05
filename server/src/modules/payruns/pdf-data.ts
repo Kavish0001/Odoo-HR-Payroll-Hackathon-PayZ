@@ -7,12 +7,19 @@ import { type PayslipPdfData } from '../../pdf/payslip-document.js';
  * the PDF download endpoint and the Send Payslips email attachment, so the
  * printed payslip and the emailed one are always built from the same query.
  */
-export async function loadPayslipPdfData(payslipId: string): Promise<PayslipPdfData> {
+export async function loadPayslipPdfData(
+  payslipId: string,
+): Promise<PayslipPdfData> {
   const payslip = await prisma.payslip.findUnique({
     where: { id: payslipId },
     include: {
       employee: {
-        select: { firstName: true, lastName: true, code: true, department: { select: { name: true } } },
+        select: {
+          firstName: true,
+          lastName: true,
+          code: true,
+          department: { select: { name: true } },
+        },
       },
       structure: { select: { name: true } },
       contract: { select: { reference: true } },

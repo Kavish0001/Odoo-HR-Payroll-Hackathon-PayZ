@@ -58,7 +58,10 @@ export function DepartmentsListPage(): React.JSX.Element {
         header: 'Status',
         accessorFn: (row) => (row.active ? 'ACTIVE' : 'INACTIVE'),
         cell: ({ row }) => (
-          <StatusBadge status={row.original.active ? 'ACTIVE' : 'INACTIVE'} dot />
+          <StatusBadge
+            status={row.original.active ? 'ACTIVE' : 'INACTIVE'}
+            dot
+          />
         ),
       },
     ],

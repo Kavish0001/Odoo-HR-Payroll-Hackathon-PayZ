@@ -113,7 +113,9 @@ export function useSalaryRule(id: string | undefined) {
   return useQuery({
     queryKey: ['salaryRules', 'detail', id],
     queryFn: async () => {
-      const { data } = await api.get<SalaryRuleRow>(`/salary-rules/${id ?? ''}`);
+      const { data } = await api.get<SalaryRuleRow>(
+        `/salary-rules/${id ?? ''}`,
+      );
       return data;
     },
     enabled: id !== undefined && id !== 'new',
@@ -164,8 +166,7 @@ export interface FormulaPreviewInput {
 }
 
 export type FormulaPreviewResult =
-  | { ok: true; amount: number }
-  | { ok: false; error: string };
+  { ok: true; amount: number } | { ok: false; error: string };
 
 export function useTestSalaryFormula() {
   return useMutation({

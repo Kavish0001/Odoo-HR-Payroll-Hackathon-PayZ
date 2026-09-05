@@ -119,7 +119,9 @@ export function WorkingScheduleFormPage(): React.JSX.Element {
       return;
     }
     const detail = scheduleQuery.data;
-    const lineByDay = new Map((detail.lines ?? []).map((line) => [line.dayOfWeek, line]));
+    const lineByDay = new Map(
+      (detail.lines ?? []).map((line) => [line.dayOfWeek, line]),
+    );
     reset({
       name: detail.name,
       calendarType: detail.calendarType,
@@ -211,7 +213,11 @@ export function WorkingScheduleFormPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title={isNew ? 'New Working Schedule' : (scheduleQuery.data?.name ?? 'Working Schedule')}
+        title={
+          isNew
+            ? 'New Working Schedule'
+            : (scheduleQuery.data?.name ?? 'Working Schedule')
+        }
         breadcrumbs={[
           { label: 'Working Schedules', to: '/working-schedules' },
           { label: isNew ? 'New' : (scheduleQuery.data?.name ?? '...') },
@@ -235,8 +241,16 @@ export function WorkingScheduleFormPage(): React.JSX.Element {
         error={formError}
       >
         <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label="Schedule Name" htmlFor="name" required error={errors.name?.message}>
-            <Input id="name" {...register('name', { required: 'Schedule name is required' })} />
+          <Field
+            label="Schedule Name"
+            htmlFor="name"
+            required
+            error={errors.name?.message}
+          >
+            <Input
+              id="name"
+              {...register('name', { required: 'Schedule name is required' })}
+            />
           </Field>
           <Field label="Calendar Type" htmlFor="calendarType">
             <Input id="calendarType" {...register('calendarType')} />
@@ -273,7 +287,10 @@ export function WorkingScheduleFormPage(): React.JSX.Element {
                 const watched = watchedDays[index];
                 const enabled = watched?.enabled ?? field.enabled;
                 return (
-                  <tr key={field.id} className="border-line border-b last:border-0">
+                  <tr
+                    key={field.id}
+                    className="border-line border-b last:border-0"
+                  >
                     <td className="px-3 py-2">
                       <Checkbox {...register(`days.${index}.enabled`)} />
                     </td>
@@ -308,7 +325,10 @@ export function WorkingScheduleFormPage(): React.JSX.Element {
                       />
                     </td>
                     <td className="px-3 py-2 font-mono">
-                      {watched !== undefined ? lineHours(watched).toFixed(2) : '0.00'}h
+                      {watched !== undefined
+                        ? lineHours(watched).toFixed(2)
+                        : '0.00'}
+                      h
                     </td>
                   </tr>
                 );

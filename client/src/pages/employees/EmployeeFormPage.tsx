@@ -170,9 +170,7 @@ export function EmployeeFormPage(): React.JSX.Element {
     <div>
       <PageHeader
         title={
-          isNew
-            ? 'New Employee'
-            : (employeeQuery.data?.fullName ?? 'Employee')
+          isNew ? 'New Employee' : (employeeQuery.data?.fullName ?? 'Employee')
         }
         breadcrumbs={[
           { label: 'Employees', to: '/employees' },
@@ -234,22 +232,46 @@ export function EmployeeFormPage(): React.JSX.Element {
 
         {tab === 'work' ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Employee Code" htmlFor="code" required error={errors.code?.message}>
+            <Field
+              label="Employee Code"
+              htmlFor="code"
+              required
+              error={errors.code?.message}
+            >
               <Input id="code" {...register('code')} />
             </Field>
-            <Field label="Work Email" htmlFor="workEmail" required error={errors.workEmail?.message}>
+            <Field
+              label="Work Email"
+              htmlFor="workEmail"
+              required
+              error={errors.workEmail?.message}
+            >
               <Input id="workEmail" type="email" {...register('workEmail')} />
             </Field>
-            <Field label="First Name" htmlFor="firstName" required error={errors.firstName?.message}>
+            <Field
+              label="First Name"
+              htmlFor="firstName"
+              required
+              error={errors.firstName?.message}
+            >
               <Input id="firstName" {...register('firstName')} />
             </Field>
-            <Field label="Last Name" htmlFor="lastName" required error={errors.lastName?.message}>
+            <Field
+              label="Last Name"
+              htmlFor="lastName"
+              required
+              error={errors.lastName?.message}
+            >
               <Input id="lastName" {...register('lastName')} />
             </Field>
             <Field label="Phone" htmlFor="phone" error={errors.phone?.message}>
               <Input id="phone" {...register('phone')} />
             </Field>
-            <Field label="Job Position" htmlFor="jobPositionId" error={errors.jobPositionId?.message}>
+            <Field
+              label="Job Position"
+              htmlFor="jobPositionId"
+              error={errors.jobPositionId?.message}
+            >
               <Select
                 id="jobPositionId"
                 options={jobPositionOptions}
@@ -257,7 +279,11 @@ export function EmployeeFormPage(): React.JSX.Element {
                 {...register('jobPositionId', { setValueAs: emptyToUndefined })}
               />
             </Field>
-            <Field label="Department" htmlFor="departmentId" error={errors.departmentId?.message}>
+            <Field
+              label="Department"
+              htmlFor="departmentId"
+              error={errors.departmentId?.message}
+            >
               <Select
                 id="departmentId"
                 options={departmentOptions}
@@ -265,7 +291,11 @@ export function EmployeeFormPage(): React.JSX.Element {
                 {...register('departmentId', { setValueAs: emptyToUndefined })}
               />
             </Field>
-            <Field label="Manager" htmlFor="managerId" error={errors.managerId?.message}>
+            <Field
+              label="Manager"
+              htmlFor="managerId"
+              error={errors.managerId?.message}
+            >
               <Select
                 id="managerId"
                 options={managerOptions}
@@ -273,26 +303,48 @@ export function EmployeeFormPage(): React.JSX.Element {
                 {...register('managerId', { setValueAs: emptyToUndefined })}
               />
             </Field>
-            <Field label="Working Schedule" htmlFor="workingScheduleId" error={errors.workingScheduleId?.message}>
+            <Field
+              label="Working Schedule"
+              htmlFor="workingScheduleId"
+              error={errors.workingScheduleId?.message}
+            >
               <Select
                 id="workingScheduleId"
                 options={scheduleOptions}
                 placeholder="No schedule"
-                {...register('workingScheduleId', { setValueAs: emptyToUndefined })}
+                {...register('workingScheduleId', {
+                  setValueAs: emptyToUndefined,
+                })}
               />
             </Field>
-            <Field label="Employee Type" htmlFor="employeeType" error={errors.employeeType?.message}>
+            <Field
+              label="Employee Type"
+              htmlFor="employeeType"
+              error={errors.employeeType?.message}
+            >
               <Select
                 id="employeeType"
                 options={EMPLOYEE_TYPE_OPTIONS}
                 {...register('employeeType')}
               />
             </Field>
-            <Field label="Work Location" htmlFor="workLocation" error={errors.workLocation?.message}>
+            <Field
+              label="Work Location"
+              htmlFor="workLocation"
+              error={errors.workLocation?.message}
+            >
               <Input id="workLocation" {...register('workLocation')} />
             </Field>
-            <Field label="Join Date" htmlFor="joinDate" error={errors.joinDate?.message}>
-              <Input id="joinDate" type="date" {...register('joinDate', { setValueAs: emptyToUndefined })} />
+            <Field
+              label="Join Date"
+              htmlFor="joinDate"
+              error={errors.joinDate?.message}
+            >
+              <Input
+                id="joinDate"
+                type="date"
+                {...register('joinDate', { setValueAs: emptyToUndefined })}
+              />
             </Field>
             <div className="flex items-center gap-2 pt-6">
               <Checkbox id="active" {...register('active')} />
@@ -303,17 +355,45 @@ export function EmployeeFormPage(): React.JSX.Element {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Personal Email" htmlFor="personalEmail" error={errors.personalEmail?.message}>
-              <Input id="personalEmail" type="email" {...register('personalEmail', { setValueAs: emptyToUndefined })} />
+            <Field
+              label="Personal Email"
+              htmlFor="personalEmail"
+              error={errors.personalEmail?.message}
+            >
+              <Input
+                id="personalEmail"
+                type="email"
+                {...register('personalEmail', { setValueAs: emptyToUndefined })}
+              />
             </Field>
-            <Field label="Bank Name" htmlFor="bankName" error={errors.bankName?.message}>
+            <Field
+              label="Bank Name"
+              htmlFor="bankName"
+              error={errors.bankName?.message}
+            >
               <Input id="bankName" {...register('bankName')} />
             </Field>
-            <Field label="Bank Account" htmlFor="bankAccount" error={errors.bankAccount?.message}>
-              <Input id="bankAccount" className="font-mono" {...register('bankAccount')} />
+            <Field
+              label="Bank Account"
+              htmlFor="bankAccount"
+              error={errors.bankAccount?.message}
+            >
+              <Input
+                id="bankAccount"
+                className="font-mono"
+                {...register('bankAccount')}
+              />
             </Field>
-            <Field label="Bank IFSC" htmlFor="bankIfsc" error={errors.bankIfsc?.message}>
-              <Input id="bankIfsc" className="font-mono" {...register('bankIfsc')} />
+            <Field
+              label="Bank IFSC"
+              htmlFor="bankIfsc"
+              error={errors.bankIfsc?.message}
+            >
+              <Input
+                id="bankIfsc"
+                className="font-mono"
+                {...register('bankIfsc')}
+              />
             </Field>
           </div>
         )}
