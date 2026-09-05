@@ -29,6 +29,8 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
+        // Root config files are covered by the root tsconfig.json, so every
+        // linted file belongs to a real project with strictNullChecks on.
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
