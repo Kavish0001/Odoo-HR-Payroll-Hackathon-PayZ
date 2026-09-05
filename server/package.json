@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "mail:check": "tsx src/scripts/check-mail.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

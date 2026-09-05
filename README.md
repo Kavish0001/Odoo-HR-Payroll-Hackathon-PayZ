@@ -331,6 +331,13 @@ Gmail rejects a plain account password — an App Password is required:
 1. Enable **2-Step Verification** on the Google account.
 2. Go to **Google Account → Security → App passwords** and create one for "Mail".
 3. Paste the 16 characters (spaces removed) into `SMTP_PASS`.
+4. Run `npm run mail:check` — it opens and authenticates a connection without
+   sending anything, and names the usual cause when it fails. Add `-- --send`
+   to also put one test message in the inbox.
+
+Set `MAIL_REDIRECT_TO` to your own address before the first real send. Without
+it, _Send Payslips_ mails all 122 seeded `@oxp.com` addresses, which is a fast
+way to get a Gmail account rate-limited.
 
 Send limits are roughly **500 recipients/day** on a free Gmail account and 2,000 on Workspace — well above a demo payrun. Leave `SMTP_USER` unset and the mailer falls back to a console transport, so _Send Payslips_ stays demoable with no network.
 
@@ -341,6 +348,7 @@ Send limits are roughly **500 recipients/day** on a free Gmail account and 2,000
 | `npm run db:up` / `npm run db:down`  | Start / stop the Postgres container (the volume survives `down`)           |
 | `npm run db:migrate`                 | `prisma migrate dev`                                                       |
 | `npm run db:seed`                    | Reset and load demo data (refuses to run against a non-localhost database) |
+| `npm run mail:check`                 | Verify the SMTP credentials without sending; `-- --send` sends one test    |
 | `npm run db:studio`                  | Prisma Studio                                                              |
 | `npm run dev`                        | Run API and client concurrently                                            |
 | `npm run build`                      | Type-check and build both apps                                             |

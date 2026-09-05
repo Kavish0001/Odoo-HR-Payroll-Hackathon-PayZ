@@ -128,8 +128,9 @@ export default tseslint.config(
 
   /* Config files and tests run outside the strict app rules. */
   {
-    // The seed prints the demo credentials, which is its whole purpose.
-    files: ['server/prisma/seed.ts'],
+    // The seed prints the demo credentials, which is its whole purpose, and
+    // the operator scripts are CLIs whose only output channel is the console.
+    files: ['server/prisma/seed.ts', 'server/src/scripts/**/*.ts'],
     rules: { 'no-console': 'off' },
   },
   {
