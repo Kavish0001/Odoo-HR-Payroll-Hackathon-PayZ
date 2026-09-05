@@ -8,7 +8,12 @@ import pinoHttp from 'pino-http';
 import { env, isTest } from './config/env.js';
 import { logger } from './config/logger.js';
 import { checkDatabase, databaseHost } from './config/prisma.js';
+import {
+  assertRoutesGuarded,
+  type RouterMount,
+} from './middleware/assert-guarded.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
+import { authRouter } from './modules/auth/auth.routes.js';
 
 /**
  * The Express app, built separately from the listener so tests can mount it
@@ -62,6 +67,17 @@ export function createApp(): Express {
       });
     })();
   });
+
+  // Every router is registered here with its prefix, so the guard assertion
+  // sees exactly what is mounted.
+  const mounts: RouterMount[] = [{ prefix: '/api/auth', router: authRouter }];
+
+  for (const mount of mounts) {
+    app.use(mount.prefix, mount.router);
+  }
+
+  // Refuses to boot if any mutating route ships without declaring its access.
+  assertRoutesGuarded(mounts);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
