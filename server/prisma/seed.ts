@@ -8,6 +8,9 @@ import {
   computePayslip,
   type RuleDefinition,
 } from '../src/modules/payroll/engine.js';
+import { computePayrunPayslips } from '../src/modules/payruns/compute.js';
+import { type ScheduleLineLike } from '../src/modules/schedules/weekly-hours.js';
+import { countWorkingDays } from '../src/modules/timeoff/duration.js';
 
 import {
   buildScaleRoster,
@@ -146,6 +149,47 @@ function eachWorkingDay(from: Date, to: Date): Date[] {
   return days;
 }
 
+/**
+ * A leave span together with the duration the API itself would give it.
+ *
+ * Rule T6 counts working days against the employee's schedule, so a raw
+ * calendar-day count wrote rows the app contradicts the moment anyone opens
+ * one: a Saturday-to-Monday request stored as three days that
+ * `POST /time-off/requests` would have recorded as one. `countWorkingDays` is
+ * the function the route calls, used here unchanged.
+ *
+ * A generated start date lands on a non-working day often enough that some
+ * spans contain no working day at all, which the route rejects outright. Those
+ * are walked forward a day at a time rather than re-rolled, so the seed remains
+ * a pure function of its RNG seed and reseeding twice still produces the same
+ * database.
+ */
+function leaveSpan(
+  from: Date,
+  calendarDays: number,
+  lines: readonly ScheduleLineLike[],
+): { start: Date; end: Date; duration: number } {
+  const start = new Date(from);
+
+  // Every seeded schedule works at least four weekdays, so a week of shifts
+  // always lands on one; the throw is for a schedule that works no day at all.
+  for (let shift = 0; shift < 7; shift += 1) {
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + calendarDays - 1);
+
+    const duration = countWorkingDays(start, end, lines);
+    if (duration > 0) {
+      return { start: new Date(start), end, duration };
+    }
+
+    start.setUTCDate(start.getUTCDate() + 1);
+  }
+
+  throw new Error(
+    `No working day within a week of ${from.toISOString().slice(0, 10)}`,
+  );
+}
+
 function toRuleDefinition(rule: SeedRule, id: number): RuleDefinition {
   return {
     id,
@@ -249,18 +293,38 @@ async function main(): Promise<void> {
     'FRIDAY',
   ] as const;
 
+  // The weekly patterns are declared once and then used twice: to create the
+  // schedules, and to count working days for seeded time off. Deriving the
+  // leave durations from the very lines the employee's schedule was built from
+  // is what keeps a seeded duration equal to the one the API would compute.
+  const fullTimeLines: ScheduleLineLike[] = weekdays.map((dayOfWeek) => ({
+    dayOfWeek,
+    startMinute: at(9),
+    endMinute: at(18),
+    breakMinutes: 60,
+  }));
+
+  const partTimeLines: ScheduleLineLike[] = weekdays
+    .slice(0, 4)
+    .map((dayOfWeek) => ({
+      dayOfWeek,
+      startMinute: at(9),
+      endMinute: at(14),
+      breakMinutes: 0,
+    }));
+
+  const flexibleLines: ScheduleLineLike[] = weekdays.map((dayOfWeek) => ({
+    dayOfWeek,
+    startMinute: at(10),
+    endMinute: at(18),
+    breakMinutes: 30,
+  }));
+
   const fullTime = await prisma.workingSchedule.create({
     data: {
       name: '40 Hours / Week',
       companyId: company.id,
-      lines: {
-        create: weekdays.map((dayOfWeek) => ({
-          dayOfWeek,
-          startMinute: at(9),
-          endMinute: at(18),
-          breakMinutes: 60,
-        })),
-      },
+      lines: { create: fullTimeLines },
     },
   });
 
@@ -268,14 +332,7 @@ async function main(): Promise<void> {
     data: {
       name: 'Part-time 20h',
       companyId: company.id,
-      lines: {
-        create: weekdays.slice(0, 4).map((dayOfWeek) => ({
-          dayOfWeek,
-          startMinute: at(9),
-          endMinute: at(14),
-          breakMinutes: 0,
-        })),
-      },
+      lines: { create: partTimeLines },
     },
   });
 
@@ -283,14 +340,7 @@ async function main(): Promise<void> {
     data: {
       name: 'Flexible Hybrid 37.5h',
       companyId: company.id,
-      lines: {
-        create: weekdays.map((dayOfWeek) => ({
-          dayOfWeek,
-          startMinute: at(10),
-          endMinute: at(18),
-          breakMinutes: 30,
-        })),
-      },
+      lines: { create: flexibleLines },
     },
   });
 
@@ -298,6 +348,12 @@ async function main(): Promise<void> {
     full: fullTime.id,
     part: partTime.id,
     flexible: flexible.id,
+  };
+
+  const scheduleLines: Record<keyof typeof schedules, ScheduleLineLike[]> = {
+    full: fullTimeLines,
+    part: partTimeLines,
+    flexible: flexibleLines,
   };
 
   // ---- Salary structures and rules ---------------------------------------
@@ -721,6 +777,10 @@ async function main(): Promise<void> {
       });
     }
 
+    // Durations are counted against this employee's own schedule, so a
+    // part-time roster member's Thursday-to-Friday request is one day, not two.
+    const lines = scheduleLines[person.schedule];
+
     // Two to four PTO requests each across the year, mostly approved.
     const requestCount = 2 + Math.floor(random() * 3);
     for (let n = 0; n < requestCount; n += 1) {
@@ -731,12 +791,14 @@ async function main(): Promise<void> {
       // upcoming leave is exactly what a pending approval queue is for.
       const month = 2 + Math.floor(random() * 8);
       const startDay = 1 + Math.floor(random() * 22);
-      const duration = 1 + Math.floor(random() * 3);
-      const start = day(
-        `2026-${String(month).padStart(2, '0')}-${String(startDay).padStart(2, '0')}`,
+      const requestedDays = 1 + Math.floor(random() * 3);
+      const { start, end, duration } = leaveSpan(
+        day(
+          `2026-${String(month).padStart(2, '0')}-${String(startDay).padStart(2, '0')}`,
+        ),
+        requestedDays,
+        lines,
       );
-      const end = new Date(start);
-      end.setUTCDate(end.getUTCDate() + duration - 1);
 
       const roll = random();
       const status =
@@ -770,23 +832,29 @@ async function main(): Promise<void> {
 
     // A sick day or two, needing no allocation at all.
     if (sickTypeId !== undefined && random() < 0.5) {
-      // June through September, for the same reason.
-      const start = day(
-        `2026-0${String(6 + Math.floor(random() * 4))}-${String(5 + Math.floor(random() * 20)).padStart(2, '0')}`,
+      // June through September, for the same reason. A single day still goes
+      // through leaveSpan: a sick day drawn onto a Sunday has to move to the
+      // next working day, or it would be stored as a zero-day request.
+      const { start, end, duration } = leaveSpan(
+        day(
+          `2026-0${String(6 + Math.floor(random() * 4))}-${String(5 + Math.floor(random() * 20)).padStart(2, '0')}`,
+        ),
+        1,
+        lines,
       );
       await prisma.timeOffRequest.create({
         data: {
           employeeId: employee.id,
           typeId: sickTypeId,
           startDate: start,
-          endDate: start,
-          duration: 1,
+          endDate: end,
+          duration,
           status: 'APPROVED',
           approverId: manager?.id ?? null,
           reason: 'Unwell',
         },
       });
-      approvedLeaveDays += 1;
+      approvedLeaveDays += duration;
     }
   }
 
@@ -937,6 +1005,100 @@ async function main(): Promise<void> {
     }
   }
 
+  // ---- A payrun Validate refuses -----------------------------------------
+  /**
+   * One COMPUTED payrun carrying a genuine blocking warning (rules W6, W7).
+   *
+   * Every warning seeded above is advisory, which left the blocking half of
+   * the rules undemonstrable: Validate refuses while a blocking warning stands,
+   * and a blocking warning cannot be acknowledged away — but with no blocking
+   * row anywhere in the database, neither behaviour could be shown live, and
+   * none of the three blocking codes can be produced on demand during a demo.
+   *
+   * The scenario is the one the product itself permits. An off-cycle correction
+   * run covers the second half of August for two people already paid for the
+   * whole of August. `resolveEligibleEmployees` lists them as eligible with an
+   * advisory `duplicateWarning` rather than excluding them, and the
+   * `payslips_unique_employee_period` index does not fire because the periods
+   * overlap rather than match — it is keyed on the exact triple. Compute then
+   * raises DUPLICATE_PAYSLIP, which is blocking.
+   *
+   * The payslips are computed by `computePayrunPayslips` inside a transaction,
+   * exactly as the Compute route does it, so the warning rows come out of the
+   * real path rather than being asserted by hand here.
+   */
+  const correctionStart = day('2026-08-16');
+  const correctionEnd = day('2026-08-31');
+
+  const correctionRun = await prisma.payrun.create({
+    data: {
+      name: 'August 2026 Off-cycle Correction',
+      companyId: company.id,
+      salaryStructureId: regular.id,
+      periodStart: correctionStart,
+      periodEnd: correctionEnd,
+      status: 'DRAFT',
+      createdByUserId: adminUser.id,
+    },
+  });
+
+  // Two engineers on plain running contracts: no expiry, bank details on file
+  // and complete records, so DUPLICATE_PAYSLIP is the only warning they raise
+  // and the blocked state has an unambiguous cause.
+  for (const code of ['EMP009', 'EMP010'] as const) {
+    const employee = employees.get(code);
+    const contractId = contracts.get(code);
+    if (employee === undefined || contractId === undefined) {
+      continue;
+    }
+
+    await prisma.payslip.create({
+      data: {
+        number: `PS/2026/${String(payslipNumber++).padStart(5, '0')}`,
+        payrunId: correctionRun.id,
+        employeeId: employee.id,
+        contractId,
+        structureId: regular.id,
+        periodStart: correctionStart,
+        periodEnd: correctionEnd,
+        contractWage: employee.wage,
+        status: 'DRAFT',
+      },
+    });
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await computePayrunPayslips(tx, {
+      id: correctionRun.id,
+      salaryStructureId: regular.id,
+      periodStart: correctionStart,
+      periodEnd: correctionEnd,
+    });
+
+    await tx.payrun.update({
+      where: { id: correctionRun.id },
+      data: {
+        status: 'COMPUTED',
+        computedAt: new Date('2026-09-01'),
+        version: { increment: 1 },
+      },
+    });
+  });
+
+  const blockingWarnings = await prisma.payrollWarning.count({
+    where: { payrunId: correctionRun.id, blocking: true },
+  });
+
+  // Compute produced the warnings, so this is an assertion rather than a
+  // formality: if a future change to the eligibility or warning rules stops
+  // this scenario from blocking, the seed says so instead of quietly shipping
+  // a demo database in which Validate succeeds where it should refuse.
+  if (blockingWarnings === 0) {
+    throw new Error(
+      'The correction payrun computed without a blocking warning; the Validate-blocked demo state is gone.',
+    );
+  }
+
   // ---- Accounts ----------------------------------------------------------
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12);
   // Named accounts for the walkthrough, kept at stable addresses so the
@@ -1035,10 +1197,13 @@ async function main(): Promise<void> {
     `  ${pad('time off')}${n(requestTotal)} requests (${n(approvedLeaveDays)} approved days, ${n(pendingRequests)} pending)`,
   );
   console.log(
-    `  ${pad('payruns')}${n(PERIODS.length)} periods, Jan 2024 - Sep 2026`,
+    `  ${pad('payruns')}${n(PERIODS.length)} monthly periods, Jan 2024 - Sep 2026, plus one off-cycle run`,
   );
   console.log(
     `  ${pad('payslips')}${n(payslipTotal)} with ${n(lineCount)} computed lines`,
+  );
+  console.log(
+    `  ${pad('blocked payrun')}"${correctionRun.name}" - ${n(blockingWarnings)} blocking DUPLICATE_PAYSLIP, Validate refused`,
   );
   console.log(
     `  ${pad('net salary paid')}Rs ${n(Math.round(totalNetPaid / 100))}`,

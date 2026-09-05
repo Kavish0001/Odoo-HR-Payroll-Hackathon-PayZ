@@ -1,4 +1,8 @@
-import { timeOffRequestSchema, type TimeOffRequestInput } from '@payz/shared';
+import {
+  timeOffRequestSchema,
+  type LeaveBalanceRow,
+  type TimeOffRequestInput,
+} from '@payz/shared';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -8,6 +12,7 @@ import { useEmployees } from '../../api/employees.js';
 import {
   useApproveTimeOffRequest,
   useCreateTimeOffRequest,
+  useLeaveBalances,
   useRefuseTimeOffRequest,
   useTimeOffRequest,
   useTimeOffTypes,
@@ -23,6 +28,8 @@ import { Select } from '../../components/ui/Select.js';
 import { Textarea } from '../../components/ui/Textarea.js';
 import { useAuth } from '../../lib/auth.js';
 import { emptyToUndefined, typedZodResolver } from '../../lib/forms.js';
+
+import { formatQty } from './format.js';
 
 interface TimeOffRequestFormValues {
   employeeId: string;
@@ -65,6 +72,7 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<TimeOffRequestFormValues, unknown, TimeOffRequestInput>({
     resolver: typedZodResolver<TimeOffRequestFormValues, TimeOffRequestInput>(
@@ -95,6 +103,19 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
     value: t.id,
     label: t.name,
   }));
+
+  // Watched, not read once: the balance has to follow the pickers, so somebody
+  // sees what is left for the type they are about to request — before they
+  // submit it, rather than after an approver refuses it.
+  const selectedEmployeeId = watch('employeeId');
+  const selectedTypeId = watch('typeId');
+
+  const balancesQuery = useLeaveBalances(
+    selectedEmployeeId === '' ? undefined : selectedEmployeeId,
+  );
+  const selectedBalance = (balancesQuery.data ?? []).find(
+    (balance) => balance.typeId === selectedTypeId,
+  );
 
   const detail = requestQuery.data;
   const isEditable = isNew || detail?.status === 'TO_APPROVE';
@@ -209,6 +230,14 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
               {...register('typeId')}
             />
           </Field>
+          <div className="sm:col-span-2">
+            <BalancePanel
+              balance={selectedBalance}
+              isLoading={balancesQuery.isLoading}
+              hasEmployee={selectedEmployeeId !== ''}
+              hasType={selectedTypeId !== ''}
+            />
+          </div>
           <Field
             label="Start Date"
             htmlFor="startDate"
@@ -273,6 +302,93 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
           </Field>
         </div>
       </FormShell>
+    </div>
+  );
+}
+
+interface BalancePanelProps {
+  balance: LeaveBalanceRow | undefined;
+  isLoading: boolean;
+  hasEmployee: boolean;
+  hasType: boolean;
+}
+
+/**
+ * The remaining balance for the type being requested, shown at the moment of
+ * the request.
+ *
+ * Every figure is printed as the API derived it. `remaining` already counts
+ * only approved requests, so nothing is recomputed here — and in particular
+ * `pending` is reported on its own line rather than subtracted, because a
+ * request nobody has decided on yet has not spent anything.
+ */
+function BalancePanel({
+  balance,
+  isLoading,
+  hasEmployee,
+  hasType,
+}: BalancePanelProps): React.JSX.Element {
+  const frame = 'border-steel-300 rounded-md border px-4 py-3';
+
+  if (!hasEmployee || !hasType) {
+    return (
+      <div className={frame}>
+        <p className="eyebrow">Leave balance</p>
+        <p className="text-muted mt-2 text-xs">
+          Pick an employee and a time off type to see the balance that applies.
+        </p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return <div className={`${frame} bg-steel-100 h-24 animate-pulse`} />;
+  }
+
+  if (balance === undefined) {
+    return (
+      <div className={frame}>
+        <p className="eyebrow">Leave balance</p>
+        <p className="text-muted mt-2 text-xs">
+          No balance is recorded for this type and employee.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={frame}>
+      <p className="eyebrow">{balance.typeName} balance</p>
+
+      <div className="mt-2 flex flex-wrap items-baseline gap-x-6 gap-y-1">
+        {balance.requiresAllocation ? (
+          <>
+            <p className="font-display text-3xl font-bold tabular-nums">
+              {formatQty(balance.remaining, balance.unit)}
+            </p>
+            <p className="text-muted font-mono text-xs">
+              {formatQty(balance.taken, balance.unit)} taken of{' '}
+              {formatQty(balance.allocated, balance.unit)} allocated
+            </p>
+          </>
+        ) : (
+          <>
+            {/* Rule T4: a type needing no allocation has no balance to report,
+                and N/A is honest where 0 would read as "you have none left". */}
+            <p className="font-display text-muted text-3xl font-bold">N/A</p>
+            <p className="text-muted text-xs">
+              This type needs no allocation, so it carries no balance.
+            </p>
+          </>
+        )}
+      </div>
+
+      {balance.pending > 0 && (
+        <p className="text-muted mt-2 text-xs">
+          {formatQty(balance.pending, balance.unit)} already requested and
+          awaiting approval — not yet deducted from the balance above.
+        </p>
+      )}
     </div>
   );
 }

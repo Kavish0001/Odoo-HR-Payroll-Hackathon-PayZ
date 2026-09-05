@@ -64,5 +64,19 @@ export const env: Env = parseEnv();
 export const isProduction = env.NODE_ENV === 'production';
 export const isTest = env.NODE_ENV === 'test';
 
-/** True when real SMTP credentials are present; false selects the console transport. */
-export const hasSmtpCredentials = env.SMTP_USER.length > 0;
+/**
+ * True when real SMTP credentials are present; false selects the console
+ * transport.
+ *
+ * Both halves are required, because a half-configured environment is worse
+ * than an unconfigured one: with a user but no password nodemailer still
+ * opens an authenticated connection, the handshake is rejected, and every
+ * payslip in the run fails to send. A blank password is never a usable
+ * credential, so it takes the console path exactly as a blank user does and
+ * Send Payslips stays demoable (guardrail 10.8).
+ *
+ * Trimmed, since a value left as `SMTP_PASS=` with a trailing space in .env
+ * is no more a password than an empty one.
+ */
+export const hasSmtpCredentials =
+  env.SMTP_USER.trim().length > 0 && env.SMTP_PASS.trim().length > 0;

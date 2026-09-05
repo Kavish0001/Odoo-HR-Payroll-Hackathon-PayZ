@@ -52,6 +52,77 @@ const previewSchema = z.object({
   seniorityYears: z.number().finite().min(0).max(60),
 });
 
+/**
+ * A representative payslip snapshot for the formula tester.
+ *
+ * The preview has no payslip behind it, so `rules` and `categories` used to
+ * be empty objects — which made `result = categories['BASIC']`, the very
+ * example the project checklist gives, evaluate to 0 and read as a broken
+ * formula rather than as a correct formula with nothing to reference. The
+ * sandbox treats a missing key as 0 by design (a rule may legitimately run
+ * before another), so nothing errors; the author just sees a zero and
+ * distrusts the editor.
+ *
+ * The figures mirror the Regular Salary structure the demo ships with — half
+ * the wage as basic, HRA at 40% of basic, LTA at 8%, capped PF, professional
+ * tax — so a formula referencing another rule or a category total returns a
+ * number an author can sanity check against the payslips they have seen.
+ * They are a stand-in, not a computation: the real amounts come from the
+ * employee's own structure when the payrun runs, which is why the response
+ * flags them rather than leaving the caller to assume otherwise.
+ *
+ * Deductions are negative here for the same reason they are on a payslip
+ * (rule P6): a formula subtracting from a category total must behave in the
+ * preview the way it will in production, or the preview is a lie.
+ */
+export function sampleFormulaContext(
+  body: z.infer<typeof previewSchema>,
+): FormulaContext {
+  // Paise throughout, as everywhere else money is handled.
+  const basic = roundPaise(body.wage * 0.5);
+  const hra = roundPaise(basic * 0.4);
+  const lta = roundPaise(basic * 0.08);
+  const standardAllowance = 416_700; // 4,167 a month, the seeded STD rule.
+  const allowance = hra + lta + standardAllowance;
+  const gross = basic + allowance;
+  const providentFund = -Math.min(roundPaise(basic * 0.12), 180_000);
+  const professionalTax = -20_000; // 200 a month.
+  const deduction = providentFund + professionalTax;
+
+  return {
+    rules: {
+      BASIC: basic,
+      HRA: hra,
+      STD: standardAllowance,
+      LTA: lta,
+      GROSS: gross,
+      PF: providentFund,
+      PT: professionalTax,
+      NET: gross + deduction,
+    },
+    categories: {
+      BASIC: basic,
+      ALLOWANCE: allowance,
+      GROSS: gross,
+      DEDUCTION: deduction,
+      NET: gross + deduction,
+    },
+    contract: { wage: body.wage },
+    worked: {
+      // Derived from the days the caller typed rather than fixed, so a
+      // formula prorating on hours moves when they change the day count.
+      // The token overtime is there for the same reason zero-filled rules
+      // were a problem: an overtime formula that always previews as 0 looks
+      // broken.
+      days: body.workedDays,
+      minutes: Math.round(body.workedDays * 8 * 60),
+      leaveDays: 0,
+      overtimeMinutes: 120,
+    },
+    employee: { seniorityYears: body.seniorityYears },
+  };
+}
+
 const ruleWithStructure = Prisma.validator<Prisma.SalaryRuleDefaultArgs>()({
   include: { structure: { select: { name: true } } },
 });
@@ -172,22 +243,20 @@ salaryRulesRouter.post(
   asyncRoute((req, res) => {
     const body = req.body as z.infer<typeof previewSchema>;
 
-    const context: FormulaContext = {
-      rules: {},
-      categories: {},
-      contract: { wage: body.wage },
-      worked: {
-        days: body.workedDays,
-        minutes: 0,
-        leaveDays: 0,
-        overtimeMinutes: 0,
-      },
-      employee: { seniorityYears: body.seniorityYears },
-    };
+    const context = sampleFormulaContext(body);
 
     try {
       const value = evaluateFormula(body.formula, context);
-      res.json({ ok: true, amount: roundPaise(value) });
+      // `illustrative` and `note` travel with the amount so the number can
+      // never be read as a real payslip line: the tester runs against a
+      // stand-in structure, and an author comparing this against an actual
+      // payslip should know why the two differ.
+      res.json({
+        ok: true,
+        amount: roundPaise(value),
+        illustrative: true,
+        note: 'Sample figures derived from the wage above, not a real payslip.',
+      });
     } catch (error) {
       res.json({
         ok: false,

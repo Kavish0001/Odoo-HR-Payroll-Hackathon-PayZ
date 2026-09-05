@@ -6,6 +6,8 @@ import { StatusBadge } from '../../components/data/StatusBadge.js';
 import { Card } from '../../components/ui/Card.js';
 import { useAuth } from '../../lib/auth.js';
 
+import { formatQty } from './format.js';
+
 /**
  * The Time Off dashboard the wireframe lists under the Time Off menu.
  *
@@ -13,11 +15,6 @@ import { useAuth } from '../../lib/auth.js';
  * on somebody. Balances come from the same derivation the allocations list
  * uses, so the two screens cannot disagree about a number.
  */
-
-function formatQty(value: number, unit: string): string {
-  const rounded = Math.round(value * 10) / 10;
-  return `${String(rounded)}${unit === 'HOURS' ? 'h' : 'd'}`;
-}
 
 export function TimeOffDashboardPage(): React.JSX.Element {
   const { user, allowed } = useAuth();

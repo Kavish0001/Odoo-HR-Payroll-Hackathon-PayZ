@@ -23,6 +23,7 @@ The point of the project is the **connected operational flow and business logic*
 - [Setup](#setup)
 - [Seed Data & Demo Scenarios](#seed-data--demo-scenarios)
 - [Out of Scope](#out-of-scope)
+- [Roadmap](#roadmap)
 
 ---
 
@@ -50,6 +51,7 @@ The point of the project is the **connected operational flow and business logic*
 - Two end-to-end demo scenarios (employee to payslip; allocation to request to balance)
 - Payslip PDF generation and bulk email from the Payrun
 - Live dashboard driven by real records, never hardcoded values
+- Future roadmap — [`ROADMAP.md`](ROADMAP.md)
 
 ---
 
@@ -362,9 +364,15 @@ The seed loads departments, employees, working schedules, historical and running
 
 **Scenario B — Allocation to Balance:** define a Time Off Type requiring allocation, allocate days and approve, employee submits a request, manager approves, balance drops, and the dashboard Time Off overview reflects it.
 
+**Blocked payrun:** the seed also leaves one `COMPUTED` run — _August 2026 Off-cycle Correction_, covering 16–31 August for two engineers already paid for the whole month — carrying a blocking `DUPLICATE_PAYSLIP` warning. Validate refuses it, and the warning cannot be acknowledged away; both are computed by the real Compute path rather than written into the database by hand. Leave durations in the seed are counted the same way: working days against the employee's own schedule, never calendar days.
+
 ## Out of Scope
 
 Deliberately excluded for the 24-hour build: SSO/OAuth and password-reset flows, multi-currency and tax-authority filings, accounting-ledger posting, recruitment and appraisal modules, expense claims, mobile apps, and a public employee self-service portal beyond the own-records views.
+
+## Roadmap
+
+[`ROADMAP.md`](ROADMAP.md) covers the rest of the deliverable: why each of the exclusions above was a choice rather than an oversight, the limitations of what _is_ here (single-tenant, no delivery pipeline, remaining N+1 queries in payslip compute, an untagged payslip PDF, an audit table nothing writes to), and the staged plan that follows from them.
 
 ---
 

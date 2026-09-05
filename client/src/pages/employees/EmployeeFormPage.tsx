@@ -16,7 +16,7 @@ import {
   useEmployees,
   useUpdateEmployee,
 } from '../../api/employees.js';
-import { useJobPositions } from '../../api/jobPositions.js';
+import { useJobPositionOptions } from '../../api/jobPositions.js';
 import { useWorkingSchedules } from '../../api/workingSchedules.js';
 import { FormShell } from '../../components/data/FormShell.js';
 import { PageHeader } from '../../components/data/PageHeader.js';
@@ -88,7 +88,7 @@ export function EmployeeFormPage(): React.JSX.Element {
 
   const employeeQuery = useEmployee(isNew ? undefined : id);
   const departmentsQuery = useDepartments({ pageSize: 200 });
-  const jobPositionsQuery = useJobPositions();
+  const jobPositionsQuery = useJobPositionOptions();
   const schedulesQuery = useWorkingSchedules({ pageSize: 200 });
   const managersQuery = useEmployees({ pageSize: 200 });
 

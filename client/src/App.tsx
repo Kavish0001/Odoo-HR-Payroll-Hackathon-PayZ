@@ -14,6 +14,8 @@ import { DepartmentFormPage } from './pages/departments/DepartmentFormPage.js';
 import { DepartmentsListPage } from './pages/departments/DepartmentsListPage.js';
 import { EmployeeFormPage } from './pages/employees/EmployeeFormPage.js';
 import { EmployeesListPage } from './pages/employees/EmployeesListPage.js';
+import { JobPositionFormPage } from './pages/jobPositions/JobPositionFormPage.js';
+import { JobPositionsListPage } from './pages/jobPositions/JobPositionsListPage.js';
 import { LandingPage } from './pages/landing/LandingPage.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { PayrunDetailPage } from './pages/payroll/PayrunDetailPage.js';
@@ -54,6 +56,11 @@ export function App(): React.JSX.Element {
             <Route path="/employees/:id" element={<EmployeeFormPage />} />
             <Route path="/departments" element={<DepartmentsListPage />} />
             <Route path="/departments/:id" element={<DepartmentFormPage />} />
+            <Route path="/job-positions" element={<JobPositionsListPage />} />
+            <Route
+              path="/job-positions/:id"
+              element={<JobPositionFormPage />}
+            />
             <Route
               path="/working-schedules"
               element={<WorkingSchedulesListPage />}

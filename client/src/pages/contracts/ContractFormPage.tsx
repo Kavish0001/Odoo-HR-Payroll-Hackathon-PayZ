@@ -16,7 +16,7 @@ import {
 } from '../../api/contracts.js';
 import { useDepartments } from '../../api/departments.js';
 import { useEmployees } from '../../api/employees.js';
-import { useJobPositions } from '../../api/jobPositions.js';
+import { useJobPositionOptions } from '../../api/jobPositions.js';
 import { useWorkingSchedules } from '../../api/workingSchedules.js';
 import { FormShell } from '../../components/data/FormShell.js';
 import { PageHeader } from '../../components/data/PageHeader.js';
@@ -71,7 +71,7 @@ export function ContractFormPage(): React.JSX.Element {
   const contractQuery = useContract(isNew ? undefined : id);
   const employeesQuery = useEmployees({ pageSize: 200 });
   const departmentsQuery = useDepartments({ pageSize: 200 });
-  const jobPositionsQuery = useJobPositions();
+  const jobPositionsQuery = useJobPositionOptions();
   const schedulesQuery = useWorkingSchedules({ pageSize: 200 });
 
   const createMutation = useCreateContract();

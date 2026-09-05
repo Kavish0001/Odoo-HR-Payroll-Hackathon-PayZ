@@ -231,6 +231,13 @@ async function loadDepartmentPoints(
   }));
 }
 
+/** "Aug 2026" -- the axis label, now that a point is a month and not a run. */
+const MONTH_LABEL = new Intl.DateTimeFormat('en-IN', {
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
 async function loadSalaryTrend(
   period: Period,
   employeeWhere: Prisma.EmployeeWhereInput,
@@ -238,7 +245,10 @@ async function loadSalaryTrend(
   const payruns = await prisma.payrun.findMany({
     where: { status: { not: 'DRAFT' }, periodEnd: { lte: period.end } },
     orderBy: { periodStart: 'desc' },
-    take: TREND_PERIODS,
+    // Payruns, not months: an off-cycle correction shares a month with the
+    // regular run, so fetching exactly TREND_PERIODS rows would return fewer
+    // than TREND_PERIODS points. Over-fetch, group, then keep the last N months.
+    take: TREND_PERIODS * 2,
     select: { id: true, name: true, periodStart: true },
   });
 
@@ -259,15 +269,38 @@ async function loadSalaryTrend(
 
   const totalsMap = new Map(totals.map((row) => [row.payrunId, row]));
 
-  return [...payruns].reverse().map((payrun) => {
+  /**
+   * One point per calendar month, not one per payrun.
+   *
+   * The chart is titled "Monthly Net Salary Trend", and a month can hold more
+   * than one run -- an off-cycle correction, a run split by employee type. As
+   * one-point-per-payrun those arrived as separate columns, so a two-payslip
+   * correction sat beside a 130-payslip month and the line fell off a cliff
+   * that represents no real change in payroll. Summing by month is both what
+   * the title promises and the only reading that survives a second run.
+   */
+  const byMonth = new Map<string, SalaryTrendPoint>();
+
+  for (const payrun of [...payruns].reverse()) {
     const total = totalsMap.get(payrun.id);
-    return {
-      period: payrun.name,
-      periodStart: payrun.periodStart.toISOString(),
-      totalNet: total?._sum.netAmount ?? 0,
-      payslipCount: total?._count._all ?? 0,
-    };
-  });
+    const month = payrun.periodStart.toISOString().slice(0, 7);
+    const existing = byMonth.get(month);
+
+    if (existing === undefined) {
+      byMonth.set(month, {
+        period: MONTH_LABEL.format(payrun.periodStart),
+        periodStart: payrun.periodStart.toISOString(),
+        totalNet: total?._sum.netAmount ?? 0,
+        payslipCount: total?._count._all ?? 0,
+      });
+      continue;
+    }
+
+    existing.totalNet += total?._sum.netAmount ?? 0;
+    existing.payslipCount += total?._count._all ?? 0;
+  }
+
+  return [...byMonth.values()].slice(-TREND_PERIODS);
 }
 
 async function loadAlerts(

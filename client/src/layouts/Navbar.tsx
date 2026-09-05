@@ -41,6 +41,11 @@ const NAV: NavItem[] = [
         permission: ['read', 'department'],
       },
       {
+        label: 'Job Positions',
+        to: '/job-positions',
+        permission: ['read', 'jobPosition'],
+      },
+      {
         label: 'Working Schedule',
         to: '/working-schedules',
         permission: ['read', 'workingSchedule'],
@@ -78,15 +83,17 @@ const NAV: NavItem[] = [
         to: '/time-off/requests',
         permission: ['read', 'timeOffRequest'],
       },
-      {
-        label: 'Allocations',
-        to: '/time-off/allocations',
-        permission: ['read', 'timeOffAllocation'],
-      },
+      // Types before Allocations, as the wireframe orders them: you define a
+      // type before you can allocate any of it.
       {
         label: 'Time Off Types',
         to: '/time-off/types',
         permission: ['read', 'timeOffType'],
+      },
+      {
+        label: 'Allocations',
+        to: '/time-off/allocations',
+        permission: ['read', 'timeOffAllocation'],
       },
     ],
   },

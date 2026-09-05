@@ -3,6 +3,7 @@ import {
   contractSchema,
   type ContractQuery,
   type ContractRow,
+  type ContractStatus,
 } from '@payz/shared';
 import { Prisma } from '@prisma/client';
 import { Router } from 'express';
@@ -44,6 +45,42 @@ function toDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+/**
+ * Rule C4: a contract whose end date has passed is expired, whether or not
+ * anything ever wrote EXPIRED to the row.
+ *
+ * Derived on read rather than swept by a job, and deliberately never written
+ * back. The stored status is what `contracts_no_overlapping_running` reads,
+ * so flipping RUNNING to EXPIRED in the table would release the rule C1
+ * overlap guard over a period that has already been worked — a renewal
+ * could then be backdated on top of the contract that actually paid it. The
+ * row stays RUNNING; only what the caller is shown changes.
+ *
+ * Compared as date strings, not timestamps: `endDate` is a DATE column read
+ * back as UTC midnight, so a `Date` comparison against local "now" makes a
+ * contract expire hours early or late depending on the server's zone.
+ */
+export function displayedStatus(
+  status: ContractStatus,
+  endDate: Date | null,
+  today: Date = new Date(),
+): ContractStatus {
+  if (status !== 'RUNNING' || endDate === null) {
+    return status;
+  }
+  // The last day is inclusive: a contract ending today is still running today.
+  return toDateOnly(endDate) < toDateOnly(today) ? 'EXPIRED' : status;
+}
+
+/**
+ * Every contract handed to a caller goes through here, so the C4 derivation
+ * applies to the list, the detail read and the create/update responses alike.
+ *
+ * The `status` filter on the list still matches the stored value, which is
+ * the honest thing for a filter to do: it is a query against the table, and
+ * a lapsed RUNNING row is genuinely still RUNNING as far as rule C1 is
+ * concerned.
+ */
 function toRow(contract: ContractWithRelations): ContractRow {
   return {
     id: String(contract.id),
@@ -55,7 +92,7 @@ function toRow(contract: ContractWithRelations): ContractRow {
     startDate: toDateOnly(contract.startDate),
     endDate: contract.endDate === null ? null : toDateOnly(contract.endDate),
     wageMonthly: contract.wageMonthly,
-    status: contract.status,
+    status: displayedStatus(contract.status, contract.endDate),
     scheduleName: contract.workingSchedule?.name ?? null,
     structureName: contract.salaryStructure?.name ?? null,
     notes: contract.notes,

@@ -1,18 +1,54 @@
 import { Prisma, type PrismaClient, type TimeOffStatus } from '@prisma/client';
 
-import { conflict, notFound, unprocessable } from '../../middleware/errors.js';
+import {
+  conflict,
+  notFound,
+  unprocessable,
+  type AppError,
+} from '../../middleware/errors.js';
 
 import {
   allocationCoversWindow,
   pickAllocationForRequest,
   requestNeedsAllocation,
   sumApprovedDurationByAllocation,
+  type AllocationValidityWindow,
 } from './balance.js';
 
 export interface ApproveRequestResult {
   id: number;
   status: TimeOffStatus;
   allocationId: number | null;
+}
+
+function toDateOnly(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function describeWindow(allocation: AllocationValidityWindow): string {
+  return `${toDateOnly(allocation.validFrom)} to ${
+    allocation.validTo === null ? 'no end date' : toDateOnly(allocation.validTo)
+  }`;
+}
+
+/**
+ * Rule T9's own failure, kept distinct from rule T3's.
+ *
+ * The two are refused at the same point in the flow but are not the same
+ * problem: T3 means the days have been used up, T9 means the days exist and
+ * the request is simply outside the dates they cover. Reporting T9 as
+ * INSUFFICIENT_BALANCE sends the approver hunting for a balance that is
+ * sitting right there, so the window that actually blocked it is named in
+ * the message and the code differs, letting the client branch on it.
+ */
+export function outsideAllocationWindow(
+  allocations: readonly AllocationValidityWindow[],
+): AppError {
+  const windows = allocations.map(describeWindow).join('; ');
+  return unprocessable(
+    'OUTSIDE_ALLOCATION_WINDOW',
+    `These dates fall outside every approved allocation for this leave type (valid ${windows})`,
+  );
 }
 
 /**
@@ -104,6 +140,14 @@ export async function approveTimeOffRequest(
       allocationCoversWindow(allocation, request.startDate, request.endDate),
     );
 
+    // The employee holds approved allocations for this type, but none of them
+    // spans these dates: that is a T9 refusal, not a T3 one, and saying so
+    // is the difference between "ask for a new allocation covering April" and
+    // "you are out of days".
+    if (approvedAllocations.length > 0 && inWindow.length === 0) {
+      throw outsideAllocationWindow(approvedAllocations);
+    }
+
     if (inWindow.length > 0) {
       const ids = inWindow.map((allocation) => allocation.id);
 
@@ -134,7 +178,9 @@ export async function approveTimeOffRequest(
       }
     }
 
-    // Rule T3: no approved, in-validity allocation had enough remaining.
+    // Rule T3: either the employee holds no approved allocation for this type
+    // at all, or the ones covering these dates are exhausted. Both are
+    // genuinely a balance problem, so both keep the original code.
     throw unprocessable(
       'INSUFFICIENT_BALANCE',
       'No approved allocation has enough remaining balance for this request',
