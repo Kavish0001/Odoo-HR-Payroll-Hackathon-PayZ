@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { toApiError } from '../../api/client.js';
+import { useCompanies } from '../../api/companies.js';
 import { useDashboard } from '../../api/dashboard.js';
 import { useDepartments } from '../../api/departments.js';
 import { PayslipStatusChart } from '../../components/charts/PayslipStatusChart.js';
@@ -55,6 +56,7 @@ export function PayrollDashboardPage(): React.JSX.Element {
 
   const periodStart = searchParams.get('periodStart') ?? '';
   const periodEnd = searchParams.get('periodEnd') ?? '';
+  const companyId = searchParams.get('companyId') ?? '';
   const departmentId = searchParams.get('departmentId') ?? '';
   const employeeTypeParam = searchParams.get('employeeType') ?? '';
   const employeeType = isEmployeeType(employeeTypeParam)
@@ -73,6 +75,16 @@ export function PayrollDashboardPage(): React.JSX.Element {
     });
   };
 
+  const companiesQuery = useCompanies();
+  const companyOptions = useMemo(
+    () =>
+      (companiesQuery.data ?? []).map((company) => ({
+        value: company.id,
+        label: company.name,
+      })),
+    [companiesQuery.data],
+  );
+
   const departmentsQuery = useDepartments({ pageSize: 200 });
   const departmentOptions = useMemo(
     () =>
@@ -86,6 +98,7 @@ export function PayrollDashboardPage(): React.JSX.Element {
   const dashboardQuery = useDashboard({
     periodStart: periodStart === '' ? undefined : periodStart,
     periodEnd: periodEnd === '' ? undefined : periodEnd,
+    companyId: companyId === '' ? undefined : companyId,
     departmentId: departmentId === '' ? undefined : departmentId,
     employeeType,
   });
@@ -176,13 +189,19 @@ export function PayrollDashboardPage(): React.JSX.Element {
           />
         </Field>
         <Field label="Company" htmlFor="dashboard-company" className="w-44">
-          {/* Single-tenant deployment (see server/company.ts): nothing to switch between yet. */}
+          {/* Named from the database rather than labelled "All Companies",
+              which told nobody whose payroll they were looking at. Most
+              deployments have one company, and then this reads as a caption;
+              it filters for real when there is more than one. */}
           <Select
             id="dashboard-company"
-            value="default"
-            onChange={() => undefined}
-            options={[{ value: 'default', label: 'All Companies' }]}
-            disabled
+            value={companyId}
+            onChange={(event) => {
+              setParam('companyId', event.target.value);
+            }}
+            options={companyOptions}
+            placeholder="All companies"
+            disabled={companyOptions.length === 0}
           />
         </Field>
       </Card>

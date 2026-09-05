@@ -15,6 +15,7 @@ import {
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { attendanceRouter } from './modules/attendance/attendance.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { companiesRouter } from './modules/common/companies.routes.js';
 import { contractsRouter } from './modules/contracts/contracts.routes.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { departmentsRouter } from './modules/departments/departments.routes.js';
@@ -103,6 +104,7 @@ export function createApp(): Express {
     { prefix: '/api/payruns', router: payrunsRouter },
     { prefix: '/api/payslips', router: payslipsRouter },
     { prefix: '/api/users', router: usersRouter },
+    { prefix: '/api/companies', router: companiesRouter },
     // Public: the landing page is outside the signed-in application.
     { prefix: '/api/stats', router: statsRouter },
     { prefix: '/api/salary-structures', router: salaryStructuresRouter },

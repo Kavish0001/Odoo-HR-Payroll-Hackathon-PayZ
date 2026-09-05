@@ -11,6 +11,7 @@ import { api } from './client.js';
 export interface DashboardParams {
   periodStart?: string | undefined;
   periodEnd?: string | undefined;
+  companyId?: string | undefined;
   departmentId?: string | undefined;
   employeeType?: EmployeeType | undefined;
 }

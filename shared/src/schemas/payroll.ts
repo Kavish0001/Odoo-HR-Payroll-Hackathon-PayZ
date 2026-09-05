@@ -298,6 +298,7 @@ export type WorkflowAction = z.infer<typeof workflowActionSchema>;
 export const dashboardQuerySchema = z.object({
   periodStart: daySchema.optional(),
   periodEnd: daySchema.optional(),
+  companyId: idSchema.optional(),
   departmentId: idSchema.optional(),
   employeeType: z.enum(EMPLOYEE_TYPES).optional(),
 });

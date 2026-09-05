@@ -163,27 +163,49 @@ function toRuleDefinition(rule: SeedRule, id: number): RuleDefinition {
   };
 }
 
+/** Every table the seed writes, children first -- the order TRUNCATE prints. */
+const SEEDED_TABLES = [
+  'payslip_lines',
+  'payroll_warnings',
+  'payslips',
+  'payruns',
+  'time_off_requests',
+  'time_off_allocations',
+  'time_off_types',
+  'attendances',
+  'contracts',
+  'salary_rules',
+  'salary_structures',
+  'audit_logs',
+  'users',
+  'schedule_lines',
+  'working_schedules',
+  'employees',
+  'departments',
+  'job_positions',
+  'companies',
+] as const;
+
+/**
+ * Empties everything and restarts the id sequences.
+ *
+ * `RESTART IDENTITY` is the part that matters. Ids are integers now, and a
+ * plain delete leaves the sequences where they were, so the second seed
+ * produced employees 131-260 and the third would have produced 261-390. Every
+ * URL written down during a demo would rot at the next reseed, and the ids
+ * would climb for no reason. Restarting means seeding twice gives the same
+ * database twice, which is what makes the seed a fixture rather than a
+ * one-shot.
+ *
+ * CASCADE covers the foreign keys, so the ordering above is documentation
+ * rather than a dependency -- and truncating all nineteen in one statement is
+ * considerably faster than nineteen deletes.
+ */
 async function clearAll(): Promise<void> {
-  // Children before parents.
-  await prisma.payslipLine.deleteMany();
-  await prisma.payrollWarning.deleteMany();
-  await prisma.payslip.deleteMany();
-  await prisma.payrun.deleteMany();
-  await prisma.timeOffRequest.deleteMany();
-  await prisma.timeOffAllocation.deleteMany();
-  await prisma.timeOffType.deleteMany();
-  await prisma.attendance.deleteMany();
-  await prisma.contract.deleteMany();
-  await prisma.salaryRule.deleteMany();
-  await prisma.salaryStructure.deleteMany();
-  await prisma.auditLog.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.scheduleLine.deleteMany();
-  await prisma.workingSchedule.deleteMany();
-  await prisma.employee.deleteMany();
-  await prisma.department.deleteMany();
-  await prisma.jobPosition.deleteMany();
-  await prisma.company.deleteMany();
+  const tables = SEEDED_TABLES.map((table) => `"${table}"`).join(', ');
+  await prisma.$executeRawUnsafe(
+    `TRUNCATE TABLE ${tables} RESTART IDENTITY CASCADE`,
+  );
 }
 
 async function main(): Promise<void> {
@@ -702,7 +724,12 @@ async function main(): Promise<void> {
     // Two to four PTO requests each across the year, mostly approved.
     const requestCount = 2 + Math.floor(random() * 3);
     for (let n = 0; n < requestCount; n += 1) {
-      const month = 2 + Math.floor(random() * 7);
+      // February through September. September is the month the demo opens in,
+      // so leaving it out made "approved time off this period" read zero on
+      // the dashboard for the one period anybody looks at first. Some of
+      // those September dates fall after the seed's today, which is correct:
+      // upcoming leave is exactly what a pending approval queue is for.
+      const month = 2 + Math.floor(random() * 8);
       const startDay = 1 + Math.floor(random() * 22);
       const duration = 1 + Math.floor(random() * 3);
       const start = day(
@@ -743,8 +770,9 @@ async function main(): Promise<void> {
 
     // A sick day or two, needing no allocation at all.
     if (sickTypeId !== undefined && random() < 0.5) {
+      // June through September, for the same reason.
       const start = day(
-        `2026-0${String(6 + Math.floor(random() * 3))}-${String(5 + Math.floor(random() * 20)).padStart(2, '0')}`,
+        `2026-0${String(6 + Math.floor(random() * 4))}-${String(5 + Math.floor(random() * 20)).padStart(2, '0')}`,
       );
       await prisma.timeOffRequest.create({
         data: {

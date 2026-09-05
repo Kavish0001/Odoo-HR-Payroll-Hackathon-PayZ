@@ -32,9 +32,14 @@ interface Period {
 
 /**
  * The selected window. When the caller does not pin both ends, the dashboard
- * falls back to the most recently finalised payroll period so the screen
- * never opens on an empty draft month (September 2026 in the seed has no
- * payslips yet).
+ * falls back to the most recent period that actually has payslips in it, so
+ * the screen never opens on a month with nothing to show.
+ *
+ * The test is "has payslips", not "is not a draft". Those are usually the
+ * same thing -- the current month is seeded as an empty draft -- but a payrun
+ * that has been computed and then emptied, or advanced with nobody eligible,
+ * is equally barren and its status says otherwise. Asking the question we
+ * actually mean is what keeps every KPI on this screen from reading zero.
  */
 async function resolvePeriod(query: DashboardQuery): Promise<Period | null> {
   if (query.periodStart !== undefined && query.periodEnd !== undefined) {
@@ -42,7 +47,7 @@ async function resolvePeriod(query: DashboardQuery): Promise<Period | null> {
   }
 
   const latest = await prisma.payrun.findFirst({
-    where: { status: { not: 'DRAFT' } },
+    where: { status: { not: 'DRAFT' }, payslips: { some: {} } },
     orderBy: { periodEnd: 'desc' },
     select: { periodStart: true, periodEnd: true },
   });
@@ -62,6 +67,11 @@ function previousPeriodOf(period: Period): Period {
 
 function employeeFilter(query: DashboardQuery): Prisma.EmployeeWhereInput {
   const where: Prisma.EmployeeWhereInput = {};
+  // Every figure on this screen is reached through employeeWhere, so scoping
+  // the company here scopes the whole dashboard in one place.
+  if (query.companyId !== undefined) {
+    where.companyId = query.companyId;
+  }
   if (query.departmentId !== undefined) {
     where.departmentId = query.departmentId;
   }
