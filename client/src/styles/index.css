@@ -59,51 +59,68 @@
   --color-metal-300: oklch(0.86 0.004 260);
 
   /* ---- Semantic hues ----
-     Every status colour means one thing across the whole app, so a colour is
-     readable without its label. Chroma and lightness are held close between
-     hues so no single status shouts louder than the others, and each pairs a
-     text tone with a tinted surface for chips and banners. */
+     Each hue carries four steps rather than a flat pair, so a screen can build
+     depth without inventing colours: -soft for chip and banner fills, -line for
+     their borders, the base for text and icons, -strong for hover and emphasis.
+     Lightness and chroma are held close across hues so no status shouts louder
+     than another, and the base steps all clear 4.5:1 on white. */
 
   /* Emerald: active, running, approved, present, paid. */
-  --color-success: oklch(0.55 0.14 155);
-  --color-success-soft: oklch(0.95 0.04 155);
+  --color-success-soft: oklch(0.96 0.035 155);
+  --color-success-line: oklch(0.86 0.07 155);
+  --color-success: oklch(0.52 0.13 155);
+  --color-success-strong: oklch(0.42 0.12 155);
 
   /* Amber: pending, to approve, late, draft, advisory warnings. */
-  --color-warning: oklch(0.66 0.15 75);
-  --color-warning-soft: oklch(0.96 0.05 75);
+  --color-warning-soft: oklch(0.96 0.045 80);
+  --color-warning-line: oklch(0.87 0.09 80);
+  --color-warning: oklch(0.56 0.13 70);
+  --color-warning-strong: oklch(0.46 0.12 65);
 
-  /* Blue: informational, computed, paid time off, neutral emphasis. */
-  --color-info: oklch(0.58 0.15 250);
-  --color-info-soft: oklch(0.95 0.04 250);
+  /* Blue: informational, computed, neutral emphasis, primary actions. */
+  --color-info-soft: oklch(0.96 0.03 250);
+  --color-info-line: oklch(0.86 0.07 250);
+  --color-info: oklch(0.53 0.16 250);
+  --color-info-strong: oklch(0.44 0.16 253);
 
   /* Violet: payroll and money surfaces, distinct from HR blue. */
-  --color-accent: oklch(0.55 0.17 300);
-  --color-accent-soft: oklch(0.95 0.04 300);
+  --color-accent-soft: oklch(0.96 0.03 300);
+  --color-accent-line: oklch(0.87 0.06 300);
+  --color-accent: oklch(0.52 0.17 300);
+  --color-accent-strong: oklch(0.43 0.16 302);
 
   /* Teal: attendance and time, distinct from both blue and green. */
-  --color-teal: oklch(0.6 0.11 195);
-  --color-teal-soft: oklch(0.95 0.035 195);
+  --color-teal-soft: oklch(0.96 0.03 195);
+  --color-teal-line: oklch(0.86 0.06 195);
+  --color-teal: oklch(0.5 0.1 195);
+  --color-teal-strong: oklch(0.41 0.09 197);
 
   /* Mint-mark red. Reserved: destructive actions, blocking payroll warnings,
      refused and absent. Nothing merely informational uses it, so when it
      appears it still means stop. */
-  --color-danger: oklch(0.55 0.21 26);
-  --color-danger-soft: oklch(0.95 0.04 26);
+  --color-danger-soft: oklch(0.96 0.035 26);
+  --color-danger-line: oklch(0.86 0.08 26);
+  --color-danger: oklch(0.53 0.2 26);
+  --color-danger-strong: oklch(0.44 0.19 26);
 
   /* Slate: expired, cancelled, inactive. Present but retired. */
-  --color-neutral: oklch(0.55 0.02 260);
-  --color-neutral-soft: oklch(0.95 0.005 260);
+  --color-neutral-soft: oklch(0.96 0.004 260);
+  --color-neutral-line: oklch(0.88 0.006 260);
+  --color-neutral: oklch(0.52 0.02 260);
+  --color-neutral-strong: oklch(0.42 0.02 260);
 
   /* Categorical series for dashboard charts, in plot order. Ordered so
      adjacent series stay distinguishable, including for the most common
      colour-vision deficiencies, where blue against amber survives and red
      against green does not. */
-  --color-chart-1: oklch(0.58 0.15 250);
-  --color-chart-2: oklch(0.55 0.14 155);
-  --color-chart-3: oklch(0.66 0.15 75);
-  --color-chart-4: oklch(0.55 0.17 300);
-  --color-chart-5: oklch(0.6 0.11 195);
-  --color-chart-6: oklch(0.55 0.21 26);
+  --color-chart-1: oklch(0.53 0.16 250);
+  --color-chart-2: oklch(0.52 0.13 155);
+  --color-chart-3: oklch(0.62 0.14 75);
+  --color-chart-4: oklch(0.52 0.17 300);
+  --color-chart-5: oklch(0.5 0.1 195);
+  --color-chart-6: oklch(0.53 0.2 26);
+  --color-chart-7: oklch(0.55 0.12 330);
+  --color-chart-8: oklch(0.58 0.1 110);
 }
 
 :root {
