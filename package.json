@@ -18,7 +18,7 @@
     "db:reset": "docker compose down -v && docker compose up -d",
     "db:migrate": "npm run -w server db:migrate",
     "db:seed": "npm run -w server db:seed",
-    "mail:check": "npm run -w server mail:check",
+    "mail:check": "npm run -w server mail:check --",
     "db:studio": "npm run -w server db:studio",
     "dev": "concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "npm run -w server dev",
