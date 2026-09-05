@@ -203,7 +203,7 @@ async function main(): Promise<void> {
         create: weekdays.map((dayOfWeek) => ({
           dayOfWeek,
           startMinute: at(10),
-          endMinute: at(18, 30),
+          endMinute: at(18),
           breakMinutes: 30,
         })),
       },

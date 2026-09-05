@@ -14,6 +14,11 @@ import {
 } from './middleware/assert-guarded.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { contractsRouter } from './modules/contracts/contracts.routes.js';
+import { departmentsRouter } from './modules/departments/departments.routes.js';
+import { employeesRouter } from './modules/employees/employees.routes.js';
+import { jobPositionsRouter } from './modules/job-positions/job-positions.routes.js';
+import { schedulesRouter } from './modules/schedules/schedules.routes.js';
 
 /**
  * The Express app, built separately from the listener so tests can mount it
@@ -70,7 +75,14 @@ export function createApp(): Express {
 
   // Every router is registered here with its prefix, so the guard assertion
   // sees exactly what is mounted.
-  const mounts: RouterMount[] = [{ prefix: '/api/auth', router: authRouter }];
+  const mounts: RouterMount[] = [
+    { prefix: '/api/auth', router: authRouter },
+    { prefix: '/api/departments', router: departmentsRouter },
+    { prefix: '/api/job-positions', router: jobPositionsRouter },
+    { prefix: '/api/working-schedules', router: schedulesRouter },
+    { prefix: '/api/employees', router: employeesRouter },
+    { prefix: '/api/contracts', router: contractsRouter },
+  ];
 
   for (const mount of mounts) {
     app.use(mount.prefix, mount.router);
