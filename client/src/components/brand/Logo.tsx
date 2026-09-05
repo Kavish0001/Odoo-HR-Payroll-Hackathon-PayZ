@@ -9,10 +9,9 @@ interface LogoProps {
 /**
  * The PayZ coin.
  *
- * One asset at every size. There was briefly a second, simplified mark for
- * small renders, but two marks means the favicon, the navbar and the login
- * screen can drift apart, and a logo that changes shape is not a logo. The
- * single mark is drawn simply enough to survive 16px.
+ * The coin, at every size. One asset for the favicon, the navbar, the login
+ * screen and the PDF alike: a logo that changes shape between places is not
+ * a logo.
  */
 export function Logo({
   size = 32,
@@ -22,7 +21,7 @@ export function Logo({
   return (
     <span className={`inline-flex items-center gap-2.5 ${className ?? ''}`}>
       <img
-        src="/payz-mark.svg"
+        src="/payz-logo.svg"
         width={size}
         height={size}
         alt=""

@@ -26,6 +26,7 @@ import { SalaryStructureFormPage } from './pages/salaryConfig/SalaryStructureFor
 import { SalaryStructuresListPage } from './pages/salaryConfig/SalaryStructuresListPage.js';
 import { AllocationFormPage } from './pages/timeoff/AllocationFormPage.js';
 import { AllocationsListPage } from './pages/timeoff/AllocationsListPage.js';
+import { TimeOffDashboardPage } from './pages/timeoff/TimeOffDashboardPage.js';
 import { TimeOffRequestFormPage } from './pages/timeoff/TimeOffRequestFormPage.js';
 import { TimeOffRequestsListPage } from './pages/timeoff/TimeOffRequestsListPage.js';
 import { TimeOffTypeFormPage } from './pages/timeoff/TimeOffTypeFormPage.js';
@@ -64,6 +65,10 @@ export function App(): React.JSX.Element {
             <Route path="/contracts/:id" element={<ContractFormPage />} />
             <Route path="/attendance" element={<AttendanceListPage />} />
             <Route path="/attendance/:id" element={<AttendanceFormPage />} />
+            <Route
+              path="/time-off/dashboard"
+              element={<TimeOffDashboardPage />}
+            />
             <Route
               path="/time-off/requests"
               element={<TimeOffRequestsListPage />}

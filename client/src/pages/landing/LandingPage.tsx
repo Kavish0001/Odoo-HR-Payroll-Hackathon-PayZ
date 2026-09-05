@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 
+import { usePublicStats } from '../../api/stats.js';
 import { Logo } from '../../components/brand/Logo.js';
 import { MachinedBackdrop } from '../../components/brand/MachinedBackdrop.js';
 
@@ -36,12 +37,7 @@ const FEATURES = [
   },
 ] as const;
 
-/** Figures from the seeded workspace, so the page does not invent numbers. */
-const NUMBERS = [
-  { value: '33', label: 'Payroll periods on record' },
-  { value: '56,512', label: 'Salary lines, each computed' },
-  { value: '0', label: 'Hardcoded figures' },
-] as const;
+const compact = (value: number): string => value.toLocaleString('en-IN');
 
 /** The workflow, stated as the product's spine. */
 const STAGES = [
@@ -68,6 +64,23 @@ const STAGES = [
 ] as const;
 
 export function LandingPage(): React.JSX.Element {
+  // Read from the live workspace rather than typed into the page. A marketing
+  // page claiming "no hardcoded values" while hardcoding its own figures is
+  // the exact thing the brief warns against.
+  const stats = usePublicStats();
+
+  const numbers = [
+    {
+      value: stats.data ? compact(stats.data.payrollPeriods) : '—',
+      label: 'Payroll periods on record',
+    },
+    {
+      value: stats.data ? compact(stats.data.payslipLines) : '—',
+      label: 'Salary lines, each computed',
+    },
+    { value: '0', label: 'Hardcoded figures' },
+  ];
+
   return (
     <div className="text-ink relative min-h-screen">
       <MachinedBackdrop />
@@ -130,7 +143,7 @@ export function LandingPage(): React.JSX.Element {
       {/* ---- Numbers ------------------------------------------------------ */}
       <section className="border-steel-300 border-b">
         <div className="divide-steel-300 mx-auto grid max-w-6xl grid-cols-1 divide-y px-6 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          {NUMBERS.map((item) => (
+          {numbers.map((item) => (
             <div key={item.label} className="px-6 py-10 first:pl-0 last:pr-0">
               <p className="font-display text-4xl font-bold tabular-nums">
                 {item.value}
@@ -220,8 +233,9 @@ export function LandingPage(): React.JSX.Element {
             Ready to run a payrun?
           </h2>
           <p className="text-muted mx-auto mt-4 max-w-md text-sm">
-            The demo workspace holds 130 employees, three years of payroll and
-            34,000 attendance records. Nothing in it is a placeholder.
+            {stats.data
+              ? `The demo workspace holds ${compact(stats.data.employees)} employees, ${compact(stats.data.payrollPeriods)} payroll periods and ${compact(stats.data.attendanceRecords)} attendance records. Nothing in it is a placeholder.`
+              : 'The demo workspace is loaded with employees, contracts, attendance and finalised payroll periods.'}
           </p>
           <Link
             to="/login"

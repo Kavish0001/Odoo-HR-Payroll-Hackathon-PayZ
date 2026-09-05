@@ -34,6 +34,7 @@ const scheduleWithRelations =
   Prisma.validator<Prisma.WorkingScheduleDefaultArgs>()({
     include: {
       lines: true,
+      company: { select: { name: true } },
       _count: { select: { employees: true } },
     },
   });
@@ -62,6 +63,7 @@ function toRow(
     id: schedule.id,
     name: schedule.name,
     calendarType: schedule.calendarType,
+    companyName: schedule.company.name,
     timezone: schedule.timezone,
     active: schedule.active,
     daysPerWeek: daysPerWeek(schedule.lines),

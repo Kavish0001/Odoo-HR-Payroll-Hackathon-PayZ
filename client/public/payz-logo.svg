@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <defs>
+    <!-- Brushed silver / gunmetal metal -->
+    <radialGradient id="coinFace" cx="35%" cy="28%" r="78%">
+      <stop offset="0" stop-color="#F7F8F9"/>
+      <stop offset=".28" stop-color="#D9DCE0"/>
+      <stop offset=".58" stop-color="#9EA3A9"/>
+      <stop offset=".82" stop-color="#5C6167"/>
+      <stop offset="1" stop-color="#2B2E33"/>
+    </radialGradient>
+
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F5F6F7"/>
+      <stop offset=".22" stop-color="#BFC3C7"/>
+      <stop offset=".5" stop-color="#555A60"/>
+      <stop offset=".75" stop-color="#D8DADD"/>
+      <stop offset="1" stop-color="#363A3F"/>
+    </linearGradient>
+
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF4A4A"/>
+      <stop offset=".5" stop-color="#FF0000"/>
+      <stop offset="1" stop-color="#A90000"/>
+    </linearGradient>
+
+    <linearGradient id="slot" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#111316"/>
+      <stop offset=".35" stop-color="#34383D"/>
+      <stop offset=".65" stop-color="#111316"/>
+      <stop offset="1" stop-color="#050607"/>
+    </linearGradient>
+
+    <!-- Fine radial machining lines -->
+    <pattern id="brush" width="4" height="4" patternUnits="userSpaceOnUse">
+      <path d="M0 1.2H4 M0 3.2H4" stroke="#fff" stroke-opacity=".08" stroke-width=".7"/>
+      <path d="M0 2.2H4" stroke="#111" stroke-opacity=".055" stroke-width=".55"/>
+    </pattern>
+
+    <!-- Reeded edge -->
+    <pattern id="reed" width="12" height="34" patternUnits="userSpaceOnUse">
+      <rect width="12" height="34" fill="url(#rim)"/>
+      <path d="M2 0L5 34 M7 0L10 34" stroke="#25282C" stroke-width="1.8" opacity=".75"/>
+      <path d="M3.5 0L6.5 34 M8.5 0L11 34" stroke="#F4F5F6" stroke-width="1.1" opacity=".7"/>
+    </pattern>
+
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
+      <feOffset dy="9"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".32"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+
+    <clipPath id="faceClip">
+      <circle cx="500" cy="500" r="405"/>
+    </clipPath>
+  </defs>
+
+  <!-- Coin only: transparent background -->
+  <g filter="url(#shadow)">
+    <!-- outer body -->
+    <circle cx="500" cy="500" r="470" fill="url(#rim)"/>
+    <circle cx="500" cy="500" r="456" fill="url(#reed)"/>
+
+    <!-- inner rim highlights -->
+    <circle cx="500" cy="500" r="433" fill="none" stroke="#F4F5F6" stroke-opacity=".7" stroke-width="7"/>
+    <circle cx="500" cy="500" r="425" fill="none" stroke="#202328" stroke-width="7"/>
+
+    <!-- coin face -->
+    <circle cx="500" cy="500" r="405" fill="url(#coinFace)"/>
+    <circle cx="500" cy="500" r="405" fill="url(#brush)" opacity=".72"/>
+
+    <!-- subtle machining rings -->
+    <circle cx="500" cy="500" r="397" fill="none" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="2"/>
+    <circle cx="500" cy="500" r="382" fill="none" stroke="#25282D" stroke-opacity=".16" stroke-width="2"/>
+    <circle cx="500" cy="500" r="365" fill="none" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="2"/>
+
+    <!-- central minted grille/emblem -->
+    <g>
+      <!-- recessed backing -->
+      <path d="M365 500
+               C365 410 425 348 500 348
+               C575 348 635 410 635 500
+               C635 590 575 652 500 652
+               C425 652 365 590 365 500Z"
+            fill="#262A2F" opacity=".38"/>
+
+      <!-- engraved vertical slots, varying heights -->
+      <g fill="url(#slot)" stroke="#E9EBED" stroke-opacity=".68" stroke-width="2">
+        <path d="M392 477 Q392 500 392 523 Q392 537 405 542 L405 458 Q392 463 392 477Z"/>
+        <path d="M420 442 Q420 500 420 558 Q420 571 433 577 L433 423 Q420 429 420 442Z"/>
+        <path d="M449 407 Q449 500 449 593 Q449 605 462 612 L462 388 Q449 395 449 407Z"/>
+        <path d="M478 375 Q478 500 478 625 Q478 637 491 642 L491 358 Q478 363 478 375Z"/>
+        <path d="M507 358 Q507 500 507 642 Q520 637 520 625 L520 375 Q520 363 507 358Z"/>
+        <path d="M536 388 Q536 500 536 612 Q549 605 549 593 L549 407 Q549 395 536 388Z"/>
+        <path d="M565 423 Q565 500 565 577 Q578 571 578 558 L578 442 Q578 429 565 423Z"/>
+        <path d="M594 458 Q594 500 594 542 Q607 537 607 523 L607 477 Q607 463 594 458Z"/>
+      </g>
+
+      <!-- crisp inner engraving lines -->
+      <path d="M365 500 C365 410 425 348 500 348 C575 348 635 410 635 500"
+            fill="none" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="3"/>
+      <path d="M365 500 C365 590 425 652 500 652 C575 652 635 590 635 500"
+            fill="none" stroke="#111418" stroke-opacity=".32" stroke-width="4"/>
+    </g>
+
+    <!-- tiny red mint mark on lower rim -->
+    <path d="M445 914 Q500 925 555 914 L551 943 Q500 953 449 943 Z"
+          fill="url(#red)" stroke="#FF6B6B" stroke-opacity=".65" stroke-width="2"/>
+    <path d="M456 924 Q500 932 544 924" fill="none" stroke="#FFFFFF" stroke-opacity=".35" stroke-width="2"/>
+
+    <!-- rim highlight -->
+    <circle cx="500" cy="500" r="466" fill="none" stroke="#FFFFFF" stroke-opacity=".25" stroke-width="3"/>
+  </g>
+</svg>

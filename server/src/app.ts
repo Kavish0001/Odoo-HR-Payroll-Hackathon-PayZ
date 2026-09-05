@@ -25,6 +25,7 @@ import { payslipsRouter } from './modules/payruns/payslips.routes.js';
 import { salaryRulesRouter } from './modules/salary-config/salary-rules.routes.js';
 import { salaryStructuresRouter } from './modules/salary-config/salary-structures.routes.js';
 import { schedulesRouter } from './modules/schedules/schedules.routes.js';
+import { statsRouter } from './modules/stats/stats.routes.js';
 import { allocationsRouter } from './modules/timeoff/allocations.routes.js';
 import { timeOffRequestsRouter } from './modules/timeoff/time-off-requests.routes.js';
 import { timeOffTypesRouter } from './modules/timeoff/time-off-types.routes.js';
@@ -102,6 +103,8 @@ export function createApp(): Express {
     { prefix: '/api/payruns', router: payrunsRouter },
     { prefix: '/api/payslips', router: payslipsRouter },
     { prefix: '/api/users', router: usersRouter },
+    // Public: the landing page is outside the signed-in application.
+    { prefix: '/api/stats', router: statsRouter },
     { prefix: '/api/salary-structures', router: salaryStructuresRouter },
     { prefix: '/api/salary-rules', router: salaryRulesRouter },
   ];

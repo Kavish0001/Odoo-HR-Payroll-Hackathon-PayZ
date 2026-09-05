@@ -101,6 +101,7 @@ export interface WorkingScheduleRow {
   id: string;
   name: string;
   calendarType: string;
+  companyName: string;
   timezone: string;
   active: boolean;
   /** Derived from the lines, never entered by hand (rule S1). */

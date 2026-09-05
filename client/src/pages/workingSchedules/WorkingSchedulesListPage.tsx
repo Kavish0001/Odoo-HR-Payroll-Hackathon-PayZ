@@ -48,12 +48,10 @@ export function WorkingSchedulesListPage(): React.JSX.Element {
           <span className="font-mono">{row.original.hoursPerWeek}h</span>
         ),
       },
-      // The schema has no multi-company field yet, so "Calendar Type" stands
-      // in for the wireframe's "Company" column.
       {
-        id: 'calendarType',
-        header: 'Calendar Type',
-        accessorKey: 'calendarType',
+        id: 'company',
+        header: 'Company',
+        accessorKey: 'companyName',
       },
       {
         id: 'status',

@@ -67,6 +67,12 @@ const NAV: NavItem[] = [
     label: 'Time Off',
     permission: ['read', 'timeOffRequest'],
     children: [
+      // The wireframe lists Dashboard first under Time Off.
+      {
+        label: 'Dashboard',
+        to: '/time-off/dashboard',
+        permission: ['read', 'timeOffRequest'],
+      },
       {
         label: 'Time Offs',
         to: '/time-off/requests',

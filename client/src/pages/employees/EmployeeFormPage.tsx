@@ -214,6 +214,15 @@ export function EmployeeFormPage(): React.JSX.Element {
                 to={`/time-off/requests?employeeId=${id}`}
                 tone="info"
               />
+              {/* B2.2 lists four related records, not three: the leave balance
+                  an employee holds is a different question from the leave they
+                  have asked for. */}
+              <SmartButton
+                label="Allocations"
+                count={counts.allocations}
+                to={`/time-off/allocations?employeeId=${id}`}
+                tone="info"
+              />
             </div>
           ) : undefined
         }
