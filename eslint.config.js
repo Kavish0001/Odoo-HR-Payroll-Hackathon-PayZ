@@ -128,6 +128,11 @@ export default tseslint.config(
 
   /* Config files and tests run outside the strict app rules. */
   {
+    // The seed prints the demo credentials, which is its whole purpose.
+    files: ['server/prisma/seed.ts'],
+    rules: { 'no-console': 'off' },
+  },
+  {
     files: ['**/*.config.{js,ts}', '**/*.test.ts', '**/*.spec.ts'],
     rules: {
       'no-console': 'off',

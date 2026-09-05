@@ -1,66 +1,84 @@
-import { useEffect, useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-import { Logo } from './components/brand/Logo.js';
-
-interface HealthResponse {
-  status: string;
-  database: { connected: boolean; host: string };
-  uptime: number;
-}
+import { AppLayout } from './layouts/AppLayout.js';
+import { AuthProvider } from './lib/auth.js';
+import { LoginPage } from './pages/LoginPage.js';
+import { Placeholder } from './pages/Placeholder.js';
 
 /**
- * Placeholder shell for P0. Replaced by the router and AppLayout in P1.
- * It calls /api/health so the checkpoint proves the proxy and the API are
- * actually wired, not merely that both processes start.
+ * Routes mirror the wireframe navbar. Screens land module by module from P2
+ * onward; each renders a placeholder for now so the navigation shape is real
+ * and clickable from the start.
  */
 export function App(): React.JSX.Element {
-  const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch('/api/health')
-      .then((response) => response.json() as Promise<HealthResponse>)
-      .then(setHealth)
-      .catch((cause: unknown) => {
-        setError(cause instanceof Error ? cause.message : 'Unknown error');
-      });
-  }, []);
-
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-8 px-6">
-      <header className="flex items-center gap-4">
-        <Logo size={64} />
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">PayZ</h1>
-          <p className="text-muted text-sm">
-            Integrated HR &amp; Payroll platform
-          </p>
-        </div>
-      </header>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
 
-      <section className="border-line bg-raised rounded-lg border p-4">
-        <h2 className="mb-3 text-xs font-medium tracking-wide uppercase">
-          API status
-        </h2>
-        {error !== null && (
-          <p className="text-danger font-mono text-sm">{error}</p>
-        )}
-        {health === null && error === null && (
-          <p className="text-muted font-mono text-sm">checking…</p>
-        )}
-        {health !== null && (
-          <dl className="grid grid-cols-[8rem_1fr] gap-y-1 font-mono text-sm">
-            <dt className="text-muted">status</dt>
-            <dd>{health.status}</dd>
-            <dt className="text-muted">database</dt>
-            <dd>{health.database.connected ? 'connected' : 'unreachable'}</dd>
-            <dt className="text-muted">host</dt>
-            <dd>{health.database.host}</dd>
-            <dt className="text-muted">uptime</dt>
-            <dd>{health.uptime}s</dd>
-          </dl>
-        )}
-      </section>
-    </main>
+          <Route element={<AppLayout />}>
+            <Route
+              path="/employees"
+              element={<Placeholder title="Employees" />}
+            />
+            <Route
+              path="/departments"
+              element={<Placeholder title="Departments" />}
+            />
+            <Route
+              path="/working-schedules"
+              element={<Placeholder title="Working Schedules" />}
+            />
+            <Route
+              path="/contracts"
+              element={<Placeholder title="Contracts" />}
+            />
+            <Route
+              path="/attendance"
+              element={<Placeholder title="Attendance" />}
+            />
+            <Route
+              path="/time-off/requests"
+              element={<Placeholder title="Time Off Requests" />}
+            />
+            <Route
+              path="/time-off/allocations"
+              element={<Placeholder title="Allocations" />}
+            />
+            <Route
+              path="/time-off/types"
+              element={<Placeholder title="Time Off Types" />}
+            />
+            <Route
+              path="/payroll/payruns"
+              element={<Placeholder title="Payruns" />}
+            />
+            <Route
+              path="/payroll/payslips"
+              element={<Placeholder title="Payslips" />}
+            />
+            <Route
+              path="/payroll/structures"
+              element={<Placeholder title="Salary Structures" />}
+            />
+            <Route
+              path="/payroll/rules"
+              element={<Placeholder title="Salary Rules" />}
+            />
+            <Route
+              path="/dashboard"
+              element={<Placeholder title="Payroll Dashboard" />}
+            />
+            <Route
+              path="/admin/users"
+              element={<Placeholder title="Users" />}
+            />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/employees" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
