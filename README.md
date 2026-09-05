@@ -14,7 +14,9 @@ The point of the project is the **connected operational flow and business logic*
 - [Core Business Rules](#core-business-rules)
 - [Payrun Workflow](#payrun-workflow)
 - [Roles & Permissions](#roles--permissions)
+- [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
+- [Guardrails](#guardrails)
 - [Screens & Routes](#screens--routes)
 - [Project Structure](#project-structure)
 - [Setup](#setup)
@@ -92,20 +94,68 @@ These are the rules the system enforces, and the reason the project is more than
 | **HR Payroll Manager** | HR Payroll User plus full CRUD on Payruns, Payslips, Structures and Rules. |
 | **Admin** | Everything, plus user management and role assignment. |
 
+## Architecture
+
+A dedicated backend and a separate frontend, sharing one validation layer.
+
+```
+┌──────────────────────┐        ┌───────────────────────┐        ┌──────────────────┐
+│  client/             │  /api  │  server/              │        │  PostgreSQL 17   │
+│  Vite + React + TS   │───────►│  Express + TS         │───────►│  in Docker       │
+│  :5173               │ proxy  │  Prisma · Zod · JWT   │ Prisma │  :5433           │
+└──────────────────────┘        │  payroll engine       │        └──────────────────┘
+           │                    │  PDF · Gmail SMTP     │
+           └──── shared/ ───────┤  :4000                │
+                zod schemas     └───────────────────────┘
+                + TS types
+```
+
+The payroll engine, RBAC guards and dashboard aggregations live in the API — unambiguously server-side and independently testable. `shared/` holds the Zod schemas and types, so the API validator and the React forms can never drift apart.
+
 ## Tech Stack
 
-| Layer | Choice | Why |
-| --- | --- | --- |
-| Framework | **Next.js 15 (App Router) + TypeScript** | One deployable for UI and API; server actions keep payroll logic on the server |
-| Styling | **Tailwind CSS v4** + shadcn/ui | Fast, consistent, Odoo-like density |
-| Database | **PostgreSQL** (SQLite for zero-setup local dev) | Real relational integrity for the entity graph |
-| ORM | **Prisma** | Typed models and migrations that match the entity design |
-| Auth | Session cookie (JWT via `jose`) + `bcrypt` | Minimal config, role claims enforced server-side |
-| Validation | **Zod** | Shared request and form schemas |
-| Charts | **Recharts** | Dashboard trend and department charts |
-| PDF | **@react-pdf/renderer** | Server-side payslip PDF without a headless browser |
-| Email | **Nodemailer** (SMTP, console transport fallback) | Bulk payslip delivery from the Payrun |
-| Formulas | Sandboxed expression evaluator | Salary-rule `FORMULA` computation with a restricted context |
+**Frontend — `client/`**
+
+| Concern | Choice |
+| --- | --- |
+| Build | Vite 7 + React 19 + TypeScript |
+| Routing | React Router v7 |
+| Server state | TanStack Query |
+| Styling | Tailwind CSS v4 + shadcn/ui |
+| Tables | TanStack Table (headless) |
+| Forms | React Hook Form + Zod resolver |
+| Charts | Recharts |
+| HTTP | Axios with `withCredentials` |
+
+**Backend — `server/`**
+
+| Concern | Choice |
+| --- | --- |
+| Runtime | Node 20+ · Express 5 · TypeScript (`tsx watch` in dev) |
+| ORM | Prisma |
+| Database | **PostgreSQL 17 in Docker** |
+| Validation | Zod (shared with the client) |
+| Auth | `jsonwebtoken` + `bcrypt`, JWT in an httpOnly cookie |
+| PDF | `@react-pdf/renderer` |
+| Email | Nodemailer over **Gmail SMTP**, console-transport fallback |
+| Hardening | helmet · express-rate-limit · pino-http |
+
+## Guardrails
+
+Payroll writes money to real records, so the system fails loudly rather than quietly producing a wrong payslip. Rules are enforced at the deepest layer that can express them — the UI is never the enforcement point.
+
+- **Database constraints** — a GiST exclusion constraint makes overlapping `RUNNING` contracts *impossible*; unique indexes back one-payslip-per-employee-per-period, unique rule codes and sequences per structure, and one open attendance session per employee.
+- **Formula sandbox** — rule expressions are parsed to an AST and evaluated against an allowlist. No `require`, `process`, `constructor`, `__proto__`, loops or assignments beyond `result`; 50 ms timeout; `NaN`/`Infinity`/division-by-zero raise a `RULE_ERROR` instead of writing garbage.
+- **Forward-reference detection** — a formula referencing a higher-sequence rule is rejected before compute, because sequence means nothing if a rule can read the future.
+- **Integer money** — all amounts stored as integer paise, formatted only at the edge, with post-compute assertions that `NET == GROSS + Σ deductions` and nothing is negative.
+- **Atomic balance consumption** — leave approval takes a row lock, re-reads remaining, and rejects if insufficient; two managers approving at once cannot overdraw an allocation.
+- **Immutable history** — validated and paid payruns reject all writes; payslips snapshot their contract and wage so later edits cannot rewrite the past.
+- **Optimistic locking** — `version` columns on Payrun and Payslip return 409 rather than letting two officers interleave a Compute.
+- **Server-side RBAC** — every mutating route declares its roles or fails a startup assertion; `EMPLOYEE` queries are rewritten server-side to their own records; users cannot elevate their own roles.
+- **Fail-fast config** — env vars are Zod-parsed at boot, so a missing `DATABASE_URL` or a short `JWT_SECRET` stops the server with a readable message.
+- **Email safety** — `MAIL_REDIRECT_TO` keeps seeded demo addresses from ever being emailed by accident; bulk send is concurrency-limited with per-recipient results.
+
+Full detail in section 9 of the system design plan.
 
 ## Screens & Routes
 
@@ -132,58 +182,112 @@ Top navigation mirrors the wireframe: **Employees ▼ · Contracts ▼ · Attend
 
 ## Project Structure
 
+npm workspaces — three packages, one lockfile.
+
 ```
-src/
-  app/
-    (auth)/login/
-    (app)/employees/ contracts/ attendance/ time-off/ payroll/ dashboard/ admin/
-    api/                      # PDF, email, export endpoints
-  server/
-    payroll/                  # rule engine, payslip computation, warnings
-    timeoff/                  # balance math, allocation consumption
-    attendance/               # worked hours, overtime
-    contracts/                # period-applicable contract resolution
-    dashboard/                # aggregation queries
-    auth/                     # session, RBAC guards
-  components/                 # ui/, forms, list and kanban shells, charts
-  lib/                        # prisma client, date/period helpers, money, zod schemas
-prisma/
-  schema.prisma
-  seed.ts
+payz/
+├─ docker-compose.yml            # postgres:17-alpine + adminer
+├─ package.json                  # workspaces + root scripts
+│
+├─ server/                       # dedicated backend API  (:4000)
+│  ├─ prisma/
+│  │  ├─ schema.prisma           # 20 models + Postgres constraints
+│  │  ├─ migrations/
+│  │  └─ seed.ts
+│  └─ src/
+│     ├─ index.ts                # express app, helmet, rate limit, error handler
+│     ├─ config/                 # env.ts (zod, fail-fast), prisma.ts, mailer.ts
+│     ├─ middleware/             # auth, requireRole, validate, errors
+│     ├─ modules/                # router + controller + service per module
+│     │  ├─ auth/ employees/ departments/ job-positions/
+│     │  ├─ schedules/           # derived weekly hours, expected hours
+│     │  ├─ contracts/           # period-contract resolution, overlap check
+│     │  ├─ attendance/          # worked hours, check-in/out
+│     │  ├─ timeoff/             # types, allocations, requests, balance
+│     │  ├─ payroll/
+│     │  │  ├─ structures/ rules/
+│     │  │  ├─ engine.ts         # sequence loop, rules[] / categories[] context
+│     │  │  ├─ evaluate-rule.ts  # FIXED | PERCENTAGE | FORMULA
+│     │  │  ├─ sandbox.ts        # AST-allowlist formula evaluation
+│     │  │  ├─ compute-payslip.ts  warnings.ts  workflow.ts
+│     │  │  └─ send-payslips.ts  # queued Gmail bulk send
+│     │  ├─ dashboard/           # kpis, by-department, trend, alerts
+│     │  └─ users/               # admin user + role management
+│     ├─ pdf/payslip-document.tsx
+│     └─ lib/                    # period, money (integer paise), dates
+│
+├─ client/                       # Vite React SPA  (:5173)
+│  ├─ vite.config.ts             # /api proxy → :4000
+│  └─ src/
+│     ├─ main.tsx  App.tsx  routes.tsx
+│     ├─ api/                    # axios client + query hooks per module
+│     ├─ layouts/                # AppLayout (navbar + attendance widget), AuthLayout
+│     ├─ components/
+│     │  ├─ ui/                  # shadcn primitives
+│     │  ├─ data/                # DataTable, KanbanGrid, StatusBadge, SmartButton,
+│     │  │                       # FormShell, FilterBar
+│     │  ├─ charts/              # DepartmentBar, NetSalaryTrend
+│     │  └─ payroll/             # PayrunWizard, ComputationTable, WarningList
+│     ├─ pages/                  # mirrors the route table above
+│     └─ lib/                    # auth context, role guards, formatters
+│
+└─ shared/
+   └─ src/                       # zod schemas + types + enums used by BOTH apps
 ```
 
 ## Setup
 
-**Prerequisites:** Node.js 20+ and npm. PostgreSQL is optional — the default local setup runs on SQLite.
+**Prerequisites:** Node.js 20+, npm, and **Docker Desktop running** (Postgres runs in a container).
 
 ```bash
 git clone https://github.com/Kavish0001/Odoo-HR-Payroll-Hackathon-PayZ.git
 cd Odoo-HR-Payroll-Hackathon-PayZ
 
-npm install
-cp .env.example .env          # then edit values
+npm install                   # installs client, server and shared workspaces
+cp .env.example .env          # then fill in the values below
 
-npx prisma migrate dev        # create the database schema
-npm run seed                  # load demo employees, contracts, rules, payroll data
+npm run db:up                 # start PostgreSQL 17 on localhost:5433
+npm run db:migrate            # create the schema
+npm run db:seed               # load demo employees, contracts, rules, payroll history
 
-npm run dev                   # http://localhost:3000
+npm run dev                   # API :4000 + client :5173
 ```
+
+Open **http://localhost:5173**. Adminer is at **http://localhost:8080** if you want to browse tables directly.
 
 ### Environment variables
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | Prisma connection string (SQLite file or Postgres URL) |
-| `AUTH_SECRET` | Session signing secret |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `MAIL_FROM` | Payslip email delivery; unset falls back to a console transport |
+| `DATABASE_URL` | `postgresql://payz:payz@localhost:5433/payz?schema=public` |
+| `JWT_SECRET` | Session signing secret — **must be at least 32 characters** or the server refuses to boot |
+| `PORT` | API port, defaults to `4000` |
+| `CLIENT_ORIGIN` | CORS allowlist entry, defaults to `http://localhost:5173` |
+| `SMTP_HOST` / `SMTP_PORT` | `smtp.gmail.com` / `587` |
+| `SMTP_USER` / `SMTP_PASS` | Your Gmail address and a **16-character App Password** |
+| `MAIL_FROM` | e.g. `PayZ Payroll <you@gmail.com>` |
+| `MAIL_REDIRECT_TO` | Optional. Redirects every outgoing mail to this address in development so seeded demo addresses are never emailed by accident |
+
+### Gmail SMTP setup
+
+Gmail rejects a plain account password — an App Password is required:
+
+1. Enable **2-Step Verification** on the Google account.
+2. Go to **Google Account → Security → App passwords** and create one for "Mail".
+3. Paste the 16 characters (spaces removed) into `SMTP_PASS`.
+
+Send limits are roughly **500 recipients/day** on a free Gmail account and 2,000 on Workspace — well above a demo payrun. Leave `SMTP_USER` unset and the mailer falls back to a console transport, so *Send Payslips* stays demoable with no network.
 
 ### Scripts
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Start the dev server |
-| `npm run build` / `npm start` | Production build and serve |
-| `npm run seed` | Reset and load demo data |
+| `npm run db:up` / `npm run db:down` | Start / stop the Postgres container (the volume survives `down`) |
+| `npm run db:migrate` | `prisma migrate dev` |
+| `npm run db:seed` | Reset and load demo data (refuses to run against a non-localhost database) |
+| `npm run db:studio` | Prisma Studio |
+| `npm run dev` | Run API and client concurrently |
+| `npm run build` | Type-check and build both apps |
 | `npm run lint` / `npm run typecheck` | Lint and type-check |
 
 ## Seed Data & Demo Scenarios
