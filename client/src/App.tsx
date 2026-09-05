@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppLayout } from './layouts/AppLayout.js';
 import { AuthProvider } from './lib/auth.js';
+import { UserFormPage } from './pages/admin/UserFormPage.js';
+import { UsersListPage } from './pages/admin/UsersListPage.js';
 import { AttendanceFormPage } from './pages/attendance/AttendanceFormPage.js';
 import { AttendanceListPage } from './pages/attendance/AttendanceListPage.js';
 import { ContractFormPage } from './pages/contracts/ContractFormPage.js';
@@ -17,7 +19,6 @@ import { PayrunNewPage } from './pages/payroll/PayrunNewPage.js';
 import { PayrunsListPage } from './pages/payroll/PayrunsListPage.js';
 import { PayslipDetailPage } from './pages/payroll/PayslipDetailPage.js';
 import { PayslipsListPage } from './pages/payroll/PayslipsListPage.js';
-import { Placeholder } from './pages/Placeholder.js';
 import { SalaryRuleFormPage } from './pages/salaryConfig/SalaryRuleFormPage.js';
 import { SalaryRulesListPage } from './pages/salaryConfig/SalaryRulesListPage.js';
 import { SalaryStructureFormPage } from './pages/salaryConfig/SalaryStructureFormPage.js';
@@ -100,10 +101,8 @@ export function App(): React.JSX.Element {
             <Route path="/payroll/rules" element={<SalaryRulesListPage />} />
             <Route path="/payroll/rules/:id" element={<SalaryRuleFormPage />} />
             <Route path="/dashboard" element={<PayrollDashboardPage />} />
-            <Route
-              path="/admin/users"
-              element={<Placeholder title="Users" />}
-            />
+            <Route path="/admin/users" element={<UsersListPage />} />
+            <Route path="/admin/users/:id" element={<UserFormPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/employees" replace />} />

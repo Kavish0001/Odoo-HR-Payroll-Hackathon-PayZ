@@ -28,6 +28,7 @@ import { schedulesRouter } from './modules/schedules/schedules.routes.js';
 import { allocationsRouter } from './modules/timeoff/allocations.routes.js';
 import { timeOffRequestsRouter } from './modules/timeoff/time-off-requests.routes.js';
 import { timeOffTypesRouter } from './modules/timeoff/time-off-types.routes.js';
+import { usersRouter } from './modules/users/users.routes.js';
 
 /**
  * The Express app, built separately from the listener so tests can mount it
@@ -100,6 +101,7 @@ export function createApp(): Express {
     { prefix: '/api/time-off', router: timeOffRequestsRouter },
     { prefix: '/api/payruns', router: payrunsRouter },
     { prefix: '/api/payslips', router: payslipsRouter },
+    { prefix: '/api/users', router: usersRouter },
     { prefix: '/api/salary-structures', router: salaryStructuresRouter },
     { prefix: '/api/salary-rules', router: salaryRulesRouter },
   ];

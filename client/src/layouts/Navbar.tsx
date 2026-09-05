@@ -178,6 +178,15 @@ export function Navbar(): React.JSX.Element {
         )}
 
         <div className="ml-auto flex items-center gap-3">
+          {allowed('read', 'user') && (
+            <NavLink
+              to="/admin/users"
+              className={({ isActive }) => linkClass(isActive)}
+              title="User management"
+            >
+              Users
+            </NavLink>
+          )}
           <AttendanceWidget />
           <div className="text-right leading-tight">
             <div className="text-sm font-medium">
