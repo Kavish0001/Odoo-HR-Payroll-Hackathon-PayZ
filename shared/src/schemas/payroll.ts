@@ -193,6 +193,7 @@ export const payrunQuerySchema = paginationSchema.extend({
   status: z.enum(PAYRUN_STATUSES).optional(),
   year: z.coerce.number().int().optional(),
 });
+export type PayrunQuery = z.infer<typeof payrunQuerySchema>;
 
 export interface PayrunRow {
   id: string;
@@ -223,6 +224,7 @@ export const payslipQuerySchema = paginationSchema.extend({
   employeeId: idSchema.optional(),
   status: z.enum(PAYSLIP_STATUSES).optional(),
 });
+export type PayslipQuery = z.infer<typeof payslipQuerySchema>;
 
 export interface PayslipLineRow {
   id: string;
@@ -287,6 +289,7 @@ export const warningCodeSchema = z.enum(WARNING_CODES);
 export const workflowActionSchema = z.object({
   version: z.number().int().nonnegative(),
 });
+export type WorkflowAction = z.infer<typeof workflowActionSchema>;
 
 // ---------------------------------------------------------------------------
 // Dashboard

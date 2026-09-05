@@ -13,7 +13,11 @@ import {
   type RouterMount,
 } from './middleware/assert-guarded.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
+import { attendanceRouter } from './modules/attendance/attendance.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
+import { salaryRulesRouter } from './modules/salary-config/salary-rules.routes.js';
+import { salaryStructuresRouter } from './modules/salary-config/salary-structures.routes.js';
 import { contractsRouter } from './modules/contracts/contracts.routes.js';
 import { departmentsRouter } from './modules/departments/departments.routes.js';
 import { employeesRouter } from './modules/employees/employees.routes.js';
@@ -82,6 +86,10 @@ export function createApp(): Express {
     { prefix: '/api/working-schedules', router: schedulesRouter },
     { prefix: '/api/employees', router: employeesRouter },
     { prefix: '/api/contracts', router: contractsRouter },
+    { prefix: '/api/attendance', router: attendanceRouter },
+    { prefix: '/api/dashboard', router: dashboardRouter },
+    { prefix: '/api/salary-structures', router: salaryStructuresRouter },
+    { prefix: '/api/salary-rules', router: salaryRulesRouter },
   ];
 
   for (const mount of mounts) {

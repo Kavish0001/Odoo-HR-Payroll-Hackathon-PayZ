@@ -8,7 +8,14 @@ import { DepartmentFormPage } from './pages/departments/DepartmentFormPage.js';
 import { DepartmentsListPage } from './pages/departments/DepartmentsListPage.js';
 import { EmployeeFormPage } from './pages/employees/EmployeeFormPage.js';
 import { EmployeesListPage } from './pages/employees/EmployeesListPage.js';
+import { AttendanceFormPage } from './pages/attendance/AttendanceFormPage.js';
+import { AttendanceListPage } from './pages/attendance/AttendanceListPage.js';
+import { PayrollDashboardPage } from './pages/dashboard/PayrollDashboardPage.js';
 import { LoginPage } from './pages/LoginPage.js';
+import { SalaryRuleFormPage } from './pages/salaryConfig/SalaryRuleFormPage.js';
+import { SalaryRulesListPage } from './pages/salaryConfig/SalaryRulesListPage.js';
+import { SalaryStructureFormPage } from './pages/salaryConfig/SalaryStructureFormPage.js';
+import { SalaryStructuresListPage } from './pages/salaryConfig/SalaryStructuresListPage.js';
 import { Placeholder } from './pages/Placeholder.js';
 import { WorkingScheduleFormPage } from './pages/workingSchedules/WorkingScheduleFormPage.js';
 import { WorkingSchedulesListPage } from './pages/workingSchedules/WorkingSchedulesListPage.js';
@@ -40,10 +47,8 @@ export function App(): React.JSX.Element {
             />
             <Route path="/contracts" element={<ContractsListPage />} />
             <Route path="/contracts/:id" element={<ContractFormPage />} />
-            <Route
-              path="/attendance"
-              element={<Placeholder title="Attendance" />}
-            />
+            <Route path="/attendance" element={<AttendanceListPage />} />
+            <Route path="/attendance/:id" element={<AttendanceFormPage />} />
             <Route
               path="/time-off/requests"
               element={<Placeholder title="Time Off Requests" />}
@@ -66,16 +71,15 @@ export function App(): React.JSX.Element {
             />
             <Route
               path="/payroll/structures"
-              element={<Placeholder title="Salary Structures" />}
+              element={<SalaryStructuresListPage />}
             />
             <Route
-              path="/payroll/rules"
-              element={<Placeholder title="Salary Rules" />}
+              path="/payroll/structures/:id"
+              element={<SalaryStructureFormPage />}
             />
-            <Route
-              path="/dashboard"
-              element={<Placeholder title="Payroll Dashboard" />}
-            />
+            <Route path="/payroll/rules" element={<SalaryRulesListPage />} />
+            <Route path="/payroll/rules/:id" element={<SalaryRuleFormPage />} />
+            <Route path="/dashboard" element={<PayrollDashboardPage />} />
             <Route
               path="/admin/users"
               element={<Placeholder title="Users" />}

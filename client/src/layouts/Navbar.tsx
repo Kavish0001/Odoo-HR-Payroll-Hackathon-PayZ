@@ -1,6 +1,7 @@
 import { type Action, type Resource } from '@payz/shared';
 import { NavLink } from 'react-router-dom';
 
+import { AttendanceWidget } from '../components/attendance/AttendanceWidget.js';
 import { Logo } from '../components/brand/Logo.js';
 import { useAuth } from '../lib/auth.js';
 
@@ -177,6 +178,7 @@ export function Navbar(): React.JSX.Element {
         )}
 
         <div className="ml-auto flex items-center gap-3">
+          <AttendanceWidget />
           <div className="text-right leading-tight">
             <div className="text-sm font-medium">
               {user?.employeeName ?? user?.email}

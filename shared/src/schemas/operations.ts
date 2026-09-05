@@ -134,6 +134,7 @@ export const allocationQuerySchema = paginationSchema.extend({
   typeId: idSchema.optional(),
   status: z.enum(TIME_OFF_STATUSES).optional(),
 });
+export type AllocationQuery = z.infer<typeof allocationQuerySchema>;
 
 export interface AllocationRow {
   id: string;
@@ -177,6 +178,7 @@ export const timeOffRequestQuerySchema = paginationSchema.extend({
   typeId: idSchema.optional(),
   status: z.enum(TIME_OFF_STATUSES).optional(),
 });
+export type TimeOffRequestQuery = z.infer<typeof timeOffRequestQuerySchema>;
 
 export interface TimeOffRequestRow {
   id: string;
