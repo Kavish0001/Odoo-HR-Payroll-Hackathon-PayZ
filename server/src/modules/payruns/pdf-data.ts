@@ -7,6 +7,25 @@ import { type PayslipPdfData } from '../../pdf/payslip-document.js';
  * the PDF download endpoint and the Send Payslips email attachment, so the
  * printed payslip and the emailed one are always built from the same query.
  */
+
+/**
+ * Shows only enough of an account number to recognise it.
+ *
+ * The payslip is emailed and forwarded on; printing the full account number
+ * puts it in every mailbox it passes through, and the employee only needs to
+ * confirm which of their accounts was paid.
+ */
+function maskAccount(account: string | null): string | null {
+  if (account === null) {
+    return null;
+  }
+  const digits = account.replace(/\s+/g, '');
+  if (digits.length <= 4) {
+    return digits;
+  }
+  return `XXXX XXXX ${digits.slice(-4)}`;
+}
+
 export async function loadPayslipPdfData(
   payslipId: string,
 ): Promise<PayslipPdfData> {
@@ -18,11 +37,18 @@ export async function loadPayslipPdfData(
           firstName: true,
           lastName: true,
           code: true,
+          joinDate: true,
+          bankName: true,
+          bankAccount: true,
+          bankIfsc: true,
           department: { select: { name: true } },
+          jobPosition: { select: { title: true } },
+          company: { select: { name: true, legalName: true } },
         },
       },
       structure: { select: { name: true } },
       contract: { select: { reference: true } },
+      payrun: { select: { name: true } },
       lines: { orderBy: { sequence: 'asc' } },
     },
   });
@@ -30,14 +56,23 @@ export async function loadPayslipPdfData(
     throw notFound('Payslip not found');
   }
 
-  const company = await prisma.company.findFirst({ select: { name: true } });
+  const { employee } = payslip;
 
   return {
-    companyName: company?.name ?? 'PayZ',
+    // The employee's own company, not "whichever company row came first":
+    // a payslip must be headed by the entity that employs the person.
+    companyName: employee.company.name,
+    companyLegalName: employee.company.legalName,
     number: payslip.number,
-    employeeName: `${payslip.employee.firstName} ${payslip.employee.lastName}`,
-    employeeCode: payslip.employee.code,
-    departmentName: payslip.employee.department?.name ?? null,
+    payrunName: payslip.payrun.name,
+    employeeName: `${employee.firstName} ${employee.lastName}`,
+    employeeCode: employee.code,
+    departmentName: employee.department?.name ?? null,
+    designation: employee.jobPosition?.title ?? null,
+    joinDate: employee.joinDate?.toISOString().slice(0, 10) ?? null,
+    bankName: employee.bankName,
+    bankAccountMasked: maskAccount(employee.bankAccount),
+    bankIfsc: employee.bankIfsc,
     structureName: payslip.structure.name,
     periodStart: payslip.periodStart.toISOString().slice(0, 10),
     periodEnd: payslip.periodEnd.toISOString().slice(0, 10),

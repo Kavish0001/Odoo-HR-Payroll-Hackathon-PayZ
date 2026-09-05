@@ -199,7 +199,7 @@ Space Grotesk's own digits are checked for `tnum` support at scaffold time; wher
 
 **Loading.** Self-hosted `.woff2` in `client/public/fonts` with `font-display: swap` and a preload hint for the 400/500 UI weights — no render-blocking request to Google's CDN during the demo, and no layout shift when the network is slow on hackathon wifi.
 
-**In the PDF.** `@react-pdf/renderer` embeds font files rather than reading a stylesheet, so the same Space Grotesk and Space Mono `.ttf` files are registered in `server/pdf/fonts.ts`. The payslip PDF therefore matches the screen exactly — the same face for labels, the same mono for the salary computation table.
+**In the PDF.** `@react-pdf/renderer` embeds font files rather than reading a stylesheet, and it wants TrueType, not the woff2 a browser takes. So the PDF keeps its own `.ttf` copies of the same families under `server/assets/fonts`, registered by `server/src/pdf/fonts.ts`: Space Grotesk for the company name, figures and totals, Inter for everything read as prose. If those files are ever missing the document falls back to the built-in Helvetica rather than failing — a payslip in the wrong face is cosmetic, a payslip that will not download is not.
 
 ### Type scale
 
@@ -269,7 +269,7 @@ payz/
 │     │  │  └─ send-payslips.ts  # queued Gmail bulk send
 │     │  ├─ dashboard/           # kpis, by-department, trend, alerts
 │     │  └─ users/               # admin user + role management
-│     ├─ pdf/payslip-document.tsx
+│     ├─ pdf/                    # payslip-document.tsx, coin-mark.tsx, fonts.ts
 │     └─ lib/                    # period, money (integer paise), dates
 │
 ├─ client/                       # Vite React SPA  (:5173)

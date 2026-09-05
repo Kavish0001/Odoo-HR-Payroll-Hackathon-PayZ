@@ -10,4 +10,6 @@
 *.jpg binary
 *.pdf binary
 *.woff2 binary
+*.ttf binary
+*.glb binary
 *.ico binary

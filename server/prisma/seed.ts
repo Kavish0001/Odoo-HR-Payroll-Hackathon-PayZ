@@ -368,7 +368,11 @@ async function main(): Promise<void> {
         joinDate: day(`${String(person.joinYear)}-04-01`),
         ...(person.hasBankDetails
           ? {
-              bankAccount: `XXXXXXXX${person.code.slice(-4)}`,
+              // A plausible 13-digit account, not a pre-masked string: the
+              // payslip masks it on the way out, so storing it already
+              // starred left the printed slip showing letters from the
+              // employee code where the last four digits belong.
+              bankAccount: `50100${String(10_000_000 + Math.floor(random() * 89_999_999))}`,
               bankName: 'HDFC Bank',
               bankIfsc: 'HDFC0001234',
             }

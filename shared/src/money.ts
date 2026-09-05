@@ -65,12 +65,16 @@ export function formatINR(
   const { withSymbol = true, decimals = true } = options;
   assertInteger(paise, 'paise');
 
+  // The sign goes outside the symbol. Formatting the absolute value and
+  // re-attaching the minus avoids the "₹-1,800.00" that a deduction would
+  // otherwise print, which reads as a currency called "minus rupees".
+  const sign = paise < 0 ? '-' : '';
   const formatted = new Intl.NumberFormat('en-IN', {
     minimumFractionDigits: decimals ? 2 : 0,
     maximumFractionDigits: decimals ? 2 : 0,
-  }).format(paiseToRupees(paise));
+  }).format(Math.abs(paiseToRupees(paise)));
 
-  return withSymbol ? `₹${formatted}` : formatted;
+  return withSymbol ? `${sign}₹${formatted}` : `${sign}${formatted}`;
 }
 
 /** Compact form for dashboard tiles: ₹18.4L, ₹1.2Cr. */
@@ -103,4 +107,125 @@ function assertInteger(value: number, label: string): void {
       `${label} must be an integer number of paise, received ${value}`,
     );
   }
+}
+
+const ONES = [
+  '',
+  'One',
+  'Two',
+  'Three',
+  'Four',
+  'Five',
+  'Six',
+  'Seven',
+  'Eight',
+  'Nine',
+  'Ten',
+  'Eleven',
+  'Twelve',
+  'Thirteen',
+  'Fourteen',
+  'Fifteen',
+  'Sixteen',
+  'Seventeen',
+  'Eighteen',
+  'Nineteen',
+] as const;
+
+const TENS = [
+  '',
+  '',
+  'Twenty',
+  'Thirty',
+  'Forty',
+  'Fifty',
+  'Sixty',
+  'Seventy',
+  'Eighty',
+  'Ninety',
+] as const;
+
+/** 0..99 in words. Anything above needs the Indian grouping below. */
+function twoDigitsToWords(value: number): string {
+  if (value < 20) {
+    return ONES[value] ?? '';
+  }
+  const tens = TENS[Math.floor(value / 10)] ?? '';
+  const ones = ONES[value % 10] ?? '';
+  return ones === '' ? tens : `${tens} ${ones}`;
+}
+
+/** 0..999 in words. */
+function threeDigitsToWords(value: number): string {
+  const hundreds = Math.floor(value / 100);
+  const rest = value % 100;
+  const parts: string[] = [];
+  if (hundreds > 0) {
+    parts.push(`${ONES[hundreds] ?? ''} Hundred`);
+  }
+  if (rest > 0) {
+    parts.push(twoDigitsToWords(rest));
+  }
+  return parts.join(' ');
+}
+
+/** The Indian groups, largest first: crore, lakh, thousand, then 0..999. */
+const GROUPS = [
+  { divisor: 10_000_000, label: 'Crore' },
+  { divisor: 100_000, label: 'Lakh' },
+  { divisor: 1_000, label: 'Thousand' },
+] as const;
+
+/**
+ * A whole number in words, grouped the Indian way (crore, lakh, thousand).
+ *
+ * Crore is not capped at 99: a figure beyond a hundred crore reads as
+ * "One Hundred Twenty Crore" rather than needing a further unit, which is how
+ * the convention actually works.
+ */
+function wholeNumberToWords(value: number): string {
+  if (value === 0) {
+    return 'Zero';
+  }
+
+  const parts: string[] = [];
+  let remaining = value;
+
+  for (const group of GROUPS) {
+    const count = Math.floor(remaining / group.divisor);
+    if (count > 0) {
+      parts.push(`${threeDigitsToWords(count)} ${group.label}`);
+      remaining %= group.divisor;
+    }
+  }
+
+  if (remaining > 0) {
+    parts.push(threeDigitsToWords(remaining));
+  }
+
+  return parts.join(' ');
+}
+
+/**
+ * Paise as the words printed on a payslip, e.g.
+ * "Rupees One Lakh Fifty Thousand and Twenty Paise Only".
+ *
+ * Indian payslips carry the net pay in words as well as figures, because a
+ * figure can be altered after printing and a sentence cannot be altered
+ * nearly as quietly. A negative amount is prefixed with "Minus" rather than
+ * dropped, so a corrected payslip still reads correctly.
+ */
+export function formatINRWords(paise: Paise): string {
+  assertInteger(paise, 'paise');
+
+  const sign = paise < 0 ? 'Minus ' : '';
+  const absolute = Math.abs(paise);
+  const rupees = Math.floor(absolute / PAISE_PER_RUPEE);
+  const remainder = absolute % PAISE_PER_RUPEE;
+
+  const rupeeWords = `${sign}Rupees ${wholeNumberToWords(rupees)}`;
+  if (remainder === 0) {
+    return `${rupeeWords} Only`;
+  }
+  return `${rupeeWords} and ${wholeNumberToWords(remainder)} Paise Only`;
 }

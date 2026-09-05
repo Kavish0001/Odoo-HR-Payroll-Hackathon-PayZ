@@ -474,6 +474,7 @@ payrunsRouter.post(
         employeeName: `${payslip.employee.firstName} ${payslip.employee.lastName}`,
         number: payslip.number,
         periodLabel,
+        netAmount: payslip.netAmount,
       })),
       async (payslipId) => {
         const detail = await loadPayslipPdfData(payslipId);

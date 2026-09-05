@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatINR,
   formatINRCompact,
+  formatINRWords,
   paiseToRupees,
   percentOf,
   roundPaise,
@@ -88,6 +89,13 @@ describe('formatINR', () => {
     expect(formatINR(8_500_000, { decimals: false })).toBe('₹85,000');
   });
 
+  // A deduction line is stored negative; "₹-1,800.00" reads as a different
+  // currency, so the sign belongs in front of the symbol.
+  it('puts the sign outside the symbol', () => {
+    expect(formatINR(-180_000)).toBe('-₹1,800.00');
+    expect(formatINR(-180_000, { withSymbol: false })).toBe('-1,800.00');
+  });
+
   it('omits the symbol when asked', () => {
     expect(formatINR(8_500_000, { withSymbol: false, decimals: false })).toBe(
       '85,000',
@@ -120,5 +128,39 @@ describe('round trip', () => {
   it('survives rupees to paise and back', () => {
     expect(paiseToRupees(rupeesToPaise(85_000))).toBe(85_000);
     expect(paiseToRupees(rupeesToPaise(1234.56))).toBe(1234.56);
+  });
+});
+
+describe('formatINRWords', () => {
+  it('groups in crore, lakh and thousand', () => {
+    expect(formatINRWords(15_000_000)).toBe(
+      'Rupees One Lakh Fifty Thousand Only',
+    );
+    expect(formatINRWords(1_200_000_000)).toBe(
+      'Rupees One Crore Twenty Lakh Only',
+    );
+  });
+
+  it('reads the paise remainder when there is one', () => {
+    expect(formatINRWords(8_500_050)).toBe(
+      'Rupees Eighty Five Thousand and Fifty Paise Only',
+    );
+  });
+
+  it('handles zero and the teens', () => {
+    expect(formatINRWords(0)).toBe('Rupees Zero Only');
+    expect(formatINRWords(1_700)).toBe('Rupees Seventeen Only');
+  });
+
+  // A corrected payslip can carry a negative net; it must still read.
+  it('prefixes a negative amount', () => {
+    expect(formatINRWords(-50_000)).toBe('Minus Rupees Five Hundred Only');
+  });
+
+  it('does not cap the crore group', () => {
+    // 120 crore rupees.
+    expect(formatINRWords(120_00_00_000 * 100)).toBe(
+      'Rupees One Hundred Twenty Crore Only',
+    );
   });
 });

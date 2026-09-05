@@ -2,6 +2,7 @@ import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { checkDatabase, disconnectPrisma } from './config/prisma.js';
+import { closeMailTransport } from './modules/payruns/send-payslips.js';
 
 async function main(): Promise<void> {
   const app = createApp();
@@ -25,6 +26,9 @@ async function main(): Promise<void> {
   const shutdown = (signal: string): void => {
     logger.info(`${signal} received, shutting down`);
     server.close(() => {
+      // The mail pool holds open TLS sockets; without closing them the
+      // process stays alive after the HTTP server has stopped listening.
+      closeMailTransport();
       void disconnectPrisma().then(() => {
         process.exit(0);
       });
