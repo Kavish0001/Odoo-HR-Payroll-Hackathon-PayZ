@@ -87,7 +87,10 @@ export function LandingPage(): React.JSX.Element {
       {/* ---- Top bar ------------------------------------------------------ */}
       <header className="border-steel-300 border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <Logo size={30} withWordmark />
+          <div className="flex items-baseline gap-4">
+            <Logo size={30} withWordmark />
+            <span className="eyebrow hidden sm:inline">Payments made easy</span>
+          </div>
           <Link
             to="/login"
             className="border-steel-300 hover:bg-steel-100 font-mono rounded-sm border px-4 py-2 text-[11px] tracking-wider uppercase transition-colors"
