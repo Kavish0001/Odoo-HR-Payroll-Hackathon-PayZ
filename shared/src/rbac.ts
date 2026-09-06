@@ -52,7 +52,17 @@ export const ACTIONS = [
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
-/** The minimum role rank required for each action on each resource. */
+/**
+ * The minimum role rank required for each action on each resource.
+ *
+ * `delete` sits at ADMIN across the destructive records -- contract,
+ * attendance, salary rule, payrun. Every one of them is either history
+ * somebody may need to answer for later or an input a payslip was computed
+ * from, and the roles that work with them day to day have a non-destructive
+ * way to get the same result: correct the attendance row, deactivate the
+ * rule, cancel the payrun. Removing the row itself is a separate decision,
+ * and a rarer one.
+ */
 const MATRIX: Record<Resource, Partial<Record<Action, Role>>> = {
   // HR master data: HR Manager and above have full control.
   employee: {
@@ -96,7 +106,10 @@ const MATRIX: Record<Resource, Partial<Record<Action, Role>>> = {
     read: 'EMPLOYEE',
     create: 'EMPLOYEE',
     update: 'HR_MANAGER',
-    delete: 'HR_MANAGER',
+    // Destroying a record is not the same as correcting one. HR corrects an
+    // attendance row by editing it, which keeps the history; removing it
+    // outright is the administrator's call (see the note on `delete` below).
+    delete: 'ADMIN',
   },
   timeOffRequest: {
     read: 'EMPLOYEE',
@@ -134,15 +147,24 @@ const MATRIX: Record<Resource, Partial<Record<Action, Role>>> = {
     read: 'HR_PAYROLL_USER',
     create: 'HR_PAYROLL_MANAGER',
     update: 'HR_PAYROLL_MANAGER',
-    delete: 'HR_PAYROLL_MANAGER',
+    delete: 'ADMIN',
   },
 
   // HR Manager has no payroll access at all (rule R3).
+  //
+  // The two payroll roles are split by whether they may *move* money, not by
+  // how much of it they can see. HR Payroll User reads the whole of payroll --
+  // payruns, payslips, structures, rules and the dashboard -- and changes
+  // none of it. Running a payrun is HR Payroll Manager's alone.
+  //
+  // `update` on a payrun is not a small permission: it is Compute, Validate,
+  // Mark Paid, Cancel, Send Payslips and acknowledging a blocking warning.
+  // Granting it to a role named "user" made that role able to pay everybody.
   payrun: {
     read: 'HR_PAYROLL_USER',
-    create: 'HR_PAYROLL_USER',
-    update: 'HR_PAYROLL_USER',
-    delete: 'HR_PAYROLL_MANAGER',
+    create: 'HR_PAYROLL_MANAGER',
+    update: 'HR_PAYROLL_MANAGER',
+    delete: 'ADMIN',
   },
   payslip: {
     read: 'HR_PAYROLL_USER',
@@ -150,8 +172,8 @@ const MATRIX: Record<Resource, Partial<Record<Action, Role>>> = {
     // employee id whenever they lack the team-wide `read`, so this grants a
     // window onto one record and never onto the batch.
     readSelf: 'EMPLOYEE',
-    create: 'HR_PAYROLL_USER',
-    update: 'HR_PAYROLL_USER',
+    create: 'HR_PAYROLL_MANAGER',
+    update: 'HR_PAYROLL_MANAGER',
     delete: 'HR_PAYROLL_MANAGER',
   },
   dashboard: { read: 'HR_PAYROLL_USER' },

@@ -74,3 +74,18 @@ export function useUpdateContract(id: string) {
     },
   });
 }
+
+/** Hard delete. The matrix puts this at ADMIN (see the note on `delete`). */
+export function useDeleteContract() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/contracts/${id}`);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      // An employee's smart-button counts include contracts.
+      await queryClient.invalidateQueries({ queryKey: ['employees'] });
+    },
+  });
+}

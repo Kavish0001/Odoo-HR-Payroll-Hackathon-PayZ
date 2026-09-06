@@ -1,9 +1,17 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { useLeaveBalances, useTimeOffRequests } from '../../api/timeoff.js';
+import { useEmployees } from '../../api/employees.js';
+import {
+  useLeaveBalances,
+  useTimeOffRequests,
+  useTimeOffTypes,
+} from '../../api/timeoff.js';
 import { PageHeader } from '../../components/data/PageHeader.js';
 import { StatusBadge } from '../../components/data/StatusBadge.js';
+import { Button } from '../../components/ui/Button.js';
 import { Card } from '../../components/ui/Card.js';
+import { Select } from '../../components/ui/Select.js';
 import { useAuth } from '../../lib/auth.js';
 
 import { formatQty } from './format.js';
@@ -20,14 +28,48 @@ export function TimeOffDashboardPage(): React.JSX.Element {
   const { user, allowed } = useAuth();
   const employeeId = user?.employeeId ?? undefined;
 
+  const canApprove = allowed('approve', 'timeOffRequest');
+
+  /**
+   * Filters over the queue, not over the balances.
+   *
+   * Balances are four cards about one person and need no narrowing. The queue
+   * is the part that grows: an approver looking at sixty-eight pending
+   * requests wants the ones for a type, or a person, or wants to check what
+   * was decided last week -- which is a different status, not a different
+   * screen.
+   */
+  const [typeId, setTypeId] = useState('');
+  const [queueEmployeeId, setQueueEmployeeId] = useState('');
+  const [status, setStatus] = useState('TO_APPROVE');
+
+  const typesQuery = useTimeOffTypes({ pageSize: 200, active: 'true' });
+  const employeesQuery = useEmployees({ pageSize: 200 }, canApprove);
+
   const balances = useLeaveBalances(employeeId);
   // Anyone who can approve sees the queue; an employee sees only their own,
   // because the API scopes the same request to the caller (rule R2).
-  const pending = useTimeOffRequests({ status: 'TO_APPROVE' });
+  const pending = useTimeOffRequests({
+    pageSize: 50,
+    ...(status === '' ? {} : { status }),
+    ...(typeId === '' ? {} : { typeId }),
+    ...(queueEmployeeId === '' ? {} : { employeeId: queueEmployeeId }),
+  });
 
-  const canApprove = allowed('approve', 'timeOffRequest');
   const rows = balances.data ?? [];
   const queue = pending.data?.rows ?? [];
+  const total = pending.data?.total ?? 0;
+
+  const typeOptions = (typesQuery.data?.rows ?? []).map((t) => ({
+    value: t.id,
+    label: t.name,
+  }));
+  const employeeOptions = (employeesQuery.data?.rows ?? []).map((e) => ({
+    value: e.id,
+    label: e.fullName,
+  }));
+  const filtered =
+    typeId !== '' || queueEmployeeId !== '' || status !== 'TO_APPROVE';
 
   return (
     <div className="space-y-6">
@@ -106,14 +148,78 @@ export function TimeOffDashboardPage(): React.JSX.Element {
       </section>
 
       <section>
-        <h2 className="eyebrow mb-3">
-          {canApprove ? 'Waiting on a decision' : 'My pending requests'}
-        </h2>
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <h2 className="eyebrow">
+            {canApprove ? 'Waiting on a decision' : 'My requests'}
+          </h2>
+          <span className="text-muted font-mono text-xs">
+            {total} {status === 'TO_APPROVE' ? 'pending' : 'matching'}
+          </span>
+        </div>
+
+        <div className="mb-3 flex flex-wrap items-end gap-3">
+          <Select
+            aria-label="Filter the queue by status"
+            className="max-w-44"
+            options={[
+              { value: 'TO_APPROVE', label: 'To approve' },
+              { value: 'APPROVED', label: 'Approved' },
+              { value: 'REFUSED', label: 'Refused' },
+              { value: 'CANCELLED', label: 'Cancelled' },
+            ]}
+            placeholder="All statuses"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+            }}
+          />
+
+          <Select
+            aria-label="Filter the queue by time off type"
+            className="max-w-48"
+            options={typeOptions}
+            placeholder="All types"
+            value={typeId}
+            onChange={(event) => {
+              setTypeId(event.target.value);
+            }}
+          />
+
+          {canApprove && (
+            <Select
+              aria-label="Filter the queue by employee"
+              className="max-w-56"
+              options={employeeOptions}
+              placeholder="All employees"
+              value={queueEmployeeId}
+              onChange={(event) => {
+                setQueueEmployeeId(event.target.value);
+              }}
+            />
+          )}
+
+          {filtered && (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                setStatus('TO_APPROVE');
+                setTypeId('');
+                setQueueEmployeeId('');
+              }}
+            >
+              Reset
+            </Button>
+          )}
+        </div>
 
         <Card className="p-0">
           {queue.length === 0 ? (
             <p className="text-muted p-5 text-sm">
-              Nothing is waiting for approval.
+              {filtered
+                ? 'Nothing matches these filters.'
+                : 'Nothing is waiting for approval.'}
             </p>
           ) : (
             <ul className="divide-steel-300 divide-y">

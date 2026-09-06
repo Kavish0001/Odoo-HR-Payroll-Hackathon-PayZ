@@ -4,6 +4,7 @@ import {
   roundPaise,
   RULE_CATEGORIES,
   rupeesSchema,
+  rupeesToPaise,
   salaryRuleSchema,
   idSchema,
   type SalaryRuleInput,
@@ -140,7 +141,9 @@ function toRuleData(body: SalaryRuleInput) {
     category: body.category,
     sequence: body.sequence,
     computationType: body.computationType,
-    fixedAmount: body.fixedAmount ?? null,
+    // Rupees in, paise stored -- converted once, here (see rupeesSchema).
+    fixedAmount:
+      body.fixedAmount == null ? null : rupeesToPaise(body.fixedAmount),
     percentage: body.percentage ?? null,
     percentageBase: body.percentageBase ?? null,
     percentageRuleCode: body.percentageRuleCode ?? null,

@@ -47,9 +47,19 @@ export const daySchema = z.coerce.date().transform((value) => {
 });
 
 /**
- * Money entered by a user, in rupees, converted to the integer paise the
- * database stores. Rejects more than two decimal places rather than silently
- * rounding away part of someone's salary.
+ * Money entered by a user, in rupees. Rejects more than two decimal places
+ * rather than silently rounding away part of someone's salary.
+ *
+ * Validates the amount; it does not convert it. This schema used to end in
+ * `.transform(rupees => rupees * 100)`, which is applied wherever the schema
+ * is -- and the same schema is the resolver on a React form and the validator
+ * on the API route. A wage therefore went through the conversion twice and
+ * reached the database a hundred times too large: a ₹50,000 contract saved as
+ * ₹50,00,000.
+ *
+ * Converting to paise is the persistence layer's job, and it happens once,
+ * where the value is written (`rupeesToPaise`). A schema that quietly changes
+ * the units of its input hides that step from both sides.
  */
 export const rupeesSchema = z
   .number()
@@ -60,8 +70,7 @@ export const rupeesSchema = z
       Number.isInteger(Math.round(value * 100)) &&
       Math.abs(value * 100 - Math.round(value * 100)) < 1e-9,
     'At most two decimal places',
-  )
-  .transform((rupees) => Math.round(rupees * 100));
+  );
 
 /** Already-integer paise, for values moving between services. */
 export const paiseSchema = z.number().int();

@@ -564,3 +564,38 @@ payrunsRouter.post(
     res.json(await getPayrunDetail(prisma, id));
   }),
 );
+
+/**
+ * Removes a payrun and, by cascade, its payslips, lines and warnings.
+ *
+ * Refused once the run has been validated or paid. Rule 10 makes finalised
+ * payroll historical: somebody was paid against those payslips, and the
+ * figures have to stay answerable afterwards. A run that has not reached
+ * that point holds only draft computation, which is safe to discard --
+ * and `cancel` remains the non-destructive way to retire one that has.
+ */
+payrunsRouter.delete(
+  '/:id',
+  requireAuth,
+  requirePermission('delete', 'payrun'),
+  validate({ params: idParamsSchema }),
+  asyncRoute(async (req, res) => {
+    const { id } = req.params as unknown as { id: number };
+
+    const payrun = await prisma.payrun.findUnique({
+      where: { id },
+      select: { id: true, status: true, name: true },
+    });
+    if (payrun === null) {
+      throw notFound('Payrun not found');
+    }
+    if (payrun.status === 'VALIDATED' || payrun.status === 'PAID') {
+      throw conflict(
+        `"${payrun.name}" has been ${payrun.status.toLowerCase()} and is part of payroll history. Cancel it instead of deleting it.`,
+      );
+    }
+
+    await prisma.payrun.delete({ where: { id } });
+    res.status(204).end();
+  }),
+);

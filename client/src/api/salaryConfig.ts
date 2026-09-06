@@ -179,3 +179,17 @@ export function useTestSalaryFormula() {
     },
   });
 }
+
+/** Removes a salary rule. ADMIN only: deactivating is the usual retirement. */
+export function useDeleteSalaryRule() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/salary-rules/${id}`);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['salary-rules'] });
+      await queryClient.invalidateQueries({ queryKey: ['salary-structures'] });
+    },
+  });
+}

@@ -216,7 +216,23 @@ export function App(): React.JSX.Element {
               }
             >
               <Route path="/payroll/payruns" element={<PayrunsListPage />} />
-              <Route path="/payroll/payruns/new" element={<PayrunNewPage />} />
+              {/* Reading the batch and starting one are different jobs: an
+                  HR Payroll User audits payroll without running it, so the
+                  creation wizard is not theirs to open by typing its path. */}
+              <Route
+                element={
+                  <RequirePermission
+                    action="create"
+                    resource="payrun"
+                    label="Creating a payrun"
+                  />
+                }
+              >
+                <Route
+                  path="/payroll/payruns/new"
+                  element={<PayrunNewPage />}
+                />
+              </Route>
               <Route
                 path="/payroll/payruns/:id"
                 element={<PayrunDetailPage />}

@@ -243,11 +243,13 @@ flowchart LR
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Employee**           | Their own record, attendance, leave balances and payslips. Files and withdraws their own time off, records their own attendance, corrects their own contact and bank details. **Approves nothing.** No HR admin, no payroll. |
 | **HR Manager**         | Full CRUD on Employees, Contracts, Working Schedules, Attendance, Time Off; approves or refuses requests. No payroll beyond their own payslip.                                                                               |
-| **HR Payroll User**    | HR Manager plus create/read/update on Payruns and Payslips; read-only Salary Structures and Rules.                                                                                                                           |
-| **HR Payroll Manager** | HR Payroll User plus full CRUD on Payruns, Payslips, Structures and Rules.                                                                                                                                                   |
+| **HR Payroll User**    | HR Manager plus **read-only** payroll: sees every payrun, payslip, structure, rule and the dashboard, and changes none of them. Cannot create a payrun, Compute, Validate, Mark Paid or Send Payslips.                       |
+| **HR Payroll Manager** | HR Payroll User plus every payroll write: creates payruns and runs them through Compute → Validate → Mark Paid → Send Payslips, and full CRUD on Payslips, Structures and Rules.                                             |
 | **Admin**              | Everything, plus user management and role assignment.                                                                                                                                                                        |
 
 > **Every screen is gated on the same permission its navbar link is**, so a path cannot be reached by typing it that could not be reached by clicking it. A form a role cannot save renders as **the record**, not as inputs behind a button that answers `403`.
+
+The two payroll roles are split by **who may move money**, not by how much of it they can see. Read parity is deliberate: an auditor who cannot see the payrun they are auditing is useless, and one who can validate it is not an auditor. `update` on a payrun is not a small permission — it is Compute, Validate, Mark Paid, Cancel, Send Payslips and acknowledging a blocking warning -- so it belongs to the manager alone.
 
 ---
 
@@ -391,12 +393,13 @@ Open **<http://localhost:5173>**. Adminer is at **<http://localhost:8081>** to b
 
 All seeded accounts share the password **`payz-demo-2026`**.
 
-| Email              | Role                 | What the console looks like                                   |
-| ------------------ | -------------------- | ------------------------------------------------------------- |
-| `admin@oxp.com`    | `ADMIN`              | Everything, plus `/admin/users`                               |
-| `payroll@oxp.com`  | `HR_PAYROLL_MANAGER` | Full payroll — payruns, structures, rules, dashboard          |
-| `hr@oxp.com`       | `HR_MANAGER`         | All HR master data, leave approvals — **no payroll**          |
-| `employee@oxp.com` | `EMPLOYEE`           | `My Profile · My Attendance · My Time Off · My Payslips` only |
+| Email                 | Role                 | What the console looks like                                   |
+| --------------------- | -------------------- | ------------------------------------------------------------- |
+| `admin@oxp.com`       | `ADMIN`              | Everything, plus `/admin/users`                               |
+| `payrolluser@oxp.com` | `HR_PAYROLL_USER`    | Reads all of payroll, changes none of it — no Compute, no Pay |
+| `payroll@oxp.com`     | `HR_PAYROLL_MANAGER` | Full payroll — creates payruns, computes, validates, pays     |
+| `hr@oxp.com`          | `HR_MANAGER`         | All HR master data, leave approvals — **no payroll**          |
+| `employee@oxp.com`    | `EMPLOYEE`           | `My Profile · My Attendance · My Time Off · My Payslips` only |
 
 Every other seeded employee has an account at `firstname.lastname@oxp.com`.
 

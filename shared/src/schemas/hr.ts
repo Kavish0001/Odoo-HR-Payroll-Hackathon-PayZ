@@ -223,7 +223,7 @@ export const contractSchema = z
     /** Null means open-ended, which is why period resolution is a range test. */
     endDate: daySchema.nullish(),
     wageMonthly: rupeesSchema.refine(
-      (paise) => paise > 0,
+      (rupees) => rupees > 0,
       'Wage must be greater than zero',
     ),
     departmentId: idSchema.nullish(),

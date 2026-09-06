@@ -3,8 +3,9 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { usePayruns } from '../../api/payruns.js';
+import { useDeletePayrun, usePayruns } from '../../api/payruns.js';
 import { DataTable } from '../../components/data/DataTable.js';
+import { DeleteRowButton } from '../../components/data/DeleteRowButton.js';
 import { PageHeader } from '../../components/data/PageHeader.js';
 import { Pagination } from '../../components/data/Pagination.js';
 import { StatusBadge } from '../../components/data/StatusBadge.js';
@@ -17,6 +18,12 @@ export function PayrunsListPage(): React.JSX.Element {
   const { allowed } = useAuth();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
+
+  // ADMIN only, and the API refuses a validated or paid run outright: that
+  // is payroll history somebody was paid against (rule 10). The icon says so
+  // rather than offering a click that comes back 409.
+  const canDelete = allowed('delete', 'payrun');
+  const deleteMutation = useDeletePayrun();
 
   const payrunsQuery = usePayruns({ page, pageSize: PAGE_SIZE });
   const rows = payrunsQuery.data?.rows ?? [];
@@ -73,8 +80,35 @@ export function PayrunsListPage(): React.JSX.Element {
         accessorKey: 'status',
         cell: ({ row }) => <StatusBadge status={row.original.status} />,
       },
+      ...(canDelete
+        ? [
+            {
+              id: 'actions',
+              header: '',
+              cell: ({ row }) => {
+                const finalised =
+                  row.original.status === 'VALIDATED' ||
+                  row.original.status === 'PAID';
+                return (
+                  <DeleteRowButton
+                    label={row.original.name}
+                    isPending={deleteMutation.isPending}
+                    disabledReason={
+                      finalised
+                        ? 'Validated and paid payruns are payroll history. Cancel it instead.'
+                        : undefined
+                    }
+                    onConfirm={() => {
+                      deleteMutation.mutate(row.original.id);
+                    }}
+                  />
+                );
+              },
+            } satisfies ColumnDef<PayrunRow>,
+          ]
+        : []),
     ],
-    [],
+    [canDelete, deleteMutation],
   );
 
   return (

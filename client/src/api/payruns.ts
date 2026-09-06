@@ -289,3 +289,22 @@ export const EMPLOYEE_TYPE_LABELS: Record<EmployeeType, string> = {
   CONTRACT: 'Contract',
   INTERN: 'Intern',
 };
+
+/**
+ * Removes a payrun and its payslips. ADMIN only, and the API refuses once the
+ * run is VALIDATED or PAID -- that is payroll history, and `cancel` is the
+ * non-destructive way to retire it.
+ */
+export function useDeletePayrun() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/payruns/${id}`);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['payruns'] });
+      await queryClient.invalidateQueries({ queryKey: ['payslips'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}

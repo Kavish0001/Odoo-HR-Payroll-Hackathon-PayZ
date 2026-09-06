@@ -3,9 +3,13 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { useAttendanceRecords } from '../../api/attendance.js';
+import {
+  useAttendanceRecords,
+  useDeleteAttendance,
+} from '../../api/attendance.js';
 import { useEmployee, useEmployees } from '../../api/employees.js';
 import { DataTable } from '../../components/data/DataTable.js';
+import { DeleteRowButton } from '../../components/data/DeleteRowButton.js';
 import { PageHeader } from '../../components/data/PageHeader.js';
 import { Pagination } from '../../components/data/Pagination.js';
 import { StatusBadge } from '../../components/data/StatusBadge.js';
@@ -60,6 +64,10 @@ export function AttendanceListPage(): React.JSX.Element {
   // an EMPLOYEE caller is scoped to their own records by the API regardless
   // (rule R2), so the picker would just be dead weight for them.
   const canManage = allowed('update', 'attendance');
+  // Correcting a row keeps the history; removing it does not, so the matrix
+  // puts deletion at ADMIN.
+  const canDelete = allowed('delete', 'attendance');
+  const deleteMutation = useDeleteAttendance();
 
   const [employeeFilter, setEmployeeFilter] = useState<string | undefined>(
     undefined,
@@ -147,8 +155,25 @@ export function AttendanceListPage(): React.JSX.Element {
         header: 'Status',
         cell: ({ row }) => <StatusBadge status={row.original.status} />,
       },
+      ...(canDelete
+        ? [
+            {
+              id: 'actions',
+              header: '',
+              cell: ({ row }) => (
+                <DeleteRowButton
+                  label={`${row.original.employeeName}'s attendance`}
+                  isPending={deleteMutation.isPending}
+                  onConfirm={() => {
+                    deleteMutation.mutate(row.original.id);
+                  }}
+                />
+              ),
+            } satisfies ColumnDef<AttendanceRow>,
+          ]
+        : []),
     ],
-    [],
+    [canDelete, deleteMutation],
   );
 
   return (

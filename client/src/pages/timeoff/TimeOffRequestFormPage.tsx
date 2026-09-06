@@ -81,6 +81,7 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<TimeOffRequestFormValues, unknown, TimeOffRequestInput>({
     resolver: typedZodResolver<TimeOffRequestFormValues, TimeOffRequestInput>(
@@ -88,6 +89,26 @@ export function TimeOffRequestFormPage(): React.JSX.Element {
     ),
     defaultValues: EMPTY_VALUES(prefillEmployeeId),
   });
+
+  /**
+   * Somebody filing for themselves still has to send an employee id.
+   *
+   * The field is not a picker for them, so the value comes from the session
+   * rather than from anything they touched. Setting it here rather than
+   * leaving it to the hidden input's default means the payload carries it
+   * whether or not that input has mounted yet -- a request that silently
+   * failed validation would look, from the outside, exactly like a request
+   * nobody could see.
+   */
+  useEffect(() => {
+    if (picksEmployee || !isNew) {
+      return;
+    }
+    const own = user?.employeeId;
+    if (own != null && own !== '') {
+      setValue('employeeId', own, { shouldValidate: false });
+    }
+  }, [picksEmployee, isNew, user?.employeeId, setValue]);
 
   useEffect(() => {
     if (requestQuery.data === undefined) {

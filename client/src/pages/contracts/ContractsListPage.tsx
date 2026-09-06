@@ -3,9 +3,10 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { useContracts } from '../../api/contracts.js';
+import { useContracts, useDeleteContract } from '../../api/contracts.js';
 import { useEmployee } from '../../api/employees.js';
 import { DataTable } from '../../components/data/DataTable.js';
+import { DeleteRowButton } from '../../components/data/DeleteRowButton.js';
 import { PageHeader } from '../../components/data/PageHeader.js';
 import { Pagination } from '../../components/data/Pagination.js';
 import { StatusBadge } from '../../components/data/StatusBadge.js';
@@ -25,6 +26,11 @@ export function ContractsListPage(): React.JSX.Element {
   const [page, setPage] = useState(1);
 
   const employeeQuery = useEmployee(employeeId);
+
+  // ADMIN only, by the matrix: a contract is what a payslip was computed
+  // from, so removing one is not the same as ending it.
+  const canDelete = allowed('delete', 'contract');
+  const deleteMutation = useDeleteContract();
 
   const contractsQuery = useContracts({
     page,
@@ -88,8 +94,25 @@ export function ContractsListPage(): React.JSX.Element {
           />
         ),
       },
+      ...(canDelete
+        ? [
+            {
+              id: 'actions',
+              header: '',
+              cell: ({ row }) => (
+                <DeleteRowButton
+                  label={row.original.reference}
+                  isPending={deleteMutation.isPending}
+                  onConfirm={() => {
+                    deleteMutation.mutate(row.original.id);
+                  }}
+                />
+              ),
+            } satisfies ColumnDef<ContractRow>,
+          ]
+        : []),
     ],
-    [],
+    [canDelete, deleteMutation],
   );
 
   return (

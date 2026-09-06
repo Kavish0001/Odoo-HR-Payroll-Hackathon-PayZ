@@ -114,3 +114,17 @@ export function useCheckOut() {
     },
   });
 }
+
+/** Removes an attendance row outright. ADMIN only, by the matrix. */
+export function useDeleteAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/attendance/${id}`);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['attendance'] });
+      await queryClient.invalidateQueries({ queryKey: ['employees'] });
+    },
+  });
+}

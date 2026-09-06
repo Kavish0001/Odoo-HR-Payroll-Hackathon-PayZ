@@ -8,8 +8,13 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { useSalaryRules, useSalaryStructure } from '../../api/salaryConfig.js';
+import {
+  useDeleteSalaryRule,
+  useSalaryRules,
+  useSalaryStructure,
+} from '../../api/salaryConfig.js';
 import { DataTable } from '../../components/data/DataTable.js';
+import { DeleteRowButton } from '../../components/data/DeleteRowButton.js';
 import { PageHeader } from '../../components/data/PageHeader.js';
 import { Pagination } from '../../components/data/Pagination.js';
 import { StatusBadge } from '../../components/data/StatusBadge.js';
@@ -38,6 +43,11 @@ export function SalaryRulesListPage(): React.JSX.Element {
   const [page, setPage] = useState(1);
 
   const structureQuery = useSalaryStructure(structureId);
+
+  // Deactivating retires a rule without touching the payslips it produced.
+  // Deleting it outright is ADMIN's.
+  const canDelete = allowed('delete', 'salaryRule');
+  const deleteMutation = useDeleteSalaryRule();
 
   const rulesQuery = useSalaryRules({
     page,
@@ -88,8 +98,25 @@ export function SalaryRulesListPage(): React.JSX.Element {
           />
         ),
       },
+      ...(canDelete
+        ? [
+            {
+              id: 'actions',
+              header: '',
+              cell: ({ row }) => (
+                <DeleteRowButton
+                  label={row.original.code}
+                  isPending={deleteMutation.isPending}
+                  onConfirm={() => {
+                    deleteMutation.mutate(row.original.id);
+                  }}
+                />
+              ),
+            } satisfies ColumnDef<SalaryRuleRow>,
+          ]
+        : []),
     ],
-    [],
+    [canDelete, deleteMutation],
   );
 
   return (

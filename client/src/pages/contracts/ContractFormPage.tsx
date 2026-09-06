@@ -1,25 +1,30 @@
 import {
   CONTRACT_STATUSES,
   contractSchema,
+  formatINR,
   type ContractInput,
+  type ContractRow,
   type ContractStatus,
+  type EmployeeDetail,
 } from '@payz/shared';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { toApiError } from '../../api/client.js';
 import {
   useContract,
+  useContracts,
   useCreateContract,
   useUpdateContract,
 } from '../../api/contracts.js';
 import { useDepartments } from '../../api/departments.js';
-import { useEmployees } from '../../api/employees.js';
+import { useEmployee, useEmployees } from '../../api/employees.js';
 import { useJobPositionOptions } from '../../api/jobPositions.js';
 import { useWorkingSchedules } from '../../api/workingSchedules.js';
 import { FormShell } from '../../components/data/FormShell.js';
 import { PageHeader } from '../../components/data/PageHeader.js';
+import { StatusBadge } from '../../components/data/StatusBadge.js';
 import { Field } from '../../components/ui/Field.js';
 import { Input } from '../../components/ui/Input.js';
 import { Select } from '../../components/ui/Select.js';
@@ -89,6 +94,9 @@ export function ContractFormPage(): React.JSX.Element {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<ContractFormValues, unknown, ContractInput>({
     resolver: typedZodResolver<ContractFormValues, ContractInput>(
@@ -116,6 +124,67 @@ export function ContractFormPage(): React.JSX.Element {
       notes: detail.notes ?? undefined,
     });
   }, [contractQuery.data, reset]);
+
+  // Watched, because everything below reacts to it: an employee carries the
+  // department, position and schedule a contract would otherwise be retyped
+  // with, and the contracts they already hold decide whether this one can
+  // even be saved.
+  const selectedEmployeeId = watch('employeeId');
+  const employeeDetailQuery = useEmployee(
+    selectedEmployeeId === '' ? undefined : selectedEmployeeId,
+  );
+  const employee = employeeDetailQuery.data;
+
+  const employeeContractsQuery = useContracts(
+    selectedEmployeeId === ''
+      ? { pageSize: 1 }
+      : { employeeId: selectedEmployeeId, pageSize: 50 },
+  );
+  const otherContracts = (employeeContractsQuery.data?.rows ?? []).filter(
+    (row) => row.id !== id,
+  );
+  const runningContract = otherContracts.find(
+    (row) => row.status === 'RUNNING',
+  );
+
+  /**
+   * Carry the employee's own department, position and schedule onto the
+   * contract when the employee changes.
+   *
+   * These three are the contract's payroll context and they almost always
+   * match the employee record, so retyping them is work the form can do. It
+   * fills only what is still blank, and only when the employee actually
+   * changes -- picking someone, correcting a field, then picking them again
+   * must not quietly undo the correction. Editing an existing contract is
+   * left alone entirely: its stored values are the record.
+   */
+  const prefilledFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isNew || employee === undefined) {
+      return;
+    }
+    if (prefilledFor.current === employee.id) {
+      return;
+    }
+    prefilledFor.current = employee.id;
+
+    const current = getValues();
+    if (current.departmentId === undefined && employee.departmentId !== null) {
+      setValue('departmentId', employee.departmentId);
+    }
+    if (
+      current.jobPositionId === undefined &&
+      employee.jobPositionId !== null
+    ) {
+      setValue('jobPositionId', employee.jobPositionId);
+    }
+    if (
+      current.workingScheduleId === undefined &&
+      employee.workingScheduleId !== null
+    ) {
+      setValue('workingScheduleId', employee.workingScheduleId);
+    }
+  }, [isNew, employee, getValues, setValue]);
 
   const employeeOptions = (employeesQuery.data?.rows ?? []).map((e) => ({
     value: e.id,
@@ -206,6 +275,15 @@ export function ContractFormPage(): React.JSX.Element {
               {...register('employeeId')}
             />
           </Field>
+          <div className="sm:col-span-2">
+            <EmployeeContextPanel
+              employee={employee}
+              isLoading={employeeDetailQuery.isLoading}
+              contractCount={otherContracts.length}
+              runningContract={runningContract}
+              isNew={isNew}
+            />
+          </div>
           <Field
             label="Start Date"
             htmlFor="startDate"
@@ -319,6 +397,124 @@ export function ContractFormPage(): React.JSX.Element {
           </Field>
         </div>
       </FormShell>
+    </div>
+  );
+}
+
+interface EmployeeContextPanelProps {
+  employee: EmployeeDetail | undefined;
+  isLoading: boolean;
+  contractCount: number;
+  runningContract: ContractRow | undefined;
+  isNew: boolean;
+}
+
+/**
+ * What the chosen employee already is, shown next to the fields it decides.
+ *
+ * A contract is written against facts that live on the employee record --
+ * their department, position and schedule -- and against the contracts they
+ * already hold. Both were invisible here, so the department and position had
+ * to be remembered and retyped, and an overlapping RUNNING contract only
+ * announced itself as a save that failed (rule C1). Reading them out is
+ * cheaper than reproducing them from memory.
+ */
+function EmployeeContextPanel({
+  employee,
+  isLoading,
+  contractCount,
+  runningContract,
+  isNew,
+}: EmployeeContextPanelProps): React.JSX.Element {
+  const frame = 'border-steel-300 rounded-md border px-4 py-3';
+
+  if (employee === undefined) {
+    return (
+      <div className={frame}>
+        <p className="eyebrow">Employee</p>
+        <p className="text-muted mt-2 text-xs">
+          {isLoading
+            ? 'Loading their record…'
+            : 'Pick an employee to see the department, position and schedule this contract will inherit.'}
+        </p>
+      </div>
+    );
+  }
+
+  const facts: { label: string; value: string }[] = [
+    { label: 'Code', value: employee.code },
+    { label: 'Department', value: employee.departmentName ?? '—' },
+    { label: 'Position', value: employee.jobPositionTitle ?? '—' },
+    { label: 'Schedule', value: employee.scheduleName ?? '—' },
+    { label: 'Manager', value: employee.managerName ?? '—' },
+    {
+      label: 'Joined',
+      value: employee.joinDate?.slice(0, 10) ?? '—',
+    },
+  ];
+
+  return (
+    <div className={frame}>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="eyebrow">{employee.fullName}</p>
+        <p className="text-muted font-mono text-xs">
+          {contractCount === 0
+            ? 'No other contracts'
+            : `${contractCount} other contract${contractCount === 1 ? '' : 's'}`}
+        </p>
+      </div>
+
+      <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3">
+        {facts.map((fact) => (
+          <div key={fact.label}>
+            <dt className="text-muted text-[11px] tracking-wide uppercase">
+              {fact.label}
+            </dt>
+            <dd className="mt-0.5 text-sm">{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {!employee.active && (
+        <p className="border-warning-line bg-warning-soft text-ink mt-3 rounded-sm border px-3 py-2 text-xs">
+          This employee is archived. Payroll skips inactive employees, so a
+          contract written now will not produce a payslip until they are
+          reactivated.
+        </p>
+      )}
+
+      {runningContract !== undefined && (
+        /* Rule C1 is a database constraint: a second RUNNING contract whose
+           dates overlap is refused outright. Saying so here turns a rejected
+           save into a decision made before typing the rest of the form. */
+        <div className="border-danger-line bg-danger-soft mt-3 rounded-sm border px-3 py-2">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <StatusBadge status={runningContract.status} />
+            <span className="font-mono">{runningContract.reference}</span>
+            <span className="text-muted">
+              from {runningContract.startDate.slice(0, 10)}
+              {runningContract.endDate === null
+                ? ' — open-ended'
+                : ` to ${runningContract.endDate.slice(0, 10)}`}
+            </span>
+            <span className="font-mono">
+              {formatINR(runningContract.wageMonthly)}
+            </span>
+          </div>
+          <p className="text-muted mt-1.5 text-xs">
+            They already hold a running contract. Only one can run over any
+            given date, so this one has to start after that one ends — or that
+            one has to be closed first.
+          </p>
+        </div>
+      )}
+
+      {isNew && (
+        <p className="text-muted mt-3 text-xs">
+          Department, position and schedule below were filled in from this
+          record. Change any of them if this contract differs.
+        </p>
+      )}
     </div>
   );
 }

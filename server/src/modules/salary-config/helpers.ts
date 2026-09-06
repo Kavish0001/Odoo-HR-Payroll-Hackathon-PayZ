@@ -1,4 +1,8 @@
-import { type SalaryRuleInput, type SalaryRuleRow } from '@payz/shared';
+import {
+  rupeesToPaise,
+  type SalaryRuleInput,
+  type SalaryRuleRow,
+} from '@payz/shared';
 import { type SalaryRule } from '@prisma/client';
 
 import { prisma } from '../../config/prisma.js';
@@ -80,7 +84,10 @@ export function toRuleDefinitionFromInput(
     category: body.category,
     sequence: body.sequence,
     computationType: body.computationType,
-    fixedAmount: body.fixedAmount ?? null,
+    // The engine computes in paise, so an unsaved rule has to be converted
+    // the same way the stored one was.
+    fixedAmount:
+      body.fixedAmount == null ? null : rupeesToPaise(body.fixedAmount),
     percentage: body.percentage ?? null,
     percentageBase: body.percentageBase ?? null,
     percentageRuleCode: body.percentageRuleCode ?? null,

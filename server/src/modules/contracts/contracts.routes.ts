@@ -1,6 +1,7 @@
 import {
   contractQuerySchema,
   contractSchema,
+  rupeesToPaise,
   type ContractQuery,
   type ContractRow,
   type ContractStatus,
@@ -110,7 +111,9 @@ function toContractData(body: z.infer<typeof contractSchema>) {
     employeeId: body.employeeId,
     startDate: body.startDate,
     endDate: body.endDate ?? null,
-    wageMonthly: body.wageMonthly,
+    // The wire carries rupees, the column stores integer paise. This is the
+    // single place the conversion happens for a contract.
+    wageMonthly: rupeesToPaise(body.wageMonthly),
     departmentId: body.departmentId ?? null,
     jobPositionId: body.jobPositionId ?? null,
     workingScheduleId: body.workingScheduleId ?? null,
