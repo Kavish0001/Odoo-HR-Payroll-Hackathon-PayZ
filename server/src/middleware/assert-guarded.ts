@@ -121,7 +121,9 @@ export function describeRouteGuards(
         (layer.route.stack ?? []).map((entry) => entry.handle),
       );
 
-      for (const [method, enabled] of Object.entries(layer.route.methods ?? {})) {
+      for (const [method, enabled] of Object.entries(
+        layer.route.methods ?? {},
+      )) {
         if (enabled) {
           routes.push({ label: `${method.toUpperCase()} ${full}`, guards });
         }

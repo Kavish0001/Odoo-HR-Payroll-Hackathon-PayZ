@@ -71,9 +71,9 @@ describe('a contract wage survives the round trip it actually takes', () => {
   });
 
   it('still refuses a wage of zero', () => {
-    expect(
-      contractSchema.safeParse({ ...input, wageMonthly: 0 }).success,
-    ).toBe(false);
+    expect(contractSchema.safeParse({ ...input, wageMonthly: 0 }).success).toBe(
+      false,
+    );
   });
 });
 

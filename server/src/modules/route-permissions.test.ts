@@ -98,11 +98,12 @@ describe('payslips are readable by their owner, and by payroll', () => {
     'GET /api/payslips',
     'GET /api/payslips/:id',
     'GET /api/payslips/:id/pdf',
-  ])('%s requires only readSelf, with ownership checked in the handler', (
-    label,
-  ) => {
-    expect(declares(label, 'readSelf', 'payslip')).toBe(true);
-  });
+  ])(
+    '%s requires only readSelf, with ownership checked in the handler',
+    (label) => {
+      expect(declares(label, 'readSelf', 'payslip')).toBe(true);
+    },
+  );
 
   it('does not thereby open the batch to an HR Manager (rule R3)', () => {
     // The guard admits them; the route's own filter pins them to their own
